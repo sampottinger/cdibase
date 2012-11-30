@@ -24,7 +24,8 @@ def enter_data_intro():
         "enter_data.html",
         cur_page="enter_data",
         formats=db_util.load_mcdi_model_listing(),
-        error=session_util.get_error()
+        error=session_util.get_error(),
+        confirmation=session_util.get_confirmation()
     )
 
 @app.route("/enter_data/<format_name>", methods=["GET", "POST"])
@@ -42,7 +43,8 @@ def enter_data_form(format_name):
             "enter_data_form.html",
             cur_page="enter_data",
             format=format,
-            error=session_util.get_error()
+            error=session_util.get_error(),
+            confirmation=session_util.get_confirmation()
         )
 
     # Add new data
@@ -139,10 +141,12 @@ def enter_data_form(format_name):
         revision = 0
 
         # Parse word entries
+        languages = set()
         count_as_spoken_vals = format.details["count_as_spoken"]
         word_entries = {}
         words_spoken = 0
         for category in format.details["categories"]:
+            languages.add(category["language"])
             for word in category["words"]:
                 word_val = request.form.get("%s_report" % word, None)
                 if word_val == None:
@@ -160,7 +164,7 @@ def enter_data_form(format_name):
         cursor = connection.cursor()
 
         # Put in snapshot metadata
-        cmd = "INSERT INTO snapshots VALUES (%s)" % (", ".join("?" * 15))
+        cmd = "INSERT INTO snapshots VALUES (%s)" % (", ".join("?" * 19))
         cursor.execute(
             cmd,
             (
@@ -178,7 +182,11 @@ def enter_data_form(format_name):
                 items_excluded,
                 percentile,
                 extra_categories,
-                revision
+                revision,
+                ",".join(languages),
+                len(languages),
+                format.details["meta"]["mcdi_type"],
+                False
             )
         )
         new_snapshot_id = cursor.lastrowid
@@ -197,7 +205,9 @@ def enter_data_form(format_name):
 
         connection.commit()
 
-        return flask.redirect("/enter_data")
+        flask.session["confirmation"] = "MCDI record added for participant %d." % global_id
+
+        return flask.redirect(request.path)
 
 @app.route("/edit_formats")
 def edit_formats():
@@ -287,7 +297,7 @@ def upload_mcdi_format():
             return flask.redirect("/edit_formats")
 
         # Check file upload valid
-        if file and db_util.allowed_file(file.filename):
+        if file and file_util.allowed_file(file.filename):
             
             # Generate random filename
             filename = file_util.generate_unique_filename()
@@ -310,7 +320,7 @@ def delete_mcdi_format(format_name):
         flask.session["error"] = "Could not find format. Possibly already deleted."
         return flask.redirect("/edit_formats")
 
-    filename = os.path.join(util.UPLOAD_FOLDER, format_model.filename)
+    filename = os.path.join(app.config["UPLOAD_FOLDER"], format_model.filename)
     os.remove(filename)
     db_util.delete_mcdi_model(format_model)
 
@@ -347,7 +357,7 @@ def upload_presentation_format():
             return flask.redirect("/edit_formats")
 
         # Check file upload valid
-        if file and db_util.allowed_file(file.filename):
+        if file and file_util.allowed_file(file.filename):
             
             # Generate random filename
             filename = file_util.generate_unique_filename()
@@ -370,7 +380,7 @@ def delete_presentation_format(format_name):
         flask.session["error"] = "Could not find format. Possibly already deleted."
         return flask.redirect("/edit_formats")
 
-    filename = os.path.join(util.UPLOAD_FOLDER, format_model.filename)
+    filename = os.path.join(app.config["UPLOAD_FOLDER"], format_model.filename)
     os.remove(filename)
     db_util.delete_presentation_model(format_model)
 
@@ -379,7 +389,7 @@ def delete_presentation_format(format_name):
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    return flask.send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    return flask.send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 if __name__ == "__main__":
     app.run()

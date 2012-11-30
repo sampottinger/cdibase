@@ -24,3 +24,7 @@ def generate_unique_filename(length=8, chars=string.letters):
         possibility = generate_filename(length, chars)
         found = not upload_exists(possibility)
     return possibility
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS

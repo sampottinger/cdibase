@@ -3,7 +3,9 @@ import sqlite3
 
 import yaml
 
+import file_util
 import models
+
 
 class ConnectionManager:
     instance = None
@@ -22,10 +24,6 @@ class ConnectionManager:
 
 def get_db_connection():
     return ConnectionManager.get_instance().get_connection()
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 def save_mcdi_model(newMetadataModel):
     connection = get_db_connection()
@@ -53,7 +51,7 @@ def load_mcdi_model_listing():
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "SELECT human_name,safe_name,file_name FROM mcdi_formats"
+        "SELECT human_name,safe_name,filename FROM mcdi_formats"
     )
     return map(lambda x: models.MCDIFormatMetadata(x[0], x[1], x[2]), cursor)
 
@@ -61,7 +59,7 @@ def load_mcdi_model(name):
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "SELECT human_name,safe_name,file_name FROM mcdi_formats WHERE safe_name=?",
+        "SELECT human_name,safe_name,filename FROM mcdi_formats WHERE safe_name=?",
         (name,)
     )
     metadata = cursor.fetchone()
@@ -70,7 +68,7 @@ def load_mcdi_model(name):
         return None
 
     filename = metadata[2]
-    filename = os.path.join(UPLOAD_FOLDER, filename)
+    filename = os.path.join(file_util.UPLOAD_FOLDER, filename)
     with open(filename) as f:
         content = f.read()
     spec = yaml.load(content)
@@ -103,7 +101,7 @@ def load_presentation_model_listing():
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "SELECT human_name,safe_name,file_name FROM presentation_formats"
+        "SELECT human_name,safe_name,filename FROM presentation_formats"
     )
     return map(lambda x: models.PresentationFormatMetadata(x[0], x[1], x[2]), cursor)
 
@@ -111,7 +109,7 @@ def load_presentation_model(name):
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "SELECT human_name,safe_name,file_name FROM presentation_formats WHERE safe_name=?",
+        "SELECT human_name,safe_name,filename FROM presentation_formats WHERE safe_name=?",
         (name,)
     )
     metadata = cursor.fetchone()
