@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block contents %}
+<div class="format-control">
+  <h3>MCDI Formats</h3>
+  <table class="table table-striped"> {% for format in mcdi_formats %}
+    <tr>
+      <td>{{ format.human_name }}</td>
+      <td><a href="/uploads/{{ format.filename }}">download</a></td>
+      <td><a href="/mcdi_format/{{ format.safe_name }}/delete">delete</a></td>
+    </tr>
+  {% endfor %}
+  </table>
+  <a href="/mcdi_format/_add">Upload new MCDI format >></a>
+</div>
+<div class="format-control">
+  <h3>Data Presentation Formats</h3>
+  <table class="table table-striped">
+  {% for format in presentation_formats %}
+    <tr>
+      <td>{{ format.human_name }}</td>
+      <td><a href="/uploads/{{ format.filename }}">download</a></td>
+      <td><a href="/presentation_format/{{ format.safe_name }}/delete">delete</a></td>
+    </tr>
+  {% endfor %}
+  </table>
+  <a href="/presentation_format/_add">Upload new presentation format >></a>
+</div>
+{% endblock %}

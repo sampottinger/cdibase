@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block contents %}
+<div class="form-category">
+  <form action="/access_data/add_filter" method="POST">
+    <table class="table table-striped">
+      {% for filter in filters %}
+      <tr>
+        <td>{{ filter }}</td>
+        <td><a href="/access_data/delete_filter/{{ loop.index0 }}">delete</a></td>
+      </tr>
+    {% endfor %}
+    </table>
+    <div class="form-category">
+      <div class="form-entry">
+        <label>Field</label>
+        <select name="field">
+          <option value="child_id">child id</option>
+          <option value="study_id">study id</option>
+          <option value="study">study</option>
+          <option value="gender">gender</option>
+          <option value="birthday">birthday</option>
+          <option value="session_date">session date</option>
+          <option value="session_num">session num</option>
+          <option value="words_spoken">words spoken</option>
+          <option value="items_excluded">items excluded</option>
+          <option value="age">age</option>
+          <option value="total_num_sessions">total num sessions</option>
+          <option value="percentile">percentile</option>
+          <option value="extra_categories">extra categories</option>
+          <option value="MCDI type">MCDI type *</option>
+          <option value="specific language *">specific language</option>
+          <option value="num languages *">num languages</option>
+          <option value="hard of hearing *">hard of hearing</option>
+        </select>
+      </div>
+      <div class="form-entry">
+        <label>Operator</label>
+        <select name="operator">
+          <option value="eq">==</option>
+          <option value="lt">&#60;</option>
+          <option value="gt">&#62;</option>
+          <option value="neq">!=</option>
+          <option value="lteq">&#60;=</option>
+          <option value="gteq">&#62;=</option>
+        </select>
+      </div>
+      <div class="form-entry">
+        <label>Value to Compare</label>
+        <input type="text" name="operand">
+      </div>
+      <input class="btn btn-primary" type="submit" value="Add Filter">
+    </div>
+  </form>
+</div>
+<div class="form-category">
+  <form method="POST">
+    <div class="form-entry">
+      <label>Presentation format</label>
+      <select name="format">
+        {% for format in formats %}
+        <option value="{{ format.safe_name }}">{{ format.human_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <input class="btn btn-primary" type="submit" value="Generate CSV">
+  </form>
+</div>
+{% endblock %}

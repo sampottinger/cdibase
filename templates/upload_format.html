@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block contents %}
+<h3>Upload {{ upload_type }} Format</h3>
+<form enctype="multipart/form-data" method="POST">
+  <div class="form-entry">
+    <label>Name</label>
+    <input type="text" name="name" placeholder="ex Regular MCDI">
+  </div>
+  <div class="form-entry">
+    <label>YAML specification</label>
+    <input type="file" name="newfile">
+  </div>
+  <input class="btn btn-primary" type="submit"> or <a href="/edit_formats">cancel</a>.
+</form>
+{% endblock %}

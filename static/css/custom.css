@@ -1,0 +1,43 @@
+.word-entry
+{
+    margin-bottom: 20px;
+}
+
+.form-category
+{
+    margin-bottom: 50px;
+}
+
+.form-entry
+{
+    margin-bottom: 20px;
+}
+
+.error
+{
+    background-color: #C00000;
+    color:white;
+    padding:10px;
+}
+
+.confirmation
+{
+    background-color: #00C000;
+    color:white;
+    padding:10px;
+}
+
+.content
+{
+    margin:0 10px 0 10px;
+}
+
+.format-control
+{
+    margin-bottom: 70px;
+}
+
+.state-announcement
+{
+    margin: 30px 0 40px 20px;
+}
