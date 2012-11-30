@@ -63,6 +63,7 @@ def enter_data_form(format_name):
         extra_categories = request.form.get("extra_categories", "")
         total_num_sessions = request.form.get("total_num_sessions", "")
         percentile = request.form.get("percentile", "")
+        hard_of_hearing = request.form.get("hard_of_hearing", "off") == "on"
 
         # Check inclusion and interpret submission
         error = None
@@ -186,7 +187,7 @@ def enter_data_form(format_name):
                 ",".join(languages),
                 len(languages),
                 format.details["meta"]["mcdi_type"],
-                False
+                hard_of_hearing
             )
         )
         new_snapshot_id = cursor.lastrowid

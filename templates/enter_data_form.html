@@ -35,6 +35,15 @@
         <input type="text" name="total_num_sessions" placeholder="ex 12">
         <label>Percentile</label>
         <input type="text" name="percentile" placeholder="ex 90">
+        {% if format.details.meta.has_hard_of_hearing %}
+        <div>
+          <label>Hard of hearing</label>
+          <label class="checkbox">
+            <input name="hard_of_hearing" type="checkbox">
+            Hard of hearing
+          </label>
+        </div>
+        {% endif %}
       </div>
       <div class="span8">
         {% for category in format.details.categories %}
