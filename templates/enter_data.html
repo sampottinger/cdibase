@@ -3,8 +3,8 @@
 {% block contents %}
 <h3>Select MCDI format</h3>
 <ul>
-    {% for format in formats %}
-    <li><a href="/enter_data/{{ format.safe_name }}">{{ format.human_name }}</a></li>
-    {% endfor %}
+  {% for format in formats %}
+  <li><a href="/enter_data/{{ format.safe_name }}">{{ format.human_name }}</a></li>
+  {% endfor %}
 </ul>
 {% endblock %}

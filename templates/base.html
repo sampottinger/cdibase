@@ -15,7 +15,13 @@
             <li {% if cur_page == "enter_data" %}class="active"{% endif %}><a href="/enter_data">Enter Data</a></li>
             <li {% if cur_page == "access_data" %}class="active"{% endif %}><a href="/access_data">Access Data</a></li>
             <li {% if cur_page == "edit_formats" %}class="active"{% endif %}><a href="/edit_formats">Edit Formats</a></li>
+            <li {% if cur_page == "edit_users" %}class="active"{% endif %}><a href="/edit_users">Edit Users</a></li>
+            <li {% if cur_page == "account" %}class="active"{% endif %}><a href="/account">Your Account</a></li>
           </ul>
+          <div class="pull-right align-right">
+            Logged in as {{ email }}<br>
+            <a href="/logout">Logout</a>
+          </div>
         </div>
       </div>
     </div>

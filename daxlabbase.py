@@ -8,21 +8,34 @@ import util
 import db_util
 import file_util
 import filter_util
+import mail_util
 import math_util
 import report_util
 import session_util
+import user_util
 import constants
 
+from flask_mail import Mail
+
 app = flask.Flask(__name__)
-app.debug = True
+app.config.from_pyfile('flask_config.cfg')
 app.config['UPLOAD_FOLDER'] = file_util.UPLOAD_FOLDER
-app.secret_key = '\xd1\xaa\'S\xba\x90^&\xb4f2\xf9"\xc7U\x06\xc2\xff\xae\x7f\xaf\x83h\xd9'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_FAIL_SILENTLY'] = False
+mail_util.init_mail(app)
 
 @app.route("/")
 def main():
-    return flask.render_template("home.html", cur_page="home")
+    return flask.render_template(
+        "home.html",
+        cur_page="home",
+        error=session_util.get_error(),
+        confirmation=session_util.get_confirmation(),
+        email="someone@somewhere.com"
+    )
 
 @app.route("/enter_data")
+@session_util.require_login
 def enter_data_intro():
     return flask.render_template(
         "enter_data.html",
@@ -33,6 +46,7 @@ def enter_data_intro():
     )
 
 @app.route("/enter_data/<format_name>", methods=["GET", "POST"])
+@session_util.require_login
 def enter_data_form(format_name):
     request = flask.request
 
@@ -227,6 +241,7 @@ def enter_data_form(format_name):
         return flask.redirect(request.path)
 
 @app.route("/edit_formats")
+@session_util.require_login
 def edit_formats():
     return flask.render_template(
         "edit_formats.html",
@@ -239,6 +254,7 @@ def edit_formats():
     )
 
 @app.route("/access_data")
+@session_util.require_login
 def access_data():
     return flask.render_template(
         "access_data.html",
@@ -250,6 +266,7 @@ def access_data():
     )
 
 @app.route("/access_data/download_mcdi_results.zip")
+@session_util.require_login
 def execute_access_request():
     request = flask.request
 
@@ -278,6 +295,7 @@ def execute_access_request():
     )
 
 @app.route("/access_data/add_filter", methods=["POST"])
+@session_util.require_login
 def add_filter():
     request = flask.request
 
@@ -305,6 +323,7 @@ def add_filter():
     return flask.redirect("/access_data")
 
 @app.route("/access_data/delete_filter/<int:filter_index>")
+@session_util.require_login
 def delete_filter(filter_index):
     if session_util.delete_filter(filter_index):
         flask.session["confirmation"] = "Filter deleted."
@@ -314,6 +333,7 @@ def delete_filter(filter_index):
         return flask.redirect("/access_data")
 
 @app.route("/mcdi_format/_add", methods=["GET", "POST"])
+@session_util.require_login
 def upload_mcdi_format():
     request = flask.request
 
@@ -360,6 +380,7 @@ def upload_mcdi_format():
     return flask.redirect("/edit_formats")
 
 @app.route("/mcdi_format/<format_name>/delete")
+@session_util.require_login
 def delete_mcdi_format(format_name):
     format_model = db_util.load_mcdi_model(format_name)
     if format_model == None:
@@ -374,6 +395,7 @@ def delete_mcdi_format(format_name):
     return flask.redirect("/edit_formats")
 
 @app.route("/presentation_format/_add", methods=["GET", "POST"])
+@session_util.require_login
 def upload_presentation_format():
     request = flask.request
 
@@ -420,6 +442,7 @@ def upload_presentation_format():
     return flask.redirect("/edit_formats")
 
 @app.route("/presentation_format/<format_name>/delete")
+@session_util.require_login
 def delete_presentation_format(format_name):
     format_model = db_util.load_presentation_model(format_name)
     if format_model == None:
@@ -434,6 +457,7 @@ def delete_presentation_format(format_name):
     return flask.redirect("/edit_formats")
 
 @app.route("/percentile_table/_add", methods=["GET", "POST"])
+@session_util.require_login
 def upload_percentile_table():
     request = flask.request
 
@@ -480,6 +504,7 @@ def upload_percentile_table():
     return flask.redirect("/edit_formats")
 
 @app.route("/percentile_table/<format_name>/delete")
+@session_util.require_login
 def delete_percentile_table(format_name):
     format_model = db_util.load_percentile_model(format_name)
     if format_model == None:
@@ -493,9 +518,140 @@ def delete_percentile_table(format_name):
     flask.session["confirmation"] = "Percentile table deleted."
     return flask.redirect("/edit_formats")
 
-@app.route('/uploads/<filename>')
+@app.route("/uploads/<filename>")
+@session_util.require_login
 def uploaded_file(filename):
     return flask.send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
+@app.route("/edit_users")
+@session_util.require_login
+def edit_users():
+    return flask.render_template(
+        "edit_users.html",
+        cur_page="edit_users",
+        users=user_util.get_all_users(),
+        error=session_util.get_error(),
+        confirmation=session_util.get_confirmation()
+    )
+
+@app.route("/edit_users/<email>/delete")
+@session_util.require_login
+def delete_user(email):
+    user_util.delete_user(email)
+    flask.session["confirmation"] = "Account for %s deleted." % email
+    return flask.redirect("/edit_users")
+
+@app.route("/edit_users/_add", methods=["GET", "POST"])
+@session_util.require_login
+def add_user():
+    request = flask.request
+    if request.method == "GET":
+        return flask.render_template(
+            "edit_user.html",
+            cur_page="edit_users",
+            action_label="Create User",
+            error=session_util.get_error(),
+            confirmation=session_util.get_confirmation()
+        )
+
+    elif request.method == "POST":
+        email = request.form["email"]
+        user_util.create_new_user(
+            email,
+            request.form["can_enter_data"] == "on",
+            request.form["can_access_data"] == "on",
+            request.form["can_change_formats"] == "on",
+            request.form["can_admin"] == "on"
+        )
+        flask.session["confirmation"] = "Account created for %s." % email
+        return flask.redirect("/edit_users/_add")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    request = flask.request
+    if request.method == "GET":
+        return flask.render_template(
+            "login.html",
+            cur_page="login",
+            error=session_util.get_error(),
+            confirmation=session_util.get_confirmation()
+        )
+
+    elif request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+
+        if not user_util.check_user_password(email, password):
+            flask.session["error"] = "Whoops! Either your username or password was wrong."
+            return flask.redirect("/login")
+
+        flask.session["email"] = email
+        flask.session["confirmation"] = "Hello %s! You logged in successfully." % email
+        return flask.redirect("/")
+
+@app.route("/forgot_password", methods=["GET", "POST"])
+def forgot_password():
+    request = flask.request
+    if request.method == "GET":
+        return flask.render_template(
+            "forgot_password.html",
+            cur_page="login",
+            error=session_util.get_error(),
+            confirmation=session_util.get_confirmation()
+        )
+
+    elif request.method == "POST":
+        email = request.form["email"]
+        user_util.reset_password(email)
+        flask.session["confirmation"] = "A new password has been sent to %s." % email
+        return flask.redirect("/login")
+
+@app.route("/logout")
+def logout():
+    session_util.logout()
+    flask.session["confirmation"] = "Logged out."
+    return flask.redirect("/")
+
+@app.route("/account")
+@session_util.require_login
+def account():
+    return flask.render_template(
+        "account.html",
+        cur_page="account",
+        error=session_util.get_error(),
+        confirmation=session_util.get_confirmation()
+    )
+
+@app.route("/change_password", methods=["GET", "POST"])
+@session_util.require_login
+def change_password():
+    request = flask.request
+    if request.method == "GET":
+        return flask.render_template(
+            "change_password.html",
+            cur_page="account",
+            error=session_util.get_error(),
+            confirmation=session_util.get_confirmation()
+        )
+
+    elif request.method == "POST":
+        email = session_util.get_user_email()
+        cur_password = request.form["current_password"]
+        new_password = request.form["new_password"]
+        confirm_new_password = request.form["confirm_new_password"]
+
+        if not user_util.check_user_password(email, cur_password):
+            flask.session["error"] = "Current password incorrect."
+            return flask.redirect("/change_password")
+
+        if not new_password == confirm_new_password:
+            flask.session["error"] = "New password and confirmation of new password are not the same."
+            return flask.redirect("/change_password")
+
+        user_util.change_user_password(email, new_password)
+        flask.session["confirmation"] = "Your password has been updated."
+        return flask.redirect("/account")
 
 if __name__ == "__main__":
     app.run()

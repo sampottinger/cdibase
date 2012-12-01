@@ -183,3 +183,62 @@ def load_snapshot_contents(snapshot):
         (snapshot.database_id,)
     )
     return map(lambda x: models.SnapshotContent(*x), cursor.fetchall())
+
+
+def load_user_model(email):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "SELECT * FROM users WHERE email=?",
+        (email,)
+    )
+    return models.User(*(cursor.fetchone()))
+
+
+def save_user_model(user):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        '''UPDATE users SET password_hash=?,can_enter_data=?,can_access_data=?,
+           can_change_formats=?,can_admin=? WHERE email=?''',
+        (
+            user.password_hash,
+            user.can_enter_data,
+            user.can_access_data,
+            user.can_change_formats,
+            user.can_admin,
+            user.email
+        )
+    )
+    connection.commit()
+
+def create_user_model(user):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)",
+        (
+            user.email,
+            user.password_hash,
+            user.can_enter_data,
+            user.can_access_data,
+            user.can_change_formats,
+            user.can_admin
+        )
+    )
+    connection.commit()
+
+def delete_user_model(email):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "DELETE FROM users WHERE email=?",
+        (email,)
+    )
+    connection.commit()
+
+def get_all_user_models():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM users")
+    return map(lambda x: models.User(*x), cursor.fetchall())

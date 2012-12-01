@@ -89,3 +89,15 @@ class Filter:
             self.operand_float = float(self.operand)
         except ValueError:
             self.operand_float = None
+
+
+class User:
+
+    def __init__(self, email, password_hash, can_enter_data, can_access_data,
+        can_change_formats, can_admin):
+        self.email = email
+        self.password_hash = password_hash
+        self.can_enter_data = can_enter_data
+        self.can_access_data = can_access_data
+        self.can_change_formats = can_change_formats
+        self.can_admin = can_admin
