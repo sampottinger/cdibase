@@ -123,6 +123,8 @@ def generate_study_report_csv(snapshots_from_study, presentation_format):
     return faux_file
 
 def generate_study_report(snapshots, presentation_format):
+    snapshots.sort(key=lambda x: "%s_%s" % (x.session_num, x.study_id))
+
     snapshots_by_study = {}
     for snapshot in snapshots:
         study = snapshot.study

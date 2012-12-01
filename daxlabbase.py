@@ -253,7 +253,9 @@ def access_data():
 def execute_access_request():
     request = flask.request
 
-    # TODO: Handle no filters
+    if not session_util.get_filters():
+        flask.session["error"] = "No filters selected! Please add atleast one filter."
+        return flask.redirect("/access_data")
 
     snapshots = filter_util.run_search_query(
         session_util.get_filters(),
@@ -266,9 +268,10 @@ def execute_access_request():
 
     zip_file = report_util.generate_study_report(snapshots, presentation_format)
 
+    assert False
+
     return flask.Response(
-        zip_file.getvalue(),
-        mimetype="application/octet-stream"
+        zip_file.getvalue()
     )
 
 @app.route("/access_data/add_filter", methods=["POST"])
