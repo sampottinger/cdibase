@@ -32,6 +32,19 @@ class PresentationFormat(PresentationFormatMetadata):
         self.details = details
 
 
+class PercentileTableMetadata:
+    def __init__(self, human_name, safe_name, filename):
+        self.human_name = human_name
+        self.safe_name = safe_name
+        self.filename = filename
+
+
+class PercentileTable(PercentileTableMetadata):
+    def __init__(self, human_name, safe_name, filename, details):
+        PercentileTableMetadata.__init__(self, human_name, safe_name, filename)
+        self.details = details
+
+
 class Filter:
 
     def __init__(self, field, operator, operand):

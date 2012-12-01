@@ -7,7 +7,9 @@ import models
 import util
 import db_util
 import file_util
+import math_util
 import session_util
+import constants
 
 app = flask.Flask(__name__)
 app.debug = True
@@ -62,7 +64,6 @@ def enter_data_form(format_name):
         items_excluded = request.form.get("items_excluded", "")
         extra_categories = request.form.get("extra_categories", "")
         total_num_sessions = request.form.get("total_num_sessions", "")
-        percentile = request.form.get("percentile", "")
         hard_of_hearing = request.form.get("hard_of_hearing", "off") == "on"
 
         # Check inclusion and interpret submission
@@ -128,13 +129,6 @@ def enter_data_form(format_name):
             if total_num_sessions == None:
                 error = "total number sessions should be a whole number."
 
-        if percentile == "":
-            error = "percentile was empty."
-        else:
-            percentile = util.safe_float_interpret(percentile)
-            if percentile == None:
-                error = "percentile should be a number."
-
         if error:
             flask.session["error"] = error
             return flask.redirect(request.path)
@@ -146,6 +140,7 @@ def enter_data_form(format_name):
         count_as_spoken_vals = format.details["count_as_spoken"]
         word_entries = {}
         words_spoken = 0
+        total_possible_words = 0
         for category in format.details["categories"]:
             languages.add(category["language"])
             for word in category["words"]:
@@ -160,6 +155,24 @@ def enter_data_form(format_name):
                 word_entries[word] = int(word_val)
                 if word_val in count_as_spoken_vals:
                     words_spoken += 1
+                total_possible_words += 1
+
+        # Determine approach percentiles
+        if gender == constants.MALE:
+            percentile_table_name = format.details["percentiles"]["male"]
+        elif gender == constants.FEMALE:
+            percentile_table_name = format.details["percentiles"]["female"]
+        else:
+            percentile_table_name = format.details["percentiles"]["other"]
+
+        # Calculate percentiles
+        percentile_model = db_util.load_percentile_model(percentile_table_name)
+        percentile = math_util.find_percentile(
+            percentile_model.details,
+            words_spoken,
+            age,
+            total_possible_words
+        )
 
         connection = db_util.get_db_connection()
         cursor = connection.cursor()
@@ -217,6 +230,7 @@ def edit_formats():
         cur_page="edit_formats",
         mcdi_formats=db_util.load_mcdi_model_listing(),
         presentation_formats=db_util.load_presentation_model_listing(),
+        percentile_tables=db_util.load_percentile_model_listing(),
         error=session_util.get_error(),
         confirmation=session_util.get_confirmation()
     )
@@ -301,7 +315,7 @@ def upload_mcdi_format():
         if file and file_util.allowed_file(file.filename):
             
             # Generate random filename
-            filename = file_util.generate_unique_filename()
+            filename = file_util.generate_unique_filename(".yaml")
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
             
             # Create and save record
@@ -361,7 +375,7 @@ def upload_presentation_format():
         if file and file_util.allowed_file(file.filename):
             
             # Generate random filename
-            filename = file_util.generate_unique_filename()
+            filename = file_util.generate_unique_filename(".yaml")
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
             
             # Create and save record
@@ -386,6 +400,66 @@ def delete_presentation_format(format_name):
     db_util.delete_presentation_model(format_model)
 
     flask.session["confirmation"] = "Format deleted."
+    return flask.redirect("/edit_formats")
+
+@app.route("/percentile_table/_add", methods=["GET", "POST"])
+def upload_percentile_table():
+    request = flask.request
+
+    # Show form on browser vising page with GET
+    if request.method == "GET":
+        return flask.render_template(
+            "upload_format.html",
+            cur_page="edit_formats",
+            upload_type="Percentile",
+            error=session_util.get_error()
+        )
+
+    # Safe file and add record to db
+    elif request.method == "POST":
+        name = request.form.get("name", "")
+        file = request.files["newfile"]
+
+        if name == "":
+            flask.session["error"] = "Name not specified. Please try again."
+            return flask.redirect("/percentile_table/_add")
+
+        safe_name = name.replace(" ", "")
+        safe_name = urllib.quote_plus(safe_name)
+
+        if db_util.load_percentile_model(safe_name) != None:
+            flask.session["error"] = "Percentile table \"%s\" already exists." % name
+            return flask.redirect("/edit_formats")
+
+        # Check file upload valid
+        if file and file_util.allowed_file(file.filename):
+            
+            # Generate random filename
+            filename = file_util.generate_unique_filename(".csv")
+            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            
+            # Create and save record
+            new_model = models.PercentileTableMetadata(name, safe_name, filename)
+            db_util.save_percentile_model(new_model)
+            
+            flask.session["confirmation"] = "Percentile table added."
+            return flask.redirect("/edit_formats")
+
+    flask.session["error"] = "File upload failed. Please try again."
+    return flask.redirect("/edit_formats")
+
+@app.route("/percentile_table/<format_name>/delete")
+def delete_percentile_table(format_name):
+    format_model = db_util.load_percentile_model(format_name)
+    if format_model == None:
+        flask.session["error"] = "Could not find percentile table. Possibly already deleted."
+        return flask.redirect("/edit_formats")
+
+    filename = os.path.join(app.config["UPLOAD_FOLDER"], format_model.filename)
+    os.remove(filename)
+    db_util.delete_percentile_model(format_model)
+
+    flask.session["confirmation"] = "Percentile table deleted."
     return flask.redirect("/edit_formats")
 
 @app.route('/uploads/<filename>')

@@ -1,3 +1,4 @@
+import csv
 import os
 import sqlite3
 
@@ -118,9 +119,58 @@ def load_presentation_model(name):
         return None
 
     filename = metadata[2]
-    filename = os.path.join(UPLOAD_FOLDER, filename)
+    filename = os.path.join(file_util.UPLOAD_FOLDER, filename)
     with open(filename) as f:
         content = f.read()
     spec = yaml.load(content)
 
     return models.PresentationFormat(metadata[0], metadata[1], metadata[2], spec)
+
+def save_percentile_model(newMetadataModel):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "INSERT INTO percentile_tables VALUES (?, ?, ?)",
+        (
+            newMetadataModel.safe_name,
+            newMetadataModel.human_name,
+            newMetadataModel.filename
+        )
+    )
+    connection.commit()
+
+def delete_percentile_model(metadataModel):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "DELETE FROM percentile_tables WHERE safe_name=?",
+        (metadataModel.safe_name,)
+    )
+    connection.commit()
+
+def load_percentile_model_listing():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "SELECT human_name,safe_name,filename FROM percentile_tables"
+    )
+    return map(lambda x: models.PercentileTableMetadata(x[0], x[1], x[2]), cursor)
+
+def load_percentile_model(name):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "SELECT human_name,safe_name,filename FROM percentile_tables WHERE safe_name=?",
+        (name,)
+    )
+    metadata = cursor.fetchone()
+
+    if metadata == None:
+        return None
+
+    filename = metadata[2]
+    filename = os.path.join(file_util.UPLOAD_FOLDER, filename)
+    with open(filename) as f:
+        spec = list(csv.reader(f))
+
+    return models.PercentileTable(metadata[0], metadata[1], metadata[2], spec)

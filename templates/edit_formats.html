@@ -26,4 +26,17 @@
   </table>
   <a href="/presentation_format/_add">Upload new presentation format >></a>
 </div>
+<div class="format-control">
+  <h3>MCDI Percentile Tables</h3>
+  <table class="table table-striped">
+  {% for table in percentile_tables %}
+    <tr>
+      <td>{{ table.human_name }}</td>
+      <td><a href="/uploads/{{ table.filename }}">download</a></td>
+      <td><a href="/percentile_table/{{ table.safe_name }}/delete">delete</a></td>
+    </tr>
+  {% endfor %}
+  </table>
+  <a href="/percentile_table/_add">Upload new percentile table >></a>
+</div>
 {% endblock %}

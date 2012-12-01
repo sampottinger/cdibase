@@ -2,7 +2,7 @@ import os
 import random
 import string
 
-ALLOWED_EXTENSIONS = set(['yaml'])
+ALLOWED_EXTENSIONS = set(['yaml', 'csv'])
 UPLOAD_FOLDER = './uploads'
 
 def upload_exists(filename):
@@ -14,14 +14,14 @@ def upload_exists(filename):
     except IOError as e:
         return False
 
-def generate_filename(length=8, chars=string.letters):
-    return ''.join([random.choice(chars) for i in range(length)]) + ".yaml"
+def generate_filename(format, length=8, chars=string.letters):
+    return ''.join([random.choice(chars) for i in range(length)]) + format
 
-def generate_unique_filename(length=8, chars=string.letters):
+def generate_unique_filename(format, length=8, chars=string.letters):
     found = False
     possibility = None
     while not found:
-        possibility = generate_filename(length, chars)
+        possibility = generate_filename(format, length, chars)
         found = not upload_exists(possibility)
     return possibility
 
