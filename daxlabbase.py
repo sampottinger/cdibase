@@ -262,16 +262,19 @@ def execute_access_request():
         "snapshots"
     )
 
+    if len(snapshots) == 0:
+        flask.session["error"] = "No matching data found."
+        return flask.redirect("/access_data")
+
     # TODO: Handle unknown format
     pres_format_name = request.args["format"]
     presentation_format = db_util.load_presentation_model(pres_format_name)
 
     zip_file = report_util.generate_study_report(snapshots, presentation_format)
 
-    assert False
-
     return flask.Response(
-        zip_file.getvalue()
+        zip_file.getvalue(),
+        mimetype="application/octet-stream"
     )
 
 @app.route("/access_data/add_filter", methods=["POST"])
