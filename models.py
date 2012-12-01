@@ -45,6 +45,40 @@ class PercentileTable(PercentileTableMetadata):
         self.details = details
 
 
+class SnapshotMetadata:
+    def __init__(self, database_id, child_id, study_id, study, gender, age,
+        birthday, session_date, session_num, total_num_sessions, words_spoken,
+        items_excluded, percentile, extra_categories, revision, languages,
+        num_languages, mcdi_type, hard_of_hearing):
+        self.database_id = database_id
+        self.child_id = child_id
+        self.study_id = study_id
+        self.study = study
+        self.gender = gender
+        self.age = age
+        self.birthday = birthday
+        self.session_date = session_date
+        self.session_num = session_num
+        self.total_num_sessions = total_num_sessions
+        self.words_spoken = words_spoken
+        self.items_excluded = items_excluded
+        self.percentile = percentile
+        self.extra_categories = extra_categories
+        self.revision = revision
+        self.languages = languages
+        self.num_languages = num_languages
+        self.mcdi_type = mcdi_type
+        self.hard_of_hearing = hard_of_hearing
+
+
+class SnapshotContent:
+    def __init__(self, snapshot_id, word, value, revision):
+        self.snapshot_id = snapshot_id
+        self.word = word
+        self.value = value
+        self.revision = revision
+
+
 class Filter:
 
     def __init__(self, field, operator, operand):

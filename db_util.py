@@ -174,3 +174,12 @@ def load_percentile_model(name):
         spec = list(csv.reader(f))
 
     return models.PercentileTable(metadata[0], metadata[1], metadata[2], spec)
+
+def load_snapshot_contents(snapshot):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "SELECT * FROM snapshot_content WHERE snapshot_id=?",
+        (snapshot.database_id,)
+    )
+    return map(lambda x: models.SnapshotContent(*x), cursor.fetchall())

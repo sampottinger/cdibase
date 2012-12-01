@@ -7,7 +7,9 @@ import models
 import util
 import db_util
 import file_util
+import filter_util
 import math_util
+import report_util
 import session_util
 import constants
 
@@ -173,6 +175,7 @@ def enter_data_form(format_name):
             age,
             total_possible_words
         )
+        percentile = int(round(percentile))
 
         connection = db_util.get_db_connection()
         cursor = connection.cursor()
@@ -235,7 +238,7 @@ def edit_formats():
         confirmation=session_util.get_confirmation()
     )
 
-@app.route("/access_data", methods=["GET"])
+@app.route("/access_data")
 def access_data():
     return flask.render_template(
         "access_data.html",
@@ -244,6 +247,28 @@ def access_data():
         filters=map(util.filter_to_str, session_util.get_filters()),
         error=session_util.get_error(),
         confirmation=session_util.get_confirmation()
+    )
+
+@app.route("/access_data/download_mcdi_results.zip")
+def execute_access_request():
+    request = flask.request
+
+    # TODO: Handle no filters
+
+    snapshots = filter_util.run_search_query(
+        session_util.get_filters(),
+        "snapshots"
+    )
+
+    # TODO: Handle unknown format
+    pres_format_name = request.args["format"]
+    presentation_format = db_util.load_presentation_model(pres_format_name)
+
+    zip_file = report_util.generate_study_report(snapshots, presentation_format)
+
+    return flask.Response(
+        zip_file.getvalue(),
+        mimetype="application/octet-stream"
     )
 
 @app.route("/access_data/add_filter", methods=["POST"])
