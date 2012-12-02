@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block contents %}
+<div class="format-control">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>email</th>
+        <th>can enter data</th>
+        <th>can access data</th>
+        <th>can change formats</th>
+        <th>can change user accounts</th>
+        <th>edit permissions</th>
+        <th>delete</th>
+      </tr>
+    </thead>
+  {% for user in users %}
+    <tr>
+      <td>{{ user.email }}</td>
+      <td>{{ user.can_enter_data == 1 }}</td>
+      <td>{{ user.can_access_data == 1 }}</td>
+      <td>{{ user.can_change_formats == 1 }}</td>
+      <td>{{ user.can_admin == 1 }}</td>
+      <td>
+        <a href="/edit_users/{{ user.email }}/change_permissions">edit</a>
+      </td>
+      <td>
+        <a href="/edit_users/{{ user.email }}/delete">delete</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </table>
+  <a href="/edit_users/_add">Add new user >></a>
+</div>
+{% endblock %}

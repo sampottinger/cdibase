@@ -1,5 +1,9 @@
 db/*
 
+uploads/*
+
+*.cfg
+
 *.DS_Store
 
 *.py[cod]

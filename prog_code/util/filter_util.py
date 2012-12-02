@@ -1,5 +1,6 @@
+from ..struct import models
+
 import db_util
-import models
 
 FIELD_MAP = {
     "child_id": "child_id",

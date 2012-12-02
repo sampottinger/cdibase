@@ -4,8 +4,9 @@ import sqlite3
 
 import yaml
 
+from ..struct import models
+
 import file_util
-import models
 
 
 class ConnectionManager:
@@ -184,7 +185,6 @@ def load_snapshot_contents(snapshot):
     )
     return map(lambda x: models.SnapshotContent(*x), cursor.fetchall())
 
-
 def load_user_model(email):
     connection = get_db_connection()
     cursor = connection.cursor()
@@ -192,7 +192,10 @@ def load_user_model(email):
         "SELECT * FROM users WHERE email=?",
         (email,)
     )
-    return models.User(*(cursor.fetchone()))
+    result = cursor.fetchone()
+    if not result:
+        return None
+    return models.User(*(result))
 
 
 def save_user_model(user):

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block contents %}
+<h3>Login</h3>
+<form method="POST">
+  <div class="form-entry">
+    <label>Email</label>
+    <input type="text" name="email">
+    <label>Password</label>
+    <input type="password" name="password">
+  </div>
+  <input class="btn btn-primary" value="Login" type="submit"> or <a href="/forgot_password">forgot password?</a>
+</form>
+{% endblock %}

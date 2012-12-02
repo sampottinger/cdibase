@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block contents %}
+<form method="POST">
+  <div class="form-entry">
+    <label>Email</label>
+    <input type="text" name="email" placeholder="ex samp@gleap.org">
+  </div>
+  <div class="form-entry">
+    <label>Permissions</label>
+    <label class="checkbox">
+      <input name="can_enter_data" type="checkbox">
+      Can enter data
+    </label>
+    <label class="checkbox">
+      <input name="can_access_data" type="checkbox">
+      Can access data
+    </label>
+    <label class="checkbox">
+      <input name="can_change_formats" type="checkbox">
+      Can change formats
+    </label>
+    <label class="checkbox">
+      <input name="can_admin" type="checkbox">
+      Can administer user accounts
+    </label>
+  </div>
+  <input class="btn btn-primary" value="{{ action_label }}" type="submit">
+</form>
+{% endblock %}
