@@ -1,3 +1,9 @@
+"""Logic for managing user sessions and their contents.
+
+@author: Sam Pottinger
+@license: GNU GPL v2
+"""
+
 import flask
 
 from ..struct import models

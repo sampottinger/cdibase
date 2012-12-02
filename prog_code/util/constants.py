@@ -1,3 +1,9 @@
+"""Listing of special values encoded in the database for MCDI information.
+
+@author: Sam Pottinger
+@license: GNU GPL v2
+"""
+
 NO_DATA = -100
 UNKNOWN = -200
 POSSIBLY_WRONGLY_REC = -300

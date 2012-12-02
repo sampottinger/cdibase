@@ -1,3 +1,10 @@
+"""Logic for sending email through the application.
+
+@author: Sam Pottinger
+@license: GNU GPL v2
+"""
+
+
 import flask.ext.mail as flask_mail
 
 class MailKeeper:

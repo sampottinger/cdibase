@@ -1,3 +1,10 @@
+"""Logic for managing user-generated database queries.
+
+@author: Sam Pottinger
+@license: GNU GPL v2
+"""
+
+
 from ..struct import models
 
 import db_util

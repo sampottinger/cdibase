@@ -1,3 +1,9 @@
+"""Logic for managing user accounts and user access controls.
+
+@author: Sam Pottinger
+@license: GNU GPL v2
+"""
+
 import random
 import string
 

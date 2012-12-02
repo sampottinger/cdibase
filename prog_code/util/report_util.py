@@ -1,3 +1,9 @@
+"""Logic for building CSV reports and zip archives of CSV files.
+
+@author: Sam Pottinger
+@license: GNU GPL v2
+"""
+
 import csv
 import StringIO as string_io
 import zipfile

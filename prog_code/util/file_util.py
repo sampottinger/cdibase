@@ -1,3 +1,10 @@
+"""Logic for interfacing user uploads.
+
+@author: Sam Pottinger
+@license: GNU GPL v2
+"""
+
+
 import os
 import random
 import string

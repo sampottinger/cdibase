@@ -1,3 +1,9 @@
+"""Logic for interpreting user provided values.
+
+@author: Sam Pottinger
+@license: GNU GPL v2
+"""
+
 def safe_int_interpret(target):
     try:
         return int(target)

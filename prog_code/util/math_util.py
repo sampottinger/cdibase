@@ -1,3 +1,10 @@
+"""Misc. mathematical routines to suppor the application.
+
+@author: Sam Pottinger
+@license: GNU GPL v2
+"""
+
+
 def find_percentile(table_entries, target_num_words, age_months, max_words):
     percentiles = map(lambda x: int(x[0]), table_entries[1:])
     percentiles.insert(0,0)

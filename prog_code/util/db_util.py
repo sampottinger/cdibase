@@ -1,3 +1,10 @@
+"""Logic for interfacing with application's persistance mechanism.
+
+@author: Sam Pottinger
+@license: GNU GPL v2
+"""
+
+
 import csv
 import os
 import sqlite3
