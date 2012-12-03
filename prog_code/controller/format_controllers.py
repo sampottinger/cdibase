@@ -9,6 +9,7 @@ participant percentiles.
 """
 
 import os
+import threading
 import urllib
 
 import flask
@@ -20,6 +21,9 @@ from ..util import session_util
 from ..struct import models
 
 from daxlabbase import app
+
+
+file_lock = threading.Lock()
 
 
 class Format:
@@ -191,8 +195,10 @@ def upload_format(format_type):
         if upload and file_util.allowed_file(upload.filename):
             
             # Generate random filename
-            filename = file_util.generate_unique_filename(format.file_extension)
-            upload.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            with file_lock:
+                filename = file_util.generate_unique_filename(
+                    format.file_extension)
+                upload.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
             
             # Create and save record
             new_model = format.model_metadata_class(name, safe_name, filename)

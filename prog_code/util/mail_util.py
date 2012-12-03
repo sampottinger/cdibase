@@ -4,7 +4,12 @@
 @license: GNU GPL v2
 """
 
+import threading
+
 import flask.ext.mail as flask_mail
+
+
+mail_lock = threading.Lock()
 
 
 class MailKeeper:
@@ -66,5 +71,6 @@ def send_msg(message):
     @param message: The message to send.
     @type message: flaskext.mail.Message
     """
-    mail_instance = MailKeeper.get_instance().get_mail_instance()
-    mail_instance.send(message)
+    with mail_lock:
+        mail_instance = MailKeeper.get_instance().get_mail_instance()
+        mail_instance.send(message)
