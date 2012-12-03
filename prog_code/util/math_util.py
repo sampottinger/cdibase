@@ -6,6 +6,20 @@
 
 
 def find_percentile(table_entries, target_num_words, age_months, max_words):
+    """Find the MCDI perentile for a child.
+
+    @param table_entries: The percentile table to use to calculate the
+        child MCDI percentile.
+    @type table_entries: 2D float array (list of list of numbers)
+    @param target_num_words: The number of words reported as spoken by the
+        child for which an MCDI percentile is desired.
+    @type target_num_words: int
+    @param age_months: The age of the child in months.
+    @type age_months: int
+    @param max_words: The number of words from the MCDI format that the child
+        could know.
+    @type max_words: int
+    """
     percentiles = map(lambda x: int(x[0]), table_entries[1:])
     percentiles.insert(0,0)
     percentiles.append(0)

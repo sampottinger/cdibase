@@ -178,8 +178,8 @@ class SnapshotMetadata:
         @param study: The name of this study this snapshot is part of.
         @type study: str
         @param gender: Constant corresponding to the gender of this child.
-        @type gender: int. Specifically, ..util.constants.MALE,
-            ..util.constants.FEMALE, or ..util.constants.OTHER_GENDER
+        @type gender: int. Specifically, constants.MALE, constants.FEMALE, or
+            constants.OTHER_GENDER
         @param age: The age in months of this participant at the time of the
             study.
         @type age: int
@@ -255,7 +255,7 @@ class SnapshotContent:
         @type word: str
         @param value: The value representing if this word was spoken or not or
             some other status indicator.
-        @type value: Constant from ..util.constants
+        @type value: Constant from util.constants
         @param revision: The number of versions of this record that existed
             before this one.
         @type revision: int

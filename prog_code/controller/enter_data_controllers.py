@@ -237,6 +237,7 @@ def enter_data_form(format_name):
             )
 
         connection.commit()
+        connection.close()
 
         flask.session["confirmation"] = "MCDI record added for participant %d." % global_id
 

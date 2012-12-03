@@ -4,7 +4,6 @@
 @license: GNU GPL v2
 """
 
-
 from ..struct import models
 
 import db_util
@@ -40,6 +39,15 @@ OPERATOR_MAP = {
 
 
 def build_search_query(filters, table):
+    """Build a string SQL query from the given filters.
+
+    @param filters: The filters to build the query out of.
+    @type filters: Iterable over models.Filter
+    @param table: The name of the table to query.
+    @type table: str
+    @return: SQL select query for the given table with the given filters.
+    @rtype: str
+    """
     filter_fields = map(lambda x: x.field, filters)
     # TODO: might want to catch this as a security exception
     fitler_fields = filter(lambda x: x in FIELD_MAP, filter_fields)
@@ -60,6 +68,16 @@ def build_search_query(filters, table):
     return "SELECT * FROM %s WHERE %s" % (table, clause)
 
 def run_search_query(filters, table):
+    """Builds and runs a SQL select query on the given table with given filters.
+
+    @param filters: The filters to build the query out of.
+    @type: Iterable over models.Filter
+    @param table: The name of the table to query.
+    @type table: str
+    @return: Results of SQL select query for the given table with the given
+        filters.
+    @rtype: Iterable over models.SnapshotMetadata
+    """
     db_connection = db_util.get_db_connection()
     db_cursor = db_connection.cursor()
 
@@ -67,4 +85,6 @@ def run_search_query(filters, table):
     operands = map(lambda x: x.operand, filters)
     db_cursor.execute(query, operands)
 
-    return map(lambda x: models.SnapshotMetadata(*x), db_cursor.fetchall())
+    ret_val = map(lambda x: models.SnapshotMetadata(*x), db_cursor.fetchall())
+    db_connection.close()
+    return ret_val

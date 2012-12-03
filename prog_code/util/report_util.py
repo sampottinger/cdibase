@@ -29,7 +29,19 @@ PRESENTATION_VALUE_NAME_MAP = {
     constants.OTHER_GENDER: "other_gender"
 }
 
+
 def interpret_word_value(value, presentation_format):
+    """Convert underlying special database value to a string descriptions.
+
+    @param value: The value to get a string description for.
+    @type value: int
+    @param presentation_format: Presentation format information to use to
+        convert the value to a string description.
+    @type presentation_format: models.PresentationFormat
+    @return: Description of the value or the original value if it is not
+        indiciated as being special in the given presentation_format.
+    @rtype: str or original value type
+    """
     if not value in PRESENTATION_VALUE_NAME_MAP:
         return value
     name = PRESENTATION_VALUE_NAME_MAP[value]
@@ -40,6 +52,16 @@ def interpret_word_value(value, presentation_format):
 
 
 def serialize_snapshot(snapshot, presentation_format):
+    """Turn a snapshot uft8 encoded list of strings.
+
+    @param snapshot: The snapshot to serialize.
+    @type snapshot: models.SnapshotMetadata
+    @param presentation_format: The presentation format to use to render the
+        string serialization.
+    @type presentation_format: models.PresentationFormat
+    @return: Serialized version of the snapshot.
+    @rtype: List of str
+    """
     target_buffer = string_io.StringIO()
     snapshot_contents = db_util.load_snapshot_contents(snapshot)
     snapshot_contents.sort(key=lambda x: x.word)
@@ -79,8 +101,19 @@ def serialize_snapshot(snapshot, presentation_format):
 
     return return_list
 
-def generate_study_report_rows(snapshots_from_study, presentation_format):
 
+def generate_study_report_rows(snapshots_from_study, presentation_format):
+    """Serialize a set of snapshots to a collection of lists of strings.
+
+    @param snapshots_by_study: The snapshots to serialize.
+    @type snapshots_by_study: Iterable of models.SnapshotMetadata
+    @param presentation_format: The presentation format to use to render the
+        string serialization.
+    @type: presentation_format: models.PresentationFormat
+    @return: List of serialized versions of snapshots with first list with
+        header information.
+    @rtype: List of list of str.
+    """
     snapshot_contents = db_util.load_snapshot_contents(snapshots_from_study[0])
     word_listing = map(
         lambda x: x.word.encode("utf-8","ignore"),
@@ -121,14 +154,39 @@ def generate_study_report_rows(snapshots_from_study, presentation_format):
 
     return zip(*cols)
 
+
 def generate_study_report_csv(snapshots_from_study, presentation_format):
+    """Generate a CSV file for a set of snapshots with the same MCDI format.
+
+    @param snapshots_from_study: The snapshots to create a CSV report for.
+    @type snapshots_from_study: Iterable over models.SnapshotMetadata
+    @param presentation_format: The presentation format to use to render the
+        string serialization.
+    @type: presentation_format: models.PresentationFormat
+    @return: Contents of the CSV file.
+    @rtype: StringIO.StringIO
+    """
     faux_file = string_io.StringIO()
     csv_writer = csv.writer(faux_file)
     csv_writer.writerows(
         generate_study_report_rows(snapshots_from_study, presentation_format))
     return faux_file
 
+
 def generate_study_report(snapshots, presentation_format):
+    """Generate a zip archive for a set of snapshots
+
+    Create a zip archive of CSV reports for a set of snapshots where each study
+    gets an individual CSV file in the archive.
+
+    @param snapshots_from_study: The snapshots to create a CSV report for.
+    @type snapshots_from_study: Iterable over models.SnapshotMetadata
+    @param presentation_format: The presentation format to use to render the
+        string serialization.
+    @type: presentation_format: models.PresentationFormat
+    @return: Contents of the zip archive file.
+    @rtype: StringIO.StringIO
+    """
     snapshots.sort(key=lambda x: "%s_%s" % (x.session_num, x.study_id))
 
     snapshots_by_study = {}

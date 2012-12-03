@@ -240,7 +240,7 @@ def delete_format(format_type, format_name):
 
     filename = os.path.join(app.config["UPLOAD_FOLDER"], format_model.filename)
     os.remove(filename)
-    format.delete_model_function(format_model)
+    format.delete_model_function(format_model.safe_name)
 
     flask.session["confirmation"] = "\"%s\" deleted." % format_name
     return flask.redirect("/edit_formats")
