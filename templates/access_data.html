@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+{% block jsinclude %}
+<script type="text/javascript" src="/static/js/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" src="/static/js/access_data.js"></script>
+{% endblock %}
+
 {% block contents %}
 <div class="hero-unit">
     <h3>Access / filter the lab's MCDI database.</h3>
@@ -83,7 +88,7 @@
                     Single CSV
                 </label>
             </div>
-            <input class="btn btn-primary" type="submit" value="Download as CSV">
+            <button class="btn btn-primary" id="download-button">Download as CSV</button>
         </form>
     </div>
 </div>
