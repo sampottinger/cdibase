@@ -24,7 +24,8 @@ def get_standard_template_values():
     return {
         "email": get_user_email(),
         "confirmation": get_confirmation(),
-        "error": get_error()
+        "error": get_error(),
+        "user": user_util.get_user(get_user_email())
     }
 
 
@@ -53,9 +54,13 @@ def require_login(access_data=False, admin=False, enter_data=False,
     def wrap(orig_view):
         def decorated_function(*args, **kwargs):
             if not is_logged_in():
-                flask.session["error"] = "You are not currently logged in."
+                flask.session["error"] = "Whoops! For security, please log in again."
                 return flask.redirect("/login")
             user = user_util.get_user(get_user_email())
+            if not user:
+                del flask.session["email"]
+                flask.session["error"] = "Whoops! For security, please log in again."
+                return flask.redirect("/account/login")
             if access_data and not user.can_access_data:
                 flask.session["error"] = "You are not authorized to access data."
                 return flask.redirect("/")

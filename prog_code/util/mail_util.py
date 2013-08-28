@@ -8,6 +8,7 @@ import threading
 
 import flask.ext.mail as flask_mail
 
+TESTING = False
 
 mail_lock = threading.Lock()
 
@@ -72,5 +73,8 @@ def send_msg(message):
     @type message: flaskext.mail.Message
     """
     with mail_lock:
-        mail_instance = MailKeeper.get_instance().get_mail_instance()
-        mail_instance.send(message)
+        mail_keeper = MailKeeper.get_instance()
+        if mail_keeper:
+            mail_keeper.get_mail_instance().send(message)
+        else:
+            print message

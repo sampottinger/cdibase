@@ -26,7 +26,8 @@ PRESENTATION_VALUE_NAME_MAP = {
     constants.EXTRA_CATEGORIES: "extra_categories",
     constants.MALE: "male",
     constants.FEMALE: "female",
-    constants.OTHER_GENDER: "other_gender"
+    constants.OTHER_GENDER: "other_gender",
+    constants.ELEVEN_PRESUMED_TRUE: "eleven_presumed_true",
 }
 
 
@@ -42,6 +43,11 @@ def interpret_word_value(value, presentation_format):
         indiciated as being special in the given presentation_format.
     @rtype: str or original value type
     """
+    try:
+        value = int(value)
+    except ValueError:
+        pass
+
     if not value in PRESENTATION_VALUE_NAME_MAP:
         return value
     name = PRESENTATION_VALUE_NAME_MAP[value]
@@ -51,7 +57,7 @@ def interpret_word_value(value, presentation_format):
     return presentation_format.details[name]
 
 
-def serialize_snapshot(snapshot, presentation_format):
+def serialize_snapshot(snapshot, presentation_format, word_listing):
     """Turn a snapshot uft8 encoded list of strings.
 
     @param snapshot: The snapshot to serialize.
@@ -64,14 +70,16 @@ def serialize_snapshot(snapshot, presentation_format):
     """
     target_buffer = string_io.StringIO()
     snapshot_contents = db_util.load_snapshot_contents(snapshot)
-    snapshot_contents.sort(key=lambda x: x.word)
+    snapshot_contents_dict = {}
+    for entry in snapshot_contents:
+        snapshot_contents_dict[entry.word] = entry
 
     return_list = [
         snapshot.database_id,
         snapshot.child_id,
         snapshot.study_id,
         snapshot.study,
-        snapshot.gender,
+        interpret_word_value(snapshot.gender, presentation_format),
         snapshot.age,
         snapshot.birthday,
         snapshot.session_date,
@@ -80,7 +88,7 @@ def serialize_snapshot(snapshot, presentation_format):
         snapshot.words_spoken,
         snapshot.items_excluded,
         snapshot.percentile,
-        snapshot.extra_categories,
+        interpret_word_value(snapshot.extra_categories, presentation_format),
         snapshot.revision,
         snapshot.languages,
         snapshot.num_languages,
@@ -88,9 +96,11 @@ def serialize_snapshot(snapshot, presentation_format):
         snapshot.hard_of_hearing
     ]
 
+    snapshot_contents_sorted = map(lambda x: snapshot_contents_dict[x], word_listing)
+
     word_values = map(
         lambda x: interpret_word_value(x.value, presentation_format),
-        snapshot_contents
+        snapshot_contents_sorted
     )
     return_list.extend(word_values)
 
@@ -122,7 +132,7 @@ def generate_study_report_rows(snapshots_from_study, presentation_format):
     word_listing.sort()
 
     serialized_snapshots = map(
-        lambda x: serialize_snapshot(x, presentation_format),
+        lambda x: serialize_snapshot(x, presentation_format, word_listing),
         snapshots_from_study
     )
     
@@ -171,6 +181,25 @@ def generate_study_report_csv(snapshots_from_study, presentation_format):
     csv_writer.writerows(
         generate_study_report_rows(snapshots_from_study, presentation_format))
     return faux_file
+
+
+def generate_consolidated_study_report(snapshots, presentation_format):
+    """Generate a unified CSV file for a set of snapshots
+
+    @param snapshots_from_study: The snapshots to create a CSV report for.
+    @type snapshots_from_study: Iterable over models.SnapshotMetadata
+    @param presentation_format: The presentation format to use to render the
+        string serialization.
+    @type: presentation_format: models.PresentationFormat
+    @return: Contents of the zip archive file.
+    @rtype: StringIO.StringIO
+    """
+    snapshots.sort(key=lambda x: "%s_%s" % (x.session_num, x.study_id))
+
+    return generate_study_report_csv(
+        snapshots,
+        presentation_format
+    )
 
 
 def generate_study_report(snapshots, presentation_format):

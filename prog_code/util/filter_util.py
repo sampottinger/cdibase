@@ -36,8 +36,8 @@ OPERATOR_MAP = {
     "lt": "<",
     "gt": ">",
     "neq": "!=",
-    "lteg": "<=",
-    "gteg": ">="
+    "lteq": "<=",
+    "gteq": ">="
 }
 
 
@@ -74,6 +74,7 @@ def build_search_query(filters, table):
     filter_fields = map(lambda x: FIELD_MAP[x], filter_fields)
 
     operators = map(lambda x: x.operator, filters)
+    operators = map(lambda x: x.encode("utf8"), operators)
     operators = filter(lambda x: x in OPERATOR_MAP, operators)
     operators = map(lambda x: OPERATOR_MAP[x], operators)
 

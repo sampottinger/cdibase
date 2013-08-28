@@ -1,67 +1,89 @@
 {% extends "base.html" %}
 
+{% block head %}
+<script language="javascript" src="/static/js/jquery-1.8.3.min.js"></script>
+<script language="javascript" src="/static/js/sprintf-0.7-beta1.js"></script>
+<script language="javascript" src="/static/js/enter_data_form.js"></script>
+{% endblock %}
+
 {% block contents %}
-<h3>Enter MCDI</h3>
-<form method="POST">
-  <p class="state-announcement">You are using the {{ format.human_name }} format. <a href="/enter_data">Select a different MCDI format</a>.</p>
-  <div class="container-fluid">
-    <div class="row-fluid">
-      <div class="span4">
-        <label>Study</label>
-        <input type="text" name="study" placeholder="ex Traj-Wave2">
-        <label>Participant study ID</label>
-        <input type="text" name="study_id" placeholder="ex TR27-5">
-        <label>Participant global ID</label>
-        <input type="text" name="global_id" placeholder="ex 4810">
-        <label>Participant birthday</label>
-        <input type="text" name="birthday" placeholder="ex 12/30/1992">
-        <label>Participant age (months)</label>
-        <input type="text" name="age" placeholder="ex 22.6">
-        <label>Participant gender</label>
-        <select name="gender">
-          <option value="1">male</option>
-          <option value="2">female</option>
-          <option value="3">other</option>
-        </select>
-        <label>Session num</label>
-        <input type="text" name="session_num" placeholder="ex 5">
-        <label>Session date</label>
-        <input type="text" name="session_date" placeholder="ex 12/30/2012">
-        <label>Items excluded</label>
-        <input type="text" name="items_excluded" placeholder="ex 0">
-        <label>Extra categories</label>
-        <input type="text" name="extra_categories" placeholder="ex 0">
-        <label>Total number sessions</label>
-        <input type="text" name="total_num_sessions" placeholder="ex 12">
-        {% if format.details.meta.has_hard_of_hearing %}
-        <div>
-          <label>Hard of hearing</label>
-          <label class="checkbox">
-            <input name="hard_of_hearing" type="checkbox">
-            Hard of hearing
-          </label>
-        </div>
-        {% endif %}
-      </div>
-      <div class="span8">
-        {% for category in format.details.categories %}
-          <div class="form-category">
-            <h4>{{ category.name }} ({{ category.language }})</h4>
-            {% for word in category.words %}
-              <div class="word-entry">
-                {{ word }}: 
-                {% for option in format.details.options %}
-                  <label class="checkbox">
-                    <input type="radio" name="{{ word }}_report" value="{{ option.value }}"> {{ option.name }}
-                  </label>
-                {% endfor %}
-              </div>
+<div class="row-fluid">
+    <div class="span3 well">
+        <h3>MCDI format</h3>
+        <ul>
+            {% for format in formats %}
+            <li>
+                {% if format.safe_name == selected_format.safe_name %}
+                {{ format.human_name }}
+                {% else %}
+                <a href="/enter_data/{{ format.safe_name }}">{{ format.human_name }}</a></li>
+                {% endif %}
             {% endfor %}
-          </div>
-        {% endfor %}
-        <input class="btn btn-primary" type="submit">
-      </div>
+        </ul>
     </div>
-  </div>
-</form>
+    <div class="span9">
+        <h3>{{ selected_format.human_name }}</h3>
+        <form method="POST">
+            <div class="container-fluid">
+                <div class="row-fluid">
+                    <div class="span4">
+                        <label>Study</label>
+                        <input id="study-input" type="text" name="study" placeholder="ex Traj-Wave2">
+                        <label>Participant study ID</label>
+                        <input id="study-id-input" type="text" name="study_id" placeholder="ex TR27-5">
+                        <label id="global-id-label">Participant global ID</label>
+                        <input type="text" id="global-id-input" name="global_id" placeholder="ex 4810">
+                        <label>Participant birthday</label>
+                        <input type="text" name="birthday" placeholder="ex 12/30/1992">
+                        <label>Participant age (months)</label>
+                        <input type="text" name="age" placeholder="ex 22.6">
+                        <label>Participant gender</label>
+                        <select name="gender">
+                            <option value="1">male</option>
+                            <option value="2">female</option>
+                            <option value="3">other</option>
+                        </select>
+                        <label>Session num</label>
+                        <input type="text" name="session_num" placeholder="ex 5">
+                        <label>Session date</label>
+                        <input type="text" name="session_date" placeholder="ex 12/30/2012">
+                        <label>Items excluded</label>
+                        <input type="text" name="items_excluded" placeholder="ex 0">
+                        <label>Extra categories</label>
+                        <input type="text" name="extra_categories" placeholder="ex 0">
+                        <label>Total number sessions</label>
+                        <input type="text" name="total_num_sessions" placeholder="ex 12">
+                        {% if selected_format.details.meta.has_hard_of_hearing %}
+                        <div>
+                            <label>Hard of hearing</label>
+                            <label class="checkbox">
+                                <input name="hard_of_hearing" type="checkbox">
+                                Hard of hearing
+                            </label>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="span8">
+                        {% for category in selected_format.details.categories %}
+                            <div class="form-category">
+                                <h4>{{ category.name }} ({{ category.language }})</h4>
+                                {% for word in category.words %}
+                                    <div class="word-entry">
+                                        {{ word }}: 
+                                        {% for option in selected_format.details.options %}
+                                            <label class="checkbox">
+                                                <input type="radio" name="{{ word }}_report" value="{{ option.value }}"> {{ option.name }}
+                                            </label>
+                                        {% endfor %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                        <input class="btn btn-primary" type="submit" value="Add MCDI">
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}

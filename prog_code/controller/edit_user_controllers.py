@@ -53,6 +53,45 @@ def delete_user(email):
     return flask.redirect("/edit_users")
 
 
+@app.route("/edit_users/<email>/edit", methods=["GET", "POST"])
+@session_util.require_login(admin=True)
+def edit_user(email):
+    """Controller to edit a user's account in this application.
+
+    @param email: The email of the user account to edit.
+    @type email: str
+    @return: Redirect
+    @rtype: flask.Response
+    """
+    request = flask.request
+    if request.method == "GET":
+        return flask.render_template(
+            "edit_user.html",
+            cur_page="edit_users",
+            target_user=user_util.get_user(email),
+            action_label="Edit User Account",
+            **session_util.get_standard_template_values()
+        )
+    
+    else:
+        new_email = request.form.get("new_email", "")
+
+        if new_email != email and user_util.get_user(new_email):
+            flask.session["error"] = "User \"%s\" already exists. User not updated." % new_email
+            return flask.redirect("/edit_users")
+
+        user_util.update_user(
+            email,
+            new_email,
+            request.form.get("can_enter_data", "") == "on",
+            request.form.get("can_access_data", "") == "on",
+            request.form.get("can_change_formats", "") == "on",
+            request.form.get("can_admin", "") == "on"
+        )
+        flask.session["confirmation"] = "Account updated for %s." % email
+        return flask.redirect("/edit_users")
+
+
 @app.route("/edit_users/_add", methods=["GET", "POST"])
 @session_util.require_login(admin=True)
 def add_user():

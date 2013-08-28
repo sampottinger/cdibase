@@ -1,42 +1,49 @@
 {% extends "base.html" %}
 
 {% block contents %}
-<div class="format-control">
-  <h3>MCDI Formats</h3>
-  <table class="table table-striped"> {% for format in mcdi_formats %}
-    <tr>
-      <td>{{ format.human_name }}</td>
-      <td><a href="/edit_formats/download/{{ format.filename }}">download</a></td>
-      <td><a href="/edit_formats/mcdi/{{ format.safe_name }}/delete">delete</a></td>
-    </tr>
-  {% endfor %}
-  </table>
-  <a href="/edit_formats/mcdi/_add">Upload new MCDI format >></a>
+<div class="hero-unit">
+    <h3>Configure the presentation and formatting of MCDIs.</h3>
+    <p>
+        To support many software packages, DaxlabBase supports many different types of MCDIs and data formatting options. These formats are defined through YAML files as described in the project wiki.
+    </p>
 </div>
 <div class="format-control">
-  <h3>Data Presentation Formats</h3>
-  <table class="table table-striped">
-  {% for format in presentation_formats %}
-    <tr>
-      <td>{{ format.human_name }}</td>
-      <td><a href="/edit_formats/download/{{ format.filename }}">download</a></td>
-      <td><a href="/edit_formats/presentation/{{ format.safe_name }}/delete">delete</a></td>
-    </tr>
-  {% endfor %}
-  </table>
-  <a href="/edit_formats/presentation/_add">Upload new presentation format >></a>
+    <h3>MCDI Formats</h3>
+    <table class="table table-striped"><tbody>
+    {% for format in mcdi_formats %}
+        <tr>
+            <td>{{ format.human_name }}</td>
+            <td><a href="/edit_formats/download/{{ format.filename }}">download</a></td>
+            <td><a href="/edit_formats/mcdi/{{ format.safe_name }}/delete">delete</a></td>
+        </tr>
+    {% endfor %}
+    </tbody></table>
+    <a href="/edit_formats/mcdi/_add">Upload new MCDI format >></a>
 </div>
 <div class="format-control">
-  <h3>MCDI Percentile Tables</h3>
-  <table class="table table-striped">
-  {% for table in percentile_tables %}
-    <tr>
-      <td>{{ table.human_name }}</td>
-      <td><a href="/edit_formats/download/{{ table.filename }}">download</a></td>
-      <td><a href="/edit_formats/percentile/{{ table.safe_name }}/delete">delete</a></td>
-    </tr>
-  {% endfor %}
-  </table>
-  <a href="/edit_formats/percentile/_add">Upload new percentile table >></a>
+    <h3>Data Presentation Formats</h3>
+    <table class="table table-striped"><tbody>
+    {% for format in presentation_formats %}
+        <tr>
+            <td>{{ format.human_name }}</td>
+            <td><a href="/edit_formats/download/{{ format.filename }}">download</a></td>
+            <td><a href="/edit_formats/presentation/{{ format.safe_name }}/delete">delete</a></td>
+        </tr>
+    {% endfor %}
+    </tbody></table>
+    <a href="/edit_formats/presentation/_add">Upload new presentation format >></a>
+</div>
+<div class="format-control">
+    <h3>MCDI Percentile Tables</h3>
+    <table class="table table-striped"><tbody>
+    {% for table in percentile_tables %}
+        <tr>
+            <td>{{ table.human_name }}</td>
+            <td><a href="/edit_formats/download/{{ table.filename }}">download</a></td>
+            <td><a href="/edit_formats/percentile/{{ table.safe_name }}/delete">delete</a></td>
+        </tr>
+    {% endfor %}
+    </tbody></table>
+    <a href="/edit_formats/percentile/_add">Upload new percentile table >></a>
 </div>
 {% endblock %}

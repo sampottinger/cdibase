@@ -121,13 +121,15 @@ def change_user_password(email, password):
     user.password_hash = werkzeug.security.generate_password_hash(password)
     db_util.save_user_model(user)
 
-def update_user_permissions(email, can_enter_data, can_access_data,
+def update_user(orig_email, email, can_enter_data, can_access_data,
     can_change_formats, can_admin):
-    """Change a user's account access permissions.
+    """Change a user's account.
 
-    @param email: The email of the user whose account permissions is being
+    @param orig_email: The email of the user whose account permissions is being
         changed.
-    @type email: str
+    @type orig_email: str
+    @param new_email: The new email address to give to this user.
+    @type new_email: str
     @param can_enter_data: Indicate if the user can enter new data into the lab
         database.
     @type can_enter_data: bool
@@ -138,12 +140,13 @@ def update_user_permissions(email, can_enter_data, can_access_data,
     @type can_change_formats: bool
     """
     email = email.lower()
-    user = db_util.load_user_model(email)
+    user = db_util.load_user_model(orig_email)
+    user.email = email
     user.can_enter_data = can_enter_data
     user.can_access_data = can_access_data
     user.can_change_formats = can_change_formats
     user.can_admin = can_admin
-    db_util.save_user_model(user)
+    db_util.save_user_model(user, existing_email=orig_email)
 
 def reset_password(email, pass_len=10):
     """Set user's password to random string and send email with new credentials.

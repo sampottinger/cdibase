@@ -127,7 +127,7 @@ def save_presentation_model(newMetadataModel):
     connection.close()
 
 
-def delete_presentation_model(metadataModel):
+def delete_presentation_model(metadataModelName):
     """Delete an existing saved presentation format.
 
     @param metadataModelName: The name of the presentation format to delete.
@@ -137,7 +137,7 @@ def delete_presentation_model(metadataModel):
     cursor = connection.cursor()
     cursor.execute(
         "DELETE FROM presentation_formats WHERE safe_name=?",
-        (metadataModel.safe_name,)
+        (metadataModelName,)
     )
     connection.commit()
     connection.close()
@@ -214,7 +214,7 @@ def save_percentile_model(newMetadataModel):
     connection.close()
 
 
-def delete_percentile_model(metadataModel):
+def delete_percentile_model(metadataModelName):
     """Delete an existing saved percentile data table.
 
     @param metadataModelName: The name of the precentile table to delete.
@@ -224,7 +224,7 @@ def delete_percentile_model(metadataModel):
     cursor = connection.cursor()
     cursor.execute(
         "DELETE FROM percentile_tables WHERE safe_name=?",
-        (metadataModel.safe_name,)
+        (metadataModelName,)
     )
     connection.commit()
     connection.close()
@@ -319,24 +319,28 @@ def load_user_model(email):
     return models.User(*(result))
 
 
-def save_user_model(user):
+def save_user_model(user, existing_email=None):
     """Save data about a user account.
 
     @param user: The user model to save to the database.
     @type user: models.User
     """
+    if not existing_email:
+        existing_email = user.email
+
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        '''UPDATE users SET password_hash=?,can_enter_data=?,can_access_data=?,
-           can_change_formats=?,can_admin=? WHERE email=?''',
+        '''UPDATE users SET email=?,password_hash=?,can_enter_data=?,
+           can_access_data=?,can_change_formats=?,can_admin=? WHERE email=?''',
         (
+            user.email,
             user.password_hash,
             user.can_enter_data,
             user.can_access_data,
             user.can_change_formats,
             user.can_admin,
-            user.email
+            existing_email
         )
     )
     connection.commit()
@@ -392,5 +396,21 @@ def get_all_user_models():
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM users")
     ret_val = map(lambda x: models.User(*x), cursor.fetchall())
+    connection.close()
+    return ret_val
+
+
+def lookup_global_participant_id(study_id, participant_study_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "SELECT child_id FROM snapshots WHERE study=? AND study_id=?",
+        (study_id, participant_study_id)
+    )
+    ret_values = cursor.fetchone()
+    if ret_values == None:
+        return None
+
+    ret_val = ret_values[0]
     connection.close()
     return ret_val

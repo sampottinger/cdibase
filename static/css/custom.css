@@ -3,6 +3,11 @@
     margin-bottom: 20px;
 }
 
+.word-entry .highlighted
+{
+    background-color: #0000C0;
+}
+
 .form-category
 {
     margin-bottom: 50px;
@@ -45,4 +50,50 @@
 .align-right
 {
     text-align: right;
+}
+
+.faux-dialog
+{
+    width: 500px;
+    background: #EEEEEE;
+    float: none;
+    margin-left: auto;
+    margin-right: auto;
+    -moz-border-radius: 15px;
+    border-radius: 15px;
+}
+
+.faux-dialog .title
+{
+    background: #9B4D4D;
+    color: black;
+    font-size: 21px;
+    padding: 15px;
+    color: white;
+    -moz-border-radius: 15px 15px 0 0;
+    border-radius: 15px 15px 0 0;
+}
+
+.faux-dialog .body
+{
+    padding: 15px;
+}
+
+#login-form-container #login-form
+{
+    margin: 0 auto;
+    width: 300px;
+}
+
+#login-form-container .wide-input
+{
+    width: 100%;
+}
+
+#unselected-mcdi-selector
+{
+    width: 300px;
+    float: none;
+    margin-left: auto;
+    margin-right: auto;
 }

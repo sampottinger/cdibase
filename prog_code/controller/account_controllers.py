@@ -51,7 +51,7 @@ def forgot_password():
     if request.method == "GET":
         return flask.render_template(
             "forgot_password.html",
-            cur_page="login",
+            cur_page="forgot_password",
             **session_util.get_standard_template_values()
         )
 

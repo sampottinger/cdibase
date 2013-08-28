@@ -1,30 +1,37 @@
 {% extends "base.html" %}
 
 {% block contents %}
+
+{% if user %}
+<h3>Add New User</h3>
+{% else %}
+<h3>Update User Account</h3>
+{% endif %}
+
 <form method="POST">
-  <div class="form-entry">
-    <label>Email</label>
-    <input type="text" name="email" placeholder="ex samp@gleap.org">
-  </div>
-  <div class="form-entry">
-    <label>Permissions</label>
-    <label class="checkbox">
-      <input name="can_enter_data" type="checkbox">
-      Can enter data
-    </label>
-    <label class="checkbox">
-      <input name="can_access_data" type="checkbox">
-      Can access data
-    </label>
-    <label class="checkbox">
-      <input name="can_change_formats" type="checkbox">
-      Can change formats
-    </label>
-    <label class="checkbox">
-      <input name="can_admin" type="checkbox">
-      Can administer user accounts
-    </label>
-  </div>
-  <input class="btn btn-primary" value="{{ action_label }}" type="submit">
+    <div class="form-entry">
+        <label>Email</label>
+        <input type="text" name="new_email" placeholder="ex samp@gleap.org" value="{% if target_user %}{{ target_user.email }}{% endif %}">
+    </div>
+    <div class="form-entry">
+        <label>Permissions</label>
+        <label class="checkbox">
+            <input name="can_enter_data" type="checkbox" {% if target_user and target_user.can_enter_data%}checked{% endif %}>
+            Can enter data
+        </label>
+        <label class="checkbox">
+            <input name="can_access_data" type="checkbox" {% if target_user and target_user.can_access_data%}checked{% endif %}>
+            Can access data
+        </label>
+        <label class="checkbox">
+            <input name="can_change_formats" type="checkbox" {% if target_user and target_user.can_change_formats%}checked{% endif %}>
+            Can change formats
+        </label>
+        <label class="checkbox">
+            <input name="can_admin" type="checkbox" {% if target_user and target_user.can_admin%}checked{% endif %}>
+            Can administer user accounts
+        </label>
+    </div>
+    <input class="btn btn-primary" value="{{ action_label }}" type="submit"> or <a href="http://127.0.0.1:5000/edit_users">cancel</a>.
 </form>
 {% endblock %}

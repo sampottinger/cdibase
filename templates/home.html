@@ -2,14 +2,35 @@
 
 {% block contents %}
 <div class="hero-unit">
-  <h3>Making daxlab's data nicer since 2012</h3>
-  <p>
-    DaxlabBase allows you to
-    <ul>
-      <li>Enter various types of MCDI results.</li>
-      <li>Non-trivial querying of the lab's database.</li>
-      <li>Flexible data entry and reporting settings.</li>
-    </ul>
-  </p>
+    <h3>Making daxlab's data nicer since 2012</h3>
+    <p>
+        DaxlabBase allows you to Enter various types of MCDI results, query the lab's database, and export data as CSV files.
+    </p>
+</div>
+<div id="login-form-container">
+    <div id="login-form">
+        {% if not email %}
+        <form action="/account/login" method="POST">
+            <h3>Login</h3>
+            <div class="form-entry">
+                <label clas="wide-input">Email</label>
+                <input type="text" name="email">
+                <label clas="wide-input">Password</label>
+                <input type="password" name="password">
+            </div>
+            <input class="btn btn-primary" value="Login" type="submit">
+            or <a href="/account/forgot_password">forgot password?</a>
+        </form>
+        {% else %}
+        <h3>Logged in.</h3>
+        <ul>
+            <li><a href="/enter_data">Enter new MCDI records >></a></li>
+            <li><a href="/access_data">Access lab MCDI database >></a></li>
+            <li><a href="/edit_formats">Edit MCDI and presentation formats >></a></li>
+            <li><a href="/edit_users">Edit users >></a></li>
+            <li><a href="/account">Edit your account >></a></li>
+        </ul>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

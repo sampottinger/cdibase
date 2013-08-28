@@ -1,10 +1,19 @@
 {% extends "base.html" %}
 
 {% block contents %}
-<h3>Select MCDI format</h3>
-<ul>
-  {% for format in formats %}
-  <li><a href="/enter_data/{{ format.safe_name }}">{{ format.human_name }}</a></li>
-  {% endfor %}
-</ul>
+<div class="hero-unit">
+    <h3>Add new MCDI results.</h3>
+    <p>
+        DaxlabBase makes adding new MCDIs easy. Start by selecting an MCDI format below.
+    </p>
+</div>
+
+<div id="unselected-mcdi-selector">
+    <h3>Select MCDI format</h3>
+    <ul>
+        {% for format in formats %}
+        <li><a href="/enter_data/{{ format.safe_name }}">{{ format.human_name }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
 {% endblock %}

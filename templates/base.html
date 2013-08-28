@@ -1,42 +1,59 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>DaxlabBase</title>
-    <!-- Bootstrap -->
-    <link href="/static/css/bootstrap.min.css" rel="stylesheet" media="screen">
-    <link href="/static/css/custom.css" rel="stylesheet" media="screen">
-  </head>
-  <body>
-    <div class="navbar">  
-      <div class="navbar-inner">  
-        <div class="container">
-          <ul class="nav">
-            <li {% if cur_page == "home" %}class="active"{% endif %}><a class="brand" href="/">DaxlabBase</a></li>
-            {% if email %}
-            <li {% if cur_page == "enter_data" %}class="active"{% endif %}><a href="/enter_data">Enter Data</a></li>
-            <li {% if cur_page == "access_data" %}class="active"{% endif %}><a href="/access_data">Access Data</a></li>
-            <li {% if cur_page == "edit_formats" %}class="active"{% endif %}><a href="/edit_formats">Edit Formats</a></li>
-            <li {% if cur_page == "edit_users" %}class="active"{% endif %}><a href="/edit_users">Edit Users</a></li>
-            <li {% if cur_page == "account" %}class="active"{% endif %}><a href="/account">Your Account</a></li>
-            {% else %}
-            <li {% if cur_page == "login" %}class="active"{% endif %}><a href="/account/login">Login</a></li>
-            {% endif %}
-          </ul>
-          <div class="pull-right align-right">
-            {% if email %}
-            Logged in as {{ email }}<br>
-            <a href="/account/logout">Logout</a>
-            {% endif %}
-          </div>
+    <head>
+        <title>DaxlabBase</title>
+        <!-- Bootstrap -->
+        <link href="/static/css/bootstrap.min.css" rel="stylesheet" media="screen">
+        <link href="/static/css/custom.css" rel="stylesheet" media="screen">
+        {% block head %}
+        {% endblock %}
+    </head>
+    <body>
+        <div class="navbar">  
+            <div class="navbar-inner">  
+                <div class="container">
+                    <ul class="nav">
+                        <li {% if cur_page == "home" %}class="active"{% endif %}><a class="brand" href="/">DaxlabBase</a></li>
+                        {% if user %}
+                        
+                        {% if user.can_enter_data %}
+                        <li {% if cur_page == "enter_data" %}class="active"{% endif %}><a href="/enter_data">Enter Data</a></li>
+                        {% endif %}
+                        
+                        {% if user.can_access_data %}
+                        <li {% if cur_page == "access_data" %}class="active"{% endif %}><a href="/access_data">Access Data</a></li>
+                        {% endif %}
+                        
+                        {% if user.can_change_formats %}
+                        <li {% if cur_page == "edit_formats" %}class="active"{% endif %}><a href="/edit_formats">Edit Formats</a></li>
+                        {% endif %}
+                        
+                        {% if user.can_admin %}
+                        <li {% if cur_page == "edit_users" %}class="active"{% endif %}><a href="/edit_users">Edit Users</a></li>
+                        {% endif %}
+                        
+                        <li {% if cur_page == "account" %}class="active"{% endif %}><a href="/account">Your Account</a></li>
+                        
+                        {% else %}
+                        <li {% if cur_page == "login" %}class="active"{% endif %}><a href="/account/login">Login</a></li>
+                        <li {% if cur_page == "forgot_password" %}class="active"{% endif %}><a href="/account/forgot_password">Forgot Password</a></li>
+                        {% endif %}
+                    </ul>
+                    <div class="pull-right align-right">
+                        {% if email %}
+                        Logged in as {{ email }}<br>
+                        <a href="/account/logout">Logout</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-    <div class="content">
-      {% if confirmation %}<p class="confirmation">{{ confirmation }}</p>{% endif %}
-      {% if error %}<p class="error">{{ error }}</p>{% endif %}
+        <div class="content">
+            {% if confirmation %}<p class="confirmation">{{ confirmation }}</p>{% endif %}
+            {% if error %}<p class="error">{{ error }}</p>{% endif %}
 
-      {% block contents %}
-      {% endblock %}
-    </div>
-  </body>
+            {% block contents %}
+            {% endblock %}
+        </div>
+    </body>
 </html>

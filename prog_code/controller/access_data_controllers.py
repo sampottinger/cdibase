@@ -36,9 +36,18 @@ def access_data():
     )
 
 
-@app.route("/access_data/download_mcdi_results.zip")
+@app.route("/access_data/download_mcdi_results")
 @session_util.require_login(access_data=True)
 def execute_access_request():
+    flask.session["format"] = flask.request.args.get("format", "")
+    if flask.request.args.get("consolidated_csv", "") == "on":
+        return flask.redirect("/access_data/download_mcdi_results.csv")
+    else:
+        return flask.redirect("/access_data/download_mcdi_results.zip")
+
+@app.route("/access_data/download_mcdi_results.zip")
+@session_util.require_login(access_data=True)
+def execute_zip_access_request():
     """Controller for finding and rendering archive of database query results.
 
     @return: ZIP archive where each study with results has a CSV file.
@@ -60,7 +69,7 @@ def execute_access_request():
         return flask.redirect("/access_data")
 
     # TODO: Handle unknown format
-    pres_format_name = request.args["format"]
+    pres_format_name = flask.session["format"]
     presentation_format = db_util.load_presentation_model(pres_format_name)
 
     zip_file = report_util.generate_study_report(snapshots, presentation_format)
@@ -68,6 +77,41 @@ def execute_access_request():
     return flask.Response(
         zip_file.getvalue(),
         mimetype="application/octet-stream"
+    )
+
+
+@app.route("/access_data/download_mcdi_results.csv")
+@session_util.require_login(access_data=True)
+def execute_csv_access_request():
+    """Controller for finding and rendering archive of database query results.
+
+    @return: ZIP archive where each study with results has a CSV file.
+    @rtype: flask.Response
+    """
+    request = flask.request
+
+    if not session_util.get_filters():
+        flask.session["error"] = "No filters selected! Please add atleast one filter."
+        return flask.redirect("/access_data")
+
+    snapshots = filter_util.run_search_query(
+        session_util.get_filters(),
+        "snapshots"
+    )
+
+    if len(snapshots) == 0:
+        flask.session["error"] = "No matching data found."
+        return flask.redirect("/access_data")
+
+    # TODO: Handle unknown format
+    pres_format_name = flask.session["format"]
+    presentation_format = db_util.load_presentation_model(pres_format_name)
+
+    csv_file = report_util.generate_consolidated_study_report(snapshots, presentation_format)
+
+    return flask.Response(
+        csv_file.getvalue(),
+        mimetype="text/csv"
     )
 
 

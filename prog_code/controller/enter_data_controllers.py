@@ -15,6 +15,9 @@ from ..util import user_util
 from daxlabbase import app
 
 
+NOT_FOUND_MSG = "[ not found ]"
+
+
 @app.route("/enter_data")
 @session_util.require_login(enter_data=True)
 def enter_data_index():
@@ -51,8 +54,8 @@ def enter_data_form(format_name):
     """
     request = flask.request
 
-    format = db_util.load_mcdi_model(format_name)
-    if format == None:
+    selected_format = db_util.load_mcdi_model(format_name)
+    if selected_format == None:
         flask.session["error"] = "Could not the specified MCDI format."
         return flask.redirect("/enter_data")
 
@@ -61,7 +64,8 @@ def enter_data_form(format_name):
         return flask.render_template(
             "enter_data_form.html",
             cur_page="enter_data",
-            format=format,
+            selected_format=selected_format,
+            formats=db_util.load_mcdi_model_listing(),
             **session_util.get_standard_template_values()
         )
 
@@ -242,3 +246,14 @@ def enter_data_form(format_name):
         flask.session["confirmation"] = "MCDI record added for participant %d." % global_id
 
         return flask.redirect(request.path)
+
+
+@app.route("/enter_data/lookup_global_id/<study_name>/<participant_study_id>")
+@session_util.require_login(enter_data=True)
+def lookup_global_id(study_name, participant_study_id):
+    global_id = db_util.lookup_global_participant_id(study_name,
+        participant_study_id)
+    if global_id == None:
+        return flask.Response(NOT_FOUND_MSG)
+    else:
+        return flask.Response(str(global_id))

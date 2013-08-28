@@ -1,69 +1,90 @@
 {% extends "base.html" %}
 
 {% block contents %}
-<div class="form-category">
-  <form action="/access_data/add_filter" method="POST">
-    <table class="table table-striped">
-      {% for filter in filters %}
-      <tr>
-        <td>{{ filter }}</td>
-        <td><a href="/access_data/delete_filter/{{ loop.index0 }}">delete</a></td>
-      </tr>
-    {% endfor %}
-    </table>
-    <div class="form-category">
-      <div class="form-entry">
-        <label>Field</label>
-        <select name="field">
-          <option value="child_id">child global id</option>
-          <option value="study_id">child study id</option>
-          <option value="study">study</option>
-          <option value="gender">gender</option>
-          <option value="birthday">birthday (YYYY/MM/DD)</option>
-          <option value="session_date">session date (YYYY/MM/DD)</option>
-          <option value="session_num">session num</option>
-          <option value="words_spoken">words spoken</option>
-          <option value="items_excluded">items excluded</option>
-          <option value="age">age</option>
-          <option value="total_num_sessions">total num sessions</option>
-          <option value="percentile">percentile</option>
-          <option value="extra_categories">extra categories</option>
-          <option value="mcdi_type">MCDI type</option>
-          <option value="specific_language">specific language</option>
-          <option value="num_languages">num languages</option>
-          <option value="hard_of_hearing">hard of hearing</option>
-        </select>
-      </div>
-      <div class="form-entry">
-        <label>Operator</label>
-        <select name="operator">
-          <option value="eq">==</option>
-          <option value="lt">&#60;</option>
-          <option value="gt">&#62;</option>
-          <option value="neq">!=</option>
-          <option value="lteq">&#60;=</option>
-          <option value="gteq">&#62;=</option>
-        </select>
-      </div>
-      <div class="form-entry">
-        <label>Value to Compare</label>
-        <input type="text" name="operand">
-      </div>
-      <input class="btn btn-primary" type="submit" value="Add Filter">
-    </div>
-  </form>
+<div class="hero-unit">
+    <h3>Access / filter the lab's MCDI database.</h3>
+    <p>
+        DaxlabBase supports advanced filtering of the dataset and bulk data export through CSV files. Start by selecting filters on the left. When finished, download CSV files on the right.
+    </p>
 </div>
-<div class="form-category">
-  <form method="GET" action="/access_data/download_mcdi_results.zip">
-    <div class="form-entry">
-      <label>Presentation format</label>
-      <select name="format">
-        {% for format in formats %}
-        <option value="{{ format.safe_name }}">{{ format.human_name }}</option>
-        {% endfor %}
-      </select>
+<div class="row-fluid">
+    <div class="span5">
+        <h3>Filter Dataset</h3>
+        <form action="/access_data/add_filter" method="POST">
+            <table class="table table-striped">
+                <tr>
+                    <th>Filter</th>
+                    <th>Delete</th>
+                </tr>
+                {% for filter in filters %}
+                <tr>
+                    <td>{{ filter }}</td>
+                    <td><a href="/access_data/delete_filter/{{ loop.index0 }}">delete</a></td>
+                </tr>
+                {% endfor %}
+            </table>
+            <div class="form-category">
+                <div class="form-entry">
+                    <label>Field</label>
+                    <select name="field">
+                        <option value="child_id">child global id</option>
+                        <option value="study_id">child study id</option>
+                        <option value="study">study</option>
+                        <option value="gender">gender</option>
+                        <option value="birthday">birthday (YYYY/MM/DD)</option>
+                        <option value="session_date">session date (YYYY/MM/DD)</option>
+                        <option value="session_num">session num</option>
+                        <option value="words_spoken">words spoken</option>
+                        <option value="items_excluded">items excluded</option>
+                        <option value="age">age</option>
+                        <option value="total_num_sessions">total num sessions</option>
+                        <option value="percentile">percentile</option>
+                        <option value="extra_categories">extra categories</option>
+                        <option value="mcdi_type">MCDI type</option>
+                        <option value="specific_language">specific language</option>
+                        <option value="num_languages">num languages</option>
+                        <option value="hard_of_hearing">hard of hearing</option>
+                    </select>
+                </div>
+                <div class="form-entry">
+                    <label>Operator</label>
+                    <select name="operator">
+                        <option value="eq">==</option>
+                        <option value="lt">&#60;</option>
+                        <option value="gt">&#62;</option>
+                        <option value="neq">!=</option>
+                        <option value="lteq">&#60;=</option>
+                        <option value="gteq">&#62;=</option>
+                    </select>
+                </div>
+                <div class="form-entry">
+                    <label>Value to Compare</label>
+                    <input type="text" name="operand">
+                </div>
+                <input class="btn btn-primary" type="submit" value="Add Filter">
+            </div>
+        </form>
     </div>
-    <input class="btn btn-primary" type="submit" value="Generate CSV">
-  </form>
+    <div class="span2"></div>
+    <div class="span5">
+        <h3>Download Results</h3>
+        <form method="GET" action="/access_data/download_mcdi_results">
+            <div class="form-entry">
+                <label>Presentation format</label>
+                <select name="format">
+                    {% for format in formats %}
+                    <option value="{{ format.safe_name }}">{{ format.human_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-entry">
+                <label class="checkbox">
+                    <input name="consolidated_csv" type="checkbox">
+                    Single CSV
+                </label>
+            </div>
+            <input class="btn btn-primary" type="submit" value="Download as CSV">
+        </form>
+    </div>
 </div>
 {% endblock %}
