@@ -79,7 +79,7 @@ def create_new_user(email, can_enter_data, can_access_data, can_change_formats,
     """
     email = email.lower()
     password = generate_password()
-    pass_hash = werkzeug.security.generate_password_hash(password)
+    pass_hash = werkzeug.generate_password_hash(password)
     user = models.User(-1, email, pass_hash, can_enter_data, can_access_data,
         can_change_formats, can_use_api_key, can_admin)
     db_util.create_user_model(user)
@@ -108,7 +108,7 @@ def check_user_password(email, password):
     if not user:
         return False
     pass_hash = user.password_hash
-    return werkzeug.security.check_password_hash(pass_hash, password)
+    return werkzeug.check_password_hash(pass_hash, password)
 
 def change_user_password(email, password):
     """Change a user's account password.
@@ -120,7 +120,7 @@ def change_user_password(email, password):
     """
     email = email.lower()
     user = db_util.load_user_model(email)
-    user.password_hash = werkzeug.security.generate_password_hash(password)
+    user.password_hash = werkzeug.generate_password_hash(password)
     db_util.save_user_model(user)
 
 def update_user(orig_email, email, can_enter_data, can_access_data,
