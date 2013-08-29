@@ -9,8 +9,6 @@ import urllib
 
 import flask
 
-from werkzeug.contrib.fixers import ProxyFix
-
 from flask_mail import Mail
 
 from prog_code.util import session_util
@@ -19,8 +17,6 @@ from prog_code.util import mail_util
 from prog_code.util import session_util
 
 app = flask.Flask(__name__)
-app.wsgi_app = ProxyFix(app.wsgi_app)
-
 app.config.from_pyfile('flask_config.cfg')
 app.config['UPLOAD_FOLDER'] = file_util.UPLOAD_FOLDER
 app.config['MAIL_PORT'] = 587
