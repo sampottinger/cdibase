@@ -58,7 +58,7 @@ def generate_password(pass_len=10):
 
 
 def create_new_user(email, can_enter_data, can_access_data, can_change_formats,
-    can_admin):
+    can_use_api_key, can_admin):
     """Create and persist a new user, sending account info by email in process.
 
     @param email: The email address of the user to create an account for.
@@ -71,6 +71,8 @@ def create_new_user(email, can_enter_data, can_access_data, can_change_formats,
     @param can_change_formats: Indicates if the user can edit MCDI forms,
         presentation formats, and percentile data tables.
     @type can_change_formats: bool
+    @param can_use_api_key: Indicates if this user can use an API key.
+    @type can_use_api_key: bool
     @param can_admin: Indicates if the user can administer user accounts and
         user access control.
     @type can_admin: bool
@@ -78,8 +80,8 @@ def create_new_user(email, can_enter_data, can_access_data, can_change_formats,
     email = email.lower()
     password = generate_password()
     pass_hash = werkzeug.security.generate_password_hash(password)
-    user = models.User(email, pass_hash, can_enter_data, can_access_data,
-        can_change_formats, can_admin)
+    user = models.User(-1, email, pass_hash, can_enter_data, can_access_data,
+        can_change_formats, can_use_api_key, can_admin)
     db_util.create_user_model(user)
 
     registration_message = flask_mail.Message(
@@ -122,7 +124,7 @@ def change_user_password(email, password):
     db_util.save_user_model(user)
 
 def update_user(orig_email, email, can_enter_data, can_access_data,
-    can_change_formats, can_admin):
+    can_change_formats, can_use_api_key, can_admin):
     """Change a user's account.
 
     @param orig_email: The email of the user whose account permissions is being
@@ -138,6 +140,11 @@ def update_user(orig_email, email, can_enter_data, can_access_data,
     @param can_change_formats: Indicate if the user can change MCDI forms, CSV
         presentation formats, and percentile tables.
     @type can_change_formats: bool
+    @param can_use_api_key: Indicates if this user can use an API key.
+    @type can_use_api_key: bool
+    @param can_admin: Indicates if this user can edit other users' accounts and
+        permissions.
+    @type can_admin: bool
     """
     email = email.lower()
     user = db_util.load_user_model(orig_email)
@@ -145,6 +152,7 @@ def update_user(orig_email, email, can_enter_data, can_access_data,
     user.can_enter_data = can_enter_data
     user.can_access_data = can_access_data
     user.can_change_formats = can_change_formats
+    user.can_use_api_key = can_use_api_key
     user.can_admin = can_admin
     db_util.save_user_model(user, existing_email=orig_email)
 
@@ -170,15 +178,16 @@ def reset_password(email, pass_len=10):
 
     mail_util.send_msg(registration_message)
 
-def get_user(email):
+def get_user(identifier):
     """Get user account information for the user with the given email.
 
-    @param email: The email address of the user to get account information for.
-    @type email: str
+    @param identifier: The email address of the user to get account information
+        for. May also be integer ID.
+    @type identifier: str or int
     @return: User account info for use with given email address.
     @rtype: models.User
     """
-    return db_util.load_user_model(email)
+    return db_util.load_user_model(identifier)
 
 def delete_user(email):
     """Delete the user with the given email address.

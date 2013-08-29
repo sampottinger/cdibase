@@ -1,14 +1,16 @@
 {% extends "base.html" %}
 
 {% block contents %}
-<h3>Login</h3>
 <form method="POST">
-    <div class="form-entry">
+    <div class="small-center-content form-entry">
+        <h3>Login</h3>
         <label>Email</label>
         <input type="text" name="email">
         <label>Password</label>
         <input type="password" name="password">
+        <div>
+            <input class="btn btn-primary" value="Login" type="submit"> or <a href="/account/forgot_password">forgot password?</a>
+        </div>
     </div>
-    <input class="btn btn-primary" value="Login" type="submit"> or <a href="/account/forgot_password">forgot password?</a>
 </form>
 {% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block contents %}
+<div class="hero-unit">
+    <h3>Programmatically access DaxlabBase.</h3>
+    <p>
+        API keys allow external programs to access the functionality of DaxlabBase on behalf of your user account.
+        See the project wiki for more details.
+    </p>
+</div>
+<div class="small-center-content">
+    {% if api_key %}
+    <p>
+        Your api key is:
+        <h3>{{ api_key.key }}</h3>
+    </p>
+    {% else %}
+    <p>
+        <h3>You do not currently have an API key.</h3>
+    </p>
+    {% endif %}
+    <p>
+        <a href="/config_api_key/new">Request a new API key >></a>
+    </p>
+</div>
+{% endblock %}

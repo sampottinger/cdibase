@@ -28,6 +28,10 @@
             Can change formats
         </label>
         <label class="checkbox">
+            <input name="can_use_api_key" type="checkbox" {% if target_user and target_user.can_use_api_key%}checked{% endif %}>
+            Can use API key
+        </label>
+        <label class="checkbox">
             <input name="can_admin" type="checkbox" {% if target_user and target_user.can_admin%}checked{% endif %}>
             Can administer user accounts
         </label>

@@ -171,7 +171,7 @@ def upload_format(format_type):
 
     # Safe file and add record to db
     elif request.method == "POST":
-        name = request.form.get("name", "")
+        name = request.form.get("name", "").lower()
         upload = request.files.get("newfile", None)
 
         if name == "":

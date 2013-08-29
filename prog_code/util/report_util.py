@@ -52,12 +52,13 @@ def interpret_word_value(value, presentation_format):
         return value
     name = PRESENTATION_VALUE_NAME_MAP[value]
 
-    if not name in presentation_format.details:
+    if presentation_format == None or not name in presentation_format.details:
         return value
     return presentation_format.details[name]
 
 
-def serialize_snapshot(snapshot, presentation_format, word_listing):
+def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
+    report_dict=False, include_words=True):
     """Turn a snapshot uft8 encoded list of strings.
 
     @param snapshot: The snapshot to serialize.
@@ -68,48 +69,84 @@ def serialize_snapshot(snapshot, presentation_format, word_listing):
     @return: Serialized version of the snapshot.
     @rtype: List of str
     """
-    target_buffer = string_io.StringIO()
-    snapshot_contents = db_util.load_snapshot_contents(snapshot)
-    snapshot_contents_dict = {}
-    for entry in snapshot_contents:
-        snapshot_contents_dict[entry.word] = entry
+    if not word_listing:
+        word_listing = []
 
-    return_list = [
-        snapshot.database_id,
-        snapshot.child_id,
-        snapshot.study_id,
-        snapshot.study,
-        interpret_word_value(snapshot.gender, presentation_format),
-        snapshot.age,
-        snapshot.birthday,
-        snapshot.session_date,
-        snapshot.session_num,
-        snapshot.total_num_sessions,
-        snapshot.words_spoken,
-        snapshot.items_excluded,
-        snapshot.percentile,
-        interpret_word_value(snapshot.extra_categories, presentation_format),
-        snapshot.revision,
-        snapshot.languages,
-        snapshot.num_languages,
-        snapshot.mcdi_type,
-        snapshot.hard_of_hearing
-    ]
+    if include_words:
+        snapshot_contents = db_util.load_snapshot_contents(snapshot)
+        snapshot_contents_dict = {}
 
-    snapshot_contents_sorted = map(lambda x: snapshot_contents_dict[x], word_listing)
+        snapshot_contents_sorted = map(lambda x: snapshot_contents_dict[x],
+            word_listing)
 
-    word_values = map(
-        lambda x: interpret_word_value(x.value, presentation_format),
-        snapshot_contents_sorted
-    )
-    return_list.extend(word_values)
+        word_values = map(
+            lambda x: interpret_word_value(x.value, presentation_format),
+            snapshot_contents_sorted
+        )
 
-    return_list = map(
-        lambda x: x.encode("utf-8","ignore") if isinstance(x, str) else x,
-        return_list
-    )
+        for entry in snapshot_contents:
+            snapshot_contents_dict[entry.word] = entry
 
-    return return_list
+    if report_dict:
+        return_dict = {
+            "database_id": snapshot.database_id,
+            "child_id": snapshot.child_id,
+            "study_id": snapshot.study_id,
+            "study": snapshot.study,
+            "gender": interpret_word_value(snapshot.gender, presentation_format),
+            "age": snapshot.age,
+            "birthday": snapshot.birthday,
+            "session_date": snapshot.session_date,
+            "session_num": snapshot.session_num,
+            "total_num_sessions": snapshot.total_num_sessions,
+            "words_spoken": snapshot.words_spoken,
+            "items_excluded": snapshot.items_excluded,
+            "percentile": snapshot.percentile,
+            "extra_categories": interpret_word_value(snapshot.extra_categories, presentation_format),
+            "revision": snapshot.revision,
+            "languages": snapshot.languages,
+            "num_languages": snapshot.num_languages,
+            "mcdi_type": snapshot.mcdi_type,
+            "hard_of_hearing": snapshot.hard_of_hearing,
+        }
+
+        if include_words:
+            return_dict["words"] = word_values
+
+        return return_dict
+
+    else:
+        return_list = [
+            snapshot.database_id,
+            snapshot.child_id,
+            snapshot.study_id,
+            snapshot.study,
+            interpret_word_value(snapshot.gender, presentation_format),
+            snapshot.age,
+            snapshot.birthday,
+            snapshot.session_date,
+            snapshot.session_num,
+            snapshot.total_num_sessions,
+            snapshot.words_spoken,
+            snapshot.items_excluded,
+            snapshot.percentile,
+            interpret_word_value(snapshot.extra_categories, presentation_format),
+            snapshot.revision,
+            snapshot.languages,
+            snapshot.num_languages,
+            snapshot.mcdi_type,
+            snapshot.hard_of_hearing
+        ]
+
+        if include_words:
+            return_list.extend(word_values)
+
+        return_list = map(
+            lambda x: x.encode("utf-8","ignore") if isinstance(x, str) else x,
+            return_list
+        )
+
+        return return_list
 
 
 def generate_study_report_rows(snapshots_from_study, presentation_format):

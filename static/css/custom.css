@@ -79,21 +79,23 @@
     padding: 15px;
 }
 
-#login-form-container #login-form
-{
-    margin: 0 auto;
-    width: 300px;
-}
-
-#login-form-container .wide-input
-{
-    width: 100%;
-}
-
-#unselected-mcdi-selector
+.small-center-content
 {
     width: 300px;
     float: none;
     margin-left: auto;
     margin-right: auto;
+}
+
+.large-center-content
+{
+    width: 500px;
+    float: none;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#login-form-container .wide-input
+{
+    width: 100%;
 }

@@ -294,10 +294,13 @@ class Filter:
 class User:
     """Record of a user account providing someone access to DaxlabBase."""
 
-    def __init__(self, email, password_hash, can_enter_data, can_access_data,
-        can_change_formats, can_admin):
+    def __init__(self, db_id, email, password_hash, can_enter_data,
+        can_access_data, can_change_formats, can_use_api_key, can_admin):
         """Create a new User record.
 
+        @param db_id: The unique numerical ID assigned to this user account in
+            the database.
+        @type db_id: int
         @param email: The email address of the user this record represents.
         @type email: str
         @param password_hash: The salted password hash of this user's password.
@@ -311,13 +314,34 @@ class User:
         @param can_change_formats: Inidicates if this user can edit MCDI
             formats, percentile tables, and CSV presentation settings.
         @type can_change_formats: bool
+        @param can_use_api_key: Indicates if this user can use an API key.
+        @type can_use_api_key: bool
         @param can_admin: Indicates if this user can edit other users' accounts
             and permissions.
         @type can_admin: bool
         """
+        self.db_id = db_id
         self.email = email
         self.password_hash = password_hash
         self.can_enter_data = can_enter_data
         self.can_access_data = can_access_data
         self.can_change_formats = can_change_formats
+        self.can_use_api_key = can_use_api_key
         self.can_admin = can_admin
+
+
+class APIKey:
+    """Record of an API key allowing programmatic access for a specific user."""
+
+    def __init__(self, user_id, key):
+        """Create a new API key record.
+
+        @param user_id: The unique numerical ID of the user that this key
+            belongs to.
+        @type user_id: int
+        @param key: A key this user can provide to programmatically access this
+            application.
+        @type key: str
+        """
+        self.user_id = user_id
+        self.key = key

@@ -7,6 +7,7 @@
 import csv
 import os
 import sqlite3
+import threading
 
 import yaml
 
@@ -15,14 +16,45 @@ from ..struct import models
 import file_util
 
 
+class SharedConnection:
+    """Singleton wrapper around a database connection.
+
+    Singleton wrapper around a database connection that allows for sharing of
+    that connection between multiple threads. Effectively acts as a database
+    connection pool of 1.
+    """
+
+    instance = None
+
+    @classmethod
+    def get_instance(cls):
+        if not cls.instance:
+            cls.instance = SharedConnection()
+        return cls.instance
+
+    def __init__(self):
+        self.__connection = sqlite3.connect('./db/daxlab.db')
+        self.__lock = threading.Lock()
+
+    def cursor(self):
+        self.__lock.acquire(True)
+        return self.__connection.cursor()
+
+    def commit(self):
+        self.__connection.commit()
+
+    def close(self):
+        self.__lock.release()
+
+
 def get_db_connection():
     """Get an open connection to the application database.
 
     @note: May come from connection pool.
-    @return: Thread-specific connection to application database.
-    @rtype: sqlite3.Connection
+    @return: Thread-safe connection to application database.
+    @rtype: SharedConnection
     """
-    return sqlite3.connect('./db/daxlab.db')
+    return SharedConnection.get_instance()
 
 def save_mcdi_model(newMetadataModel):
     """Save a metadata for a MCDI format.
@@ -241,8 +273,10 @@ def load_percentile_model_listing():
     cursor.execute(
         "SELECT human_name,safe_name,filename FROM percentile_tables"
     )
-    return map(lambda x: models.PercentileTableMetadata(x[0], x[1], x[2]),
+    ret_val = map(lambda x: models.PercentileTableMetadata(x[0], x[1], x[2]),
         cursor)
+    connection.close()
+    return ret_val
 
 
 def load_percentile_model(name):
@@ -296,22 +330,28 @@ def load_snapshot_contents(snapshot):
     return ret_val
 
 
-def load_user_model(email):
+def load_user_model(identifier):
     """Load the user model for a user account with the given email address.
 
-    @param email: The email of the user for which a user model should be
-        retrieved.
-    @type email: str
+    @param identifier: The email of the user for which a user model should be
+        retrieved. Can also be integer ID.
+    @type email: str or int
     @return: The user account information for the user with the given email
         address. None if corresponding user account cannot be found.
     @rtype: models.User
     """
     connection = get_db_connection()
     cursor = connection.cursor()
-    cursor.execute(
-        "SELECT * FROM users WHERE email=?",
-        (email,)
-    )
+    if isinstance(identifier, basestring):
+        cursor.execute(
+            "SELECT * FROM users WHERE email=?",
+            (identifier,)
+        )
+    else:
+        cursor.execute(
+            "SELECT * FROM users WHERE id=?",
+            (identifier,)
+        )
     result = cursor.fetchone()
     connection.close()
     if not result:
@@ -332,13 +372,15 @@ def save_user_model(user, existing_email=None):
     cursor = connection.cursor()
     cursor.execute(
         '''UPDATE users SET email=?,password_hash=?,can_enter_data=?,
-           can_access_data=?,can_change_formats=?,can_admin=? WHERE email=?''',
+           can_access_data=?,can_change_formats=?,can_use_api_key=?,can_admin=?
+           WHERE email=?''',
         (
             user.email,
             user.password_hash,
             user.can_enter_data,
             user.can_access_data,
             user.can_change_formats,
+            user.can_use_api_key,
             user.can_admin,
             existing_email
         )
@@ -356,13 +398,16 @@ def create_user_model(user):
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)",
+        '''INSERT INTO users (email, password_hash, can_enter_data,
+            can_access_data, can_change_formats, can_use_api_key, can_admin)
+            VALUES (?, ?, ?, ?, ?, ?, ?)''',
         (
             user.email,
             user.password_hash,
             user.can_enter_data,
             user.can_access_data,
             user.can_change_formats,
+            user.can_use_api_key,
             user.can_admin
         )
     )
@@ -409,8 +454,71 @@ def lookup_global_participant_id(study_id, participant_study_id):
     )
     ret_values = cursor.fetchone()
     if ret_values == None:
+        connection.close()
         return None
 
     ret_val = ret_values[0]
-    connection.close()
     return ret_val
+
+
+def get_api_key_by_user(user_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "SELECT api_key FROM api_keys WHERE user_id=?",
+        (user_id,)
+    )
+    api_key = cursor.fetchone()
+    connection.commit()
+    connection.close()
+
+    if api_key:
+        return models.APIKey(user_id, api_key[0])
+    else:
+        return None
+
+
+def get_api_key_by_key(api_key):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "SELECT user_id FROM api_keys WHERE api_key=?",
+        (api_key,)
+    )
+    user_id = cursor.fetchone()
+    connection.commit()
+    connection.close()
+
+    if user_id:
+        return models.APIKey(user_id[0], api_key)
+    else:
+        return None
+
+
+def get_api_key(identifier):
+    if isinstance(identifier, basestring):
+        return get_api_key_by_key(identifier)
+    else:
+        return get_api_key_by_user(identifier)
+
+
+def delete_api_key(user_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "DELETE FROM api_keys WHERE user_id=?",
+        (user_id,)
+    )
+    connection.close()
+
+
+def create_new_api_key(user_id, api_key):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "INSERT INTO api_keys VALUES (?, ?)",
+        (user_id, api_key)
+    )
+    connection.close()
+
+    return models.APIKey(user_id, api_key)

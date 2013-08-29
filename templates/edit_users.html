@@ -14,6 +14,7 @@
             <th>can enter data</th>
             <th>can access data</th>
             <th>can change formats</th>
+            <th>can use API key</th>
             <th>can change user accounts</th>
             <th>edit account</th>
             <th>delete account</th>
@@ -24,6 +25,7 @@
             <td>{{ user.can_enter_data == 1 }}</td>
             <td>{{ user.can_access_data == 1 }}</td>
             <td>{{ user.can_change_formats == 1 }}</td>
+            <td>{{ user.can_use_api_key == 1 }}</td>
             <td>{{ user.can_admin == 1 }}</td>
             <td>
                 <a href="/edit_users/{{ user.email }}/edit">edit</a>

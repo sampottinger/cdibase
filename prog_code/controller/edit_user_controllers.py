@@ -78,7 +78,7 @@ def edit_user(email):
 
         if new_email != email and user_util.get_user(new_email):
             flask.session["error"] = "User \"%s\" already exists. User not updated." % new_email
-            return flask.redirect("/edit_users")
+            return flask.redirect(request.path)
 
         user_util.update_user(
             email,
@@ -86,6 +86,7 @@ def edit_user(email):
             request.form.get("can_enter_data", "") == "on",
             request.form.get("can_access_data", "") == "on",
             request.form.get("can_change_formats", "") == "on",
+            request.form.get("can_use_api_key", "") == "on",
             request.form.get("can_admin", "") == "on"
         )
         flask.session["confirmation"] = "Account updated for %s." % email
@@ -110,22 +111,23 @@ def add_user():
         )
 
     elif request.method == "POST":
-        email = request.form.get("email", "")
+        email = request.form.get("new_email", "")
 
         if email == "":
             flask.session["error"] = "Email not provided. Please try again."
-            return flask.redirect("/edit_users")
+            return flask.redirect("/edit_users/_add")
 
         if user_util.get_user(email):
             flask.session["error"] = "User \"%s\" already exists." % email
-            return flask.redirect("/edit_users")
+            return flask.redirect("/edit_users/_add")
 
         user_util.create_new_user(
             email,
             request.form.get("can_enter_data", "") == "on",
             request.form.get("can_access_data", "") == "on",
             request.form.get("can_change_formats", "") == "on",
+            request.form.get("can_use_api_key", "") == "on",
             request.form.get("can_admin", "") == "on"
         )
         flask.session["confirmation"] = "Account created for %s." % email
-        return flask.redirect("/edit_users/_add")
+        return flask.redirect("/edit_users")

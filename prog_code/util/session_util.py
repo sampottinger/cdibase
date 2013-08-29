@@ -30,32 +30,35 @@ def get_standard_template_values():
 
 
 def require_login(access_data=False, admin=False, enter_data=False,
-    change_formats=False):
+    change_formats=False, use_api_key=False):
     """Decorator that requires that a user be logged in to do an operation.
 
     Decorator that requires that a user be logged in to do an operation and
     automatically redirect if visitor is not logged in or if visitor has
     insufficient permissions.
 
-    @param access_data: If True, require that the user have permission to access
-        existing database entries.
+    @keyword access_data: If True, require that the user have permission to
+        access existing database entries. Defaults to False.
     @type access_data: bool
-    @param admin: If True, require that the user have permission to administer
-        other user accounts and user access control.
+    @keyword admin: If True, require that the user have permission to administer
+        other user accounts and user access control. Defaults to False.
     @type admin: bool
-    @param enter_data: If True, require that the user have permission to access
-        enter new data into the database.
+    @keyword enter_data: If True, require that the user have permission to
+        access enter new data into the database. Defaults to False.
     @type enter_data: bool
-    @param change_formats: If True, require that the user have permission to
+    @keyword change_formats: If True, require that the user have permission to
         access / edit MCDI forms, CSV presentation formats, and percentile
-        tables.
+        tables. Defaults to False.
     @type access_data: bool
+    @keyword use_api_key: If True, require that the user has permission to use
+        API keys. Defaults to False.
+    @tyep: use_api_key: bool
     """
     def wrap(orig_view):
         def decorated_function(*args, **kwargs):
             if not is_logged_in():
                 flask.session["error"] = "Whoops! For security, please log in again."
-                return flask.redirect("/login")
+                return flask.redirect("/account/login")
             user = user_util.get_user(get_user_email())
             if not user:
                 del flask.session["email"]
@@ -72,6 +75,9 @@ def require_login(access_data=False, admin=False, enter_data=False,
                 return flask.redirect("/")
             if change_formats and not user.can_change_formats:
                 flask.session["error"] = "You are not authorized to change formats."
+                return flask.redirect("/")
+            if use_api_key and not user.can_use_api_key:
+                flask.session["error"] = "You are not authorized to use API keys."
                 return flask.redirect("/")
             return orig_view(*args, **kwargs)
         decorated_function.__name__ = orig_view.__name__
@@ -118,6 +124,14 @@ def get_user_email():
     @rtype: str
     """
     return flask.session.get("email", None)
+
+
+def get_user_id():
+    """Get the id of the user currently logged in."""
+    user = user_util.get_user(get_user_email())
+    if not user:
+        return None
+    return user.db_id
 
 
 def get_confirmation():
