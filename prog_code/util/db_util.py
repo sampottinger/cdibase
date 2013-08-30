@@ -67,8 +67,8 @@ def save_mcdi_model(newMetadataModel):
     cursor.execute(
         "INSERT INTO mcdi_formats VALUES (?, ?, ?)",
         (
-            newMetadataModel.safe_name,
             newMetadataModel.human_name,
+            newMetadataModel.safe_name,
             newMetadataModel.filename
         )
     )
