@@ -24,10 +24,11 @@
         {% else %}
         <h3>Logged in.</h3>
         <ul>
-            <li><a href="/enter_data">Enter new MCDI records >></a></li>
-            <li><a href="/access_data">Access lab MCDI database >></a></li>
-            <li><a href="/edit_formats">Edit MCDI and presentation formats >></a></li>
-            <li><a href="/edit_users">Edit users >></a></li>
+            {% if user.can_enter_data %}<li><a href="/enter_data">Enter new MCDI records >></a></li>{% endif %}
+            {% if user.can_access_data %}<li><a href="/access_data">Access lab MCDI database >></a></li>{% endif %}
+            {% if user.can_change_formats %}<li><a href="/edit_formats">Edit MCDI and presentation formats >></a></li>{% endif %}
+            {% if user.can_admin %}<li><a href="/edit_users">Edit users >></a></li>{% endif %}
+            {% if user.can_use_api_key %}<li><a href="/config_api_key">Configure API keys >></a></li>{% endif %}
             <li><a href="/account">Edit your account >></a></li>
         </ul>
         {% endif %}
