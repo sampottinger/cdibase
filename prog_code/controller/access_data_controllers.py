@@ -56,7 +56,7 @@ def execute_zip_access_request():
     request = flask.request
 
     if not session_util.get_filters():
-        flask.session["error"] = "No filters selected! Please add atleast one filter."
+        flask.session["error"] = "No filters selected! Please add at least one filter."
         return flask.redirect("/access_data")
 
     snapshots = filter_util.run_search_query(

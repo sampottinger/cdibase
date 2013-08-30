@@ -9,7 +9,9 @@ import random
 import string
 
 ALLOWED_EXTENSIONS = set(['yaml', 'csv'])
-UPLOAD_FOLDER = './uploads'
+UTIL_DIR = os.path.dirname(os.path.realpath(__file__))
+ROOT_DIR = os.path.abspath(os.path.join(UTIL_DIR, os.pardir, os.pardir))
+UPLOAD_FOLDER = os.path.join(ROOT_DIR, 'uploads')
 
 
 def upload_exists(filename):
