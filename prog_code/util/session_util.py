@@ -149,7 +149,7 @@ def get_confirmation():
     return msg
 
 
-def serailize_filter(target_filter):
+def serialize_filter(target_filter):
     return {
         "field": target_filter.field,
         "operator": target_filter.operator,
