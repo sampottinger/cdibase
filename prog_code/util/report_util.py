@@ -77,7 +77,7 @@ def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
         snapshot_contents_dict = {}
 
         snapshot_contents_sorted = map(
-            lambda x: snapshot_contents_dict.get(x, constants.NO_DATA),
+            lambda x: snapshot_contents_dict.get(x,{'value':constants.NO_DATA}),
             word_listing
         )
 
