@@ -187,7 +187,7 @@ def add_filter(new_filter):
     @param new_filter: The filter to add to the current user's current query.
     @type new_filter: models.Filter
     """
-    filters = flask.session.get("filters", None)
+    filters = get_filters()
     if not filters:
         filters = []
     filters.append(new_filter)
