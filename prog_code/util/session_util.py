@@ -151,9 +151,9 @@ def get_confirmation():
 
 def serailize_filter(target_filter):
     return {
-        "field": target_filter.field
-        "operator": target_filter.operator
-        "operand": target_filter.operand
+        "field": target_filter.field,
+        "operator": target_filter.operator,
+        "operand": target_filter.operand,
         "operand_float": target_filter.operand_float
     }
 
