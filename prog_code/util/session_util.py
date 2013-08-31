@@ -149,6 +149,23 @@ def get_confirmation():
     return msg
 
 
+def serailize_filter(target_filter):
+    return {
+        "field": target_filter.field
+        "operator": target_filter.operator
+        "operand": target_filter.operand
+        "operand_float": target_filter.operand_float
+    }
+
+
+def unserialize_filter(target_filter_dict):
+    return models.Filter(
+        target_filter_dict["field"],
+        target_filter_dict["operator"],
+        target_filter_dict["operand"]
+    )
+
+
 def get_filters():
     """Get a collection of filters that the current user has created.
 
@@ -161,7 +178,7 @@ def get_filters():
     filters = flask.session.get("filters", None)
     if not filters:
         return []
-    return filters
+    return map(unserialize_filter, filters)
 
 
 def add_filter(new_filter):
@@ -174,7 +191,7 @@ def add_filter(new_filter):
     if not filters:
         filters = []
     filters.append(new_filter)
-    flask.session["filters"] = filters
+    flask.session["filters"] = map(serialize_filter, filters)
 
 
 def delete_filter(index):
