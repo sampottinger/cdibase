@@ -76,8 +76,10 @@ def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
         snapshot_contents = db_util.load_snapshot_contents(snapshot)
         snapshot_contents_dict = {}
 
-        snapshot_contents_sorted = map(lambda x: snapshot_contents_dict[x],
-            word_listing)
+        snapshot_contents_sorted = map(
+            lambda x: snapshot_contents_dict.get(x, constants.NO_DATA),
+            word_listing
+        )
 
         word_values = map(
             lambda x: interpret_word_value(x.value, presentation_format),
