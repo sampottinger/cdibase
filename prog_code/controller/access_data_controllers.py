@@ -6,6 +6,7 @@ querying the database and producing CSV files and zip archives.
 @author: Sam Pottinger
 @license: GNU GPL v2
 """
+import json
 
 import flask
 
@@ -39,11 +40,29 @@ def access_data():
 @app.route("/access_data/download_mcdi_results")
 @session_util.require_login(access_data=True)
 def execute_access_request():
+    session_util.set_waiting_on_download(True)
     flask.session["format"] = flask.request.args.get("format", "")
     if flask.request.args.get("consolidated_csv", "") == "on":
         return flask.redirect("/access_data/download_mcdi_results.csv")
     else:
         return flask.redirect("/access_data/download_mcdi_results.zip")
+
+
+@app.route("/access_data/is_waiting")
+@session_util.require_login(access_data=True)
+def is_waiting_on_download():
+    ret_val = {'is_waiting': session_util.is_waiting_on_download()}
+    return json.dumps(ret_val)
+
+
+@app.route("/access_data/abort")
+@session_util.require_login(access_data=True)
+def abort_download():
+    session_util.set_waiting_on_download(False)
+    ret_val = {'is_waiting': session_util.is_waiting_on_download()}
+    return json.dumps(ret_val)
+
+
 
 @app.route("/access_data/download_mcdi_results.zip")
 @session_util.require_login(access_data=True)
@@ -73,11 +92,18 @@ def execute_zip_access_request():
     presentation_format = db_util.load_presentation_model(pres_format_name)
 
     zip_file = report_util.generate_study_report(snapshots, presentation_format)
+    zip_contents = zip_file.getvalue()
 
-    return flask.Response(
-        zip_file.getvalue(),
+    response = flask.Response(
+        zip_contents,
         mimetype="application/octet-stream"
     )
+    response.headers['Content-Type'] = 'application/octet-stream'
+    response.headers['Content-Disposition'] = 'attachment; filename=mcdi_results.zip'
+    response.headers['Content-Length'] = len(zip_contents)
+
+    session_util.set_waiting_on_download(False)
+    return response
 
 
 @app.route("/access_data/download_mcdi_results.csv")
@@ -108,11 +134,18 @@ def execute_csv_access_request():
     presentation_format = db_util.load_presentation_model(pres_format_name)
 
     csv_file = report_util.generate_consolidated_study_report(snapshots, presentation_format)
+    csv_contents = csv_file.getvalue()
 
-    return flask.Response(
-        csv_file.getvalue(),
+    response = flask.Response(
+        csv_contents,
         mimetype="text/csv"
     )
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = 'attachment; filename=mcdi_results.csv'
+    response.headers['Content-Length'] = len(csv_contents)
+
+    session_util.set_waiting_on_download(False)
+    return response
 
 
 @app.route("/access_data/add_filter", methods=["POST"])

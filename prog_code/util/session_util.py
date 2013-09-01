@@ -209,3 +209,11 @@ def delete_filter(index):
         return False
     del filters[index]
     return True
+
+
+def set_waiting_on_download(value):
+    flask.session["waiting_on_download"] = value
+
+
+def is_waiting_on_download():
+    return flask.session.get("waiting_on_download", False)

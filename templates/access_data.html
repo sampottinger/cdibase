@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block jsinclude %}
-<script type="text/javascript" src="/static/js/jquery-1.8.3.min.js"></script>
 <script type="text/javascript" src="/static/js/access_data.js"></script>
 {% endblock %}
 
@@ -73,7 +72,7 @@
     <div class="span2"></div>
     <div class="span5">
         <h3>Download Results</h3>
-        <form method="GET" action="/access_data/download_mcdi_results">
+        <form method="GET" id="mcdi-form" action="/access_data/download_mcdi_results">
             <div class="form-entry">
                 <label>Presentation format</label>
                 <select name="format">
@@ -88,8 +87,17 @@
                     Single CSV
                 </label>
             </div>
-            <button class="btn btn-primary" id="download-button">Download as CSV</button>
+            <div id="download-button-holder">
+                <button class="btn btn-primary" id="download-button">Download as CSV</button>
+            </div>
+            <div id="status-display">
+                <img src="/static/img/ajax-loader.gif"> Please wait... - <a href="#" id="abort-link">abort</a>
+            </div>
+            <div id="coming-msg">
+                Your download will start momentarily.
+            </div>
         </form>
     </div>
 </div>
+<iframe id="hidden-frame" src=""></iframe>
 {% endblock %}

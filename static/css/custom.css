@@ -95,7 +95,18 @@
     margin-right: auto;
 }
 
+.tiling-form-input
+{
+    display: inline-block;
+    padding: 5px 10px 5px 10px;
+}
+
 #login-form-container .wide-input
 {
     width: 100%;
+}
+
+#hidden-frame 
+{
+    visibility: hidden;
 }

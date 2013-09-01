@@ -24,64 +24,82 @@
     <div class="span9">
         <h3>{{ selected_format.human_name }}</h3>
         <form method="POST">
-            <div class="container-fluid">
-                <div class="row-fluid">
-                    <div class="span4">
-                        <label>Study</label>
-                        <input id="study-input" type="text" name="study" placeholder="ex Traj-Wave2">
-                        <label>Participant study ID</label>
-                        <input id="study-id-input" type="text" name="study_id" placeholder="ex TR27-5">
-                        <label id="global-id-label">Participant global ID</label>
-                        <input type="text" id="global-id-input" name="global_id" placeholder="ex 4810">
-                        <label>Participant birthday</label>
-                        <input type="text" name="birthday" placeholder="ex 12/30/1992">
-                        <label>Participant age (months)</label>
-                        <input type="text" name="age" placeholder="ex 22.6">
-                        <label>Participant gender</label>
-                        <select name="gender">
-                            <option value="1">male</option>
-                            <option value="2">female</option>
-                            <option value="3">other</option>
-                        </select>
-                        <label>Session num</label>
-                        <input type="text" name="session_num" placeholder="ex 5">
-                        <label>Session date</label>
-                        <input type="text" name="session_date" placeholder="ex 12/30/2012">
-                        <label>Items excluded</label>
-                        <input type="text" name="items_excluded" placeholder="ex 0">
-                        <label>Extra categories</label>
-                        <input type="text" name="extra_categories" placeholder="ex 0">
-                        <label>Total number sessions</label>
-                        <input type="text" name="total_num_sessions" placeholder="ex 12">
-                        {% if selected_format.details.meta.has_hard_of_hearing %}
-                        <div>
-                            <label>Hard of hearing</label>
-                            <label class="checkbox">
-                                <input name="hard_of_hearing" type="checkbox">
-                                Hard of hearing
-                            </label>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="span8">
-                        {% for category in selected_format.details.categories %}
-                            <div class="form-category">
-                                <h4>{{ category.name }} ({{ category.language }})</h4>
-                                {% for word in category.words %}
-                                    <div class="word-entry">
-                                        {{ word }}: 
-                                        {% for option in selected_format.details.options %}
-                                            <label class="checkbox">
-                                                <input type="radio" name="{{ word }}_report" value="{{ option.value }}"> {{ option.name }}
-                                            </label>
-                                        {% endfor %}
-                                    </div>
+            <div>
+                <div class="tiling-form-input">
+                    <label>Study</label>
+                    <input id="study-input" type="text" name="study" placeholder="ex Traj-Wave2">
+                </div>
+                <div class="tiling-form-input">
+                    <label>Participant study ID</label>
+                    <input id="study-id-input" type="text" name="study_id" placeholder="ex TR27-5">
+                </div>
+                <div class="tiling-form-input">
+                    <label id="global-id-label">Participant global ID</label>
+                    <input type="text" id="global-id-input" name="global_id" placeholder="ex 4810">
+                </div>
+                <div class="tiling-form-input">
+                    <label>Participant birthday</label>
+                    <input type="text" name="birthday" placeholder="ex 12/30/1992">
+                </div>
+                <div class="tiling-form-input">
+                    <label>Participant age (months)</label>
+                    <input type="text" name="age" placeholder="ex 22.6">
+                </div>
+                <div class="tiling-form-input">
+                    <label>Participant gender</label>
+                    <select name="gender">
+                        <option value="1">male</option>
+                        <option value="2">female</option>
+                        <option value="3">other</option>
+                    </select>
+                </div>
+                <div class="tiling-form-input">
+                    <label>Session num</label>
+                    <input type="text" name="session_num" placeholder="ex 5">
+                </div>
+                <div class="tiling-form-input">
+                    <label>Session date</label>
+                    <input type="text" name="session_date" placeholder="ex 12/30/2012">
+                </div>
+                <div class="tiling-form-input">
+                    <label>Items excluded</label>
+                    <input type="text" name="items_excluded" placeholder="ex 0">
+                </div>
+                <div class="tiling-form-input">
+                    <label>Extra categories</label>
+                    <input type="text" name="extra_categories" placeholder="ex 0">
+                </div>
+                <div class="tiling-form-input">
+                    <label>Total number sessions</label>
+                    <input type="text" name="total_num_sessions" placeholder="ex 12">
+                </div>
+                {% if selected_format.details.meta.has_hard_of_hearing %}
+                <div class="tiling-form-input">
+                    <label>Hard of hearing</label>
+                    <label class="checkbox">
+                        <input name="hard_of_hearing" type="checkbox">
+                        Hard of hearing
+                    </label>
+                </div>
+                {% endif %}
+            </div>
+            <div>
+                {% for category in selected_format.details.categories %}
+                    <div class="form-category">
+                        <h4>{{ category.name }} ({{ category.language }})</h4>
+                        {% for word in category.words %}
+                            <div class="word-entry tiling-form-input">
+                                {{ word }}: 
+                                {% for option in selected_format.details.options %}
+                                    <label class="checkbox">
+                                        <input type="radio" name="{{ word }}_report" value="{{ option.value }}"> {{ option.name }}
+                                    </label>
                                 {% endfor %}
                             </div>
                         {% endfor %}
-                        <input class="btn btn-primary" type="submit" value="Add MCDI">
                     </div>
-                </div>
+                {% endfor %}
+                <input class="btn btn-primary" type="submit" value="Add MCDI">
             </div>
         </form>
     </div>
