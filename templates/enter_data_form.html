@@ -89,12 +89,14 @@
                         <h4>{{ category.name }} ({{ category.language }})</h4>
                         {% for word in category.words %}
                             <div class="word-entry tiling-form-input">
-                                {{ word }}: 
+                                {{ word }}:
+                                <div class="word-entry-options">
                                 {% for option in selected_format.details.options %}
                                     <label class="checkbox">
                                         <input type="radio" name="{{ word }}_report" value="{{ option.value }}"> {{ option.name }}
                                     </label>
                                 {% endfor %}
+                                </div>
                             </div>
                         {% endfor %}
                     </div>

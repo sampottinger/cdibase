@@ -99,6 +99,12 @@
 {
     display: inline-block;
     padding: 5px 10px 5px 10px;
+    min-width: 140px;
+}
+
+.word-entry-options
+{
+    color: #808080;
 }
 
 #login-form-container .wide-input
