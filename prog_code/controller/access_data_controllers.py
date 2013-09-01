@@ -20,6 +20,7 @@ from ..struct import models
 
 from daxlabbase import app
 
+
 @app.route("/access_data")
 @session_util.require_login(access_data=True)
 def access_data():

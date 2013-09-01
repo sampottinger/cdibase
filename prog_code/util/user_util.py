@@ -9,8 +9,6 @@ import string
 
 import werkzeug
 
-import flask.ext.mail as flask_mail
-
 from ..struct import models
 
 import db_util
@@ -84,14 +82,11 @@ def create_new_user(email, can_enter_data, can_access_data, can_change_formats,
         can_change_formats, can_use_api_key, can_admin)
     db_util.create_user_model(user)
 
-    registration_message = flask_mail.Message(
+    mail_util.send_msg(
+        email,
         "Your DaxlabBase Account",
-        sender="daxlab@gleap.org",
-        recipients=[email],
-        body=SIGN_UP_MSG % (email, password)
+        SIGN_UP_MSG % (email, password)
     )
-
-    mail_util.send_msg(registration_message)
 
 def check_user_password(email, password):
     """Check if the given password is correct.
@@ -169,14 +164,11 @@ def reset_password(email, pass_len=10):
     new_pass = generate_password(pass_len)
     change_user_password(email, new_pass)
 
-    registration_message = flask_mail.Message(
+    mail_util.send_msg(
+        email,
         "Your DaxlabBase Account",
-        sender="daxlab@gleap.org",
-        recipients=[email],
-        body=RESET_PASSWORD_MSG % (email, new_pass)
+        RESET_PASSWORD_MSG % (email, new_pass)
     )
-
-    mail_util.send_msg(registration_message)
 
 def get_user(identifier):
     """Get user account information for the user with the given email.

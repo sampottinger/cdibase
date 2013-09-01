@@ -19,8 +19,6 @@ from prog_code.util import session_util
 app = flask.Flask(__name__)
 app.config.from_pyfile('flask_config.cfg')
 app.config['UPLOAD_FOLDER'] = file_util.UPLOAD_FOLDER
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_FAIL_SILENTLY'] = False
 mail_util.init_mail(app)
 
 from prog_code.controller import access_data_controllers

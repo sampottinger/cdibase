@@ -43,6 +43,7 @@ class MailKeeper:
         @type app: flask.Flask
         """
         self.__mail = flask_mail.Mail(app)
+        self.__from_addr = app.config['MAIL_SEND_FROM']
 
     def get_mail_instance(self):
         """Get the underlying Flask-Mail client.
@@ -51,6 +52,9 @@ class MailKeeper:
         @rtype: flaskext.mail.Mail
         """
         return self.__mail
+
+    def get_from_addr(self):
+        return self.__from_addr
 
 
 def init_mail(app):
@@ -66,15 +70,24 @@ def init_mail(app):
     MailKeeper.init_mail(app)
 
 
-def send_msg(message):
+def send_msg(email, subject, message):
     """Send an email.
 
     @param message: The message to send.
     @type message: flaskext.mail.Message
     """
     with mail_lock:
+        
         mail_keeper = MailKeeper.get_instance()
+        
         if mail_keeper:
-            mail_keeper.get_mail_instance().send(message)
+            flask_message = flask_mail.Message(
+                subject,
+                sender=mail_keeper.get_from_addr(),
+                recipients=[email],
+                body=message
+            )
+            mail_keeper.get_mail_instance().send(flask_message)
+        
         else:
             print message
