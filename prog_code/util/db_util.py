@@ -401,7 +401,7 @@ def create_user_model(user):
     cursor.execute(
         '''INSERT INTO users (email, password_hash, can_enter_data,
             can_edit_parents,can_access_data, can_change_formats,
-            can_use_api_key, can_admin) VALUES (?, ?, ?, ?, ?, ?, ?)''',
+            can_use_api_key, can_admin) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
         (
             user.email,
             user.password_hash,
