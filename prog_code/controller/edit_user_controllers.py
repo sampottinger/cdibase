@@ -124,6 +124,7 @@ def add_user():
         user_util.create_new_user(
             email,
             request.form.get("can_enter_data", "") == "on",
+            request.form.get("can_edit_parents", "") == "on",
             request.form.get("can_access_data", "") == "on",
             request.form.get("can_change_formats", "") == "on",
             request.form.get("can_use_api_key", "") == "on",

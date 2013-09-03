@@ -55,8 +55,8 @@ def generate_password(pass_len=10):
     return ''.join([random.choice(chars) for i in range(pass_len)])
 
 
-def create_new_user(email, can_enter_data, can_access_data, can_change_formats,
-    can_use_api_key, can_admin):
+def create_new_user(email, can_enter_data, can_edit_parents, can_access_data,
+    can_change_formats, can_use_api_key, can_admin):
     """Create and persist a new user, sending account info by email in process.
 
     @param email: The email address of the user to create an account for.
@@ -78,8 +78,8 @@ def create_new_user(email, can_enter_data, can_access_data, can_change_formats,
     email = email.lower()
     password = generate_password()
     pass_hash = werkzeug.generate_password_hash(password)
-    user = models.User(-1, email, pass_hash, can_enter_data, can_access_data,
-        can_change_formats, can_use_api_key, can_admin)
+    user = models.User(-1, email, pass_hash, can_enter_data, can_edit_parents,
+        can_access_data, can_change_formats, can_use_api_key, can_admin)
     db_util.create_user_model(user)
 
     mail_util.send_msg(
