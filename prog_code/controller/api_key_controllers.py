@@ -68,7 +68,7 @@ def make_filter(field, value):
     )
 
 
-@app.route("/config_api_key")
+@app.route("/base/config_api_key")
 @session_util.require_login(use_api_key=True)
 def config_api_keys():
     """GUI page for configuring API keys.
@@ -85,16 +85,16 @@ def config_api_keys():
     )
 
 
-@app.route("/config_api_key/new")
+@app.route("/base/config_api_key/new")
 @session_util.require_login(use_api_key=True)
 def create_api_key():
     user_id = session_util.get_user_id()
     api_key_util.create_new_api_key(user_id)
     flask.session["confirmation"] = "New API key generated."
-    return flask.redirect("/config_api_key")
+    return flask.redirect("/base/config_api_key")
 
 
-@app.route("/api/v0/mcdi_metadata.json")
+@app.route("/base/api/v0/mcdi_metadata.json")
 def get_child_info_by_api():
     api_key = flask.request.args.get('api_key', None)
     if not api_key:

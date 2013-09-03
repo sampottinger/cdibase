@@ -19,16 +19,18 @@ from prog_code.util import session_util
 app = flask.Flask(__name__)
 app.config.from_pyfile('flask_config.cfg')
 app.config['UPLOAD_FOLDER'] = file_util.UPLOAD_FOLDER
-mail_util.init_mail(app)
+if not app.config['NO_MAIL']:
+    mail_util.init_mail(app)
 
 from prog_code.controller import access_data_controllers
 from prog_code.controller import account_controllers
 from prog_code.controller import api_key_controllers
+from prog_code.controller import edit_parent_controllers
 from prog_code.controller import edit_user_controllers
 from prog_code.controller import enter_data_controllers
 from prog_code.controller import format_controllers
 
-@app.route("/")
+@app.route("/base")
 def main():
     """Controller for the daxlabbase homepage.
 

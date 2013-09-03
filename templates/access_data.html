@@ -14,7 +14,7 @@
 <div class="row-fluid">
     <div class="span5">
         <h3>Filter Dataset</h3>
-        <form action="/access_data/add_filter" method="POST">
+        <form action="/base/access_data/add_filter" method="POST">
             <table class="table table-striped">
                 <tr>
                     <th>Filter</th>
@@ -23,7 +23,7 @@
                 {% for filter in filters %}
                 <tr>
                     <td>{{ filter }}</td>
-                    <td><a href="/access_data/delete_filter/{{ loop.index0 }}">delete</a></td>
+                    <td><a href="/base/access_data/delete_filter/{{ loop.index0 }}">delete</a></td>
                 </tr>
                 {% endfor %}
             </table>
@@ -72,7 +72,7 @@
     <div class="span2"></div>
     <div class="span5">
         <h3>Download Results</h3>
-        <form method="GET" id="mcdi-form" action="/access_data/download_mcdi_results">
+        <form method="GET" id="mcdi-form" action="/base/access_data/download_mcdi_results">
             <div class="form-entry">
                 <label>Presentation format</label>
                 <select name="format">

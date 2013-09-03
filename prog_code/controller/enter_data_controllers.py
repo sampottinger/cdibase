@@ -18,7 +18,7 @@ from daxlabbase import app
 NOT_FOUND_MSG = "[ not found ]"
 
 
-@app.route("/enter_data")
+@app.route("/base/enter_data")
 @session_util.require_login(enter_data=True)
 def enter_data_index():
     """Controller for listing of various forms / MCDI types.
@@ -38,7 +38,7 @@ def enter_data_index():
     )
 
 
-@app.route("/enter_data/<format_name>", methods=["GET", "POST"])
+@app.route("/base/enter_data/<format_name>", methods=["GET", "POST"])
 @session_util.require_login(enter_data=True)
 def enter_data_form(format_name):
     """Actual data entry form controller.
@@ -57,7 +57,7 @@ def enter_data_form(format_name):
     selected_format = db_util.load_mcdi_model(format_name)
     if selected_format == None:
         flask.session["error"] = "Could not the specified MCDI format."
-        return flask.redirect("/enter_data")
+        return flask.redirect("/base/enter_data")
 
     # Render form
     if request.method == "GET":
@@ -248,7 +248,7 @@ def enter_data_form(format_name):
         return flask.redirect(request.path)
 
 
-@app.route("/enter_data/lookup_global_id/<study_name>/<participant_study_id>")
+@app.route("/base/enter_data/lookup_global_id/<study_name>/<participant_study_id>")
 @session_util.require_login(enter_data=True)
 def lookup_global_id(study_name, participant_study_id):
     global_id = db_util.lookup_global_participant_id(study_name,

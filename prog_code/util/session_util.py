@@ -30,7 +30,7 @@ def get_standard_template_values():
 
 
 def require_login(access_data=False, admin=False, enter_data=False,
-    change_formats=False, use_api_key=False):
+    edit_parents=False,change_formats=False, use_api_key=False):
     """Decorator that requires that a user be logged in to do an operation.
 
     Decorator that requires that a user be logged in to do an operation and
@@ -58,27 +58,30 @@ def require_login(access_data=False, admin=False, enter_data=False,
         def decorated_function(*args, **kwargs):
             if not is_logged_in():
                 flask.session["error"] = "Whoops! For security, please log in again."
-                return flask.redirect("/account/login")
+                return flask.redirect("/base/account/login")
             user = user_util.get_user(get_user_email())
             if not user:
                 del flask.session["email"]
                 flask.session["error"] = "Whoops! For security, please log in again."
-                return flask.redirect("/account/login")
+                return flask.redirect("/base/account/login")
             if access_data and not user.can_access_data:
                 flask.session["error"] = "You are not authorized to access data."
-                return flask.redirect("/")
+                return flask.redirect("/base")
+            if edit_parents and not user.can_edit_parents:
+                flask.session["error"] = "You are not authorized to edit parent accounts."
+                return flask.redirect("/base")
             if admin and not user.can_admin:
                 flask.session["error"] = "You are not authorized to admin."
-                return flask.redirect("/")
+                return flask.redirect("/base")
             if enter_data and not user.can_enter_data:
                 flask.session["error"] = "You are not authorized to enter data."
-                return flask.redirect("/")
+                return flask.redirect("/base")
             if change_formats and not user.can_change_formats:
                 flask.session["error"] = "You are not authorized to change formats."
-                return flask.redirect("/")
+                return flask.redirect("/base")
             if use_api_key and not user.can_use_api_key:
                 flask.session["error"] = "You are not authorized to use API keys."
-                return flask.redirect("/")
+                return flask.redirect("/base")
             return orig_view(*args, **kwargs)
         decorated_function.__name__ = orig_view.__name__
         return decorated_function

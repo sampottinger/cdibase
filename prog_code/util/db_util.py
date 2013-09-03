@@ -372,12 +372,13 @@ def save_user_model(user, existing_email=None):
     cursor = connection.cursor()
     cursor.execute(
         '''UPDATE users SET email=?,password_hash=?,can_enter_data=?,
-           can_access_data=?,can_change_formats=?,can_use_api_key=?,can_admin=?
-           WHERE email=?''',
+            can_edit_parents=?,can_access_data=?,can_change_formats=?,
+            can_use_api_key=?,can_admin=? WHERE email=?''',
         (
             user.email,
             user.password_hash,
             user.can_enter_data,
+            user.can_edit_parents,
             user.can_access_data,
             user.can_change_formats,
             user.can_use_api_key,
@@ -399,12 +400,13 @@ def create_user_model(user):
     cursor = connection.cursor()
     cursor.execute(
         '''INSERT INTO users (email, password_hash, can_enter_data,
-            can_access_data, can_change_formats, can_use_api_key, can_admin)
-            VALUES (?, ?, ?, ?, ?, ?, ?)''',
+            can_edit_parents,can_access_data, can_change_formats,
+            can_use_api_key, can_admin) VALUES (?, ?, ?, ?, ?, ?, ?)''',
         (
             user.email,
             user.password_hash,
             user.can_enter_data,
+            user.can_edit_parents,
             user.can_access_data,
             user.can_change_formats,
             user.can_use_api_key,

@@ -12,6 +12,7 @@
         <tr>
             <th>email</th>
             <th>can enter data</th>
+            <th>can edit parents</th>
             <th>can access data</th>
             <th>can change formats</th>
             <th>can use API key</th>
@@ -23,19 +24,20 @@
         <tr>
             <td>{{ user.email }}</td>
             <td>{{ user.can_enter_data == 1 }}</td>
+            <td>{{ user.can_edit_parents == 1 }}</td>
             <td>{{ user.can_access_data == 1 }}</td>
             <td>{{ user.can_change_formats == 1 }}</td>
             <td>{{ user.can_use_api_key == 1 }}</td>
             <td>{{ user.can_admin == 1 }}</td>
             <td>
-                <a href="/edit_users/{{ user.email }}/edit">edit</a>
+                <a href="/base/edit_users/{{ user.email }}/edit">edit</a>
             </td>
             <td>
-                <a href="/edit_users/{{ user.email }}/delete">delete</a>
+                <a href="/base/edit_users/{{ user.email }}/delete">delete</a>
             </td>
         </tr>
         {% endfor %}
     </tbody></table>
-    <a href="/edit_users/_add">Add new user >></a>
+    <a href="/base/edit_users/_add">Add new user >></a>
 </div>
 {% endblock %}

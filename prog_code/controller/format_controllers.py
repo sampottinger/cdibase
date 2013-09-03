@@ -108,7 +108,7 @@ FORMATS = {
 }
 
 
-@app.route("/edit_formats")
+@app.route("/base/edit_formats")
 @session_util.require_login(change_formats=True)
 def edit_formats():
     """Index page for changing data management behavior.
@@ -130,7 +130,7 @@ def edit_formats():
     )
 
 
-@app.route("/edit_formats/<format_type>/_add", methods=["GET", "POST"])
+@app.route("/base/edit_formats/<format_type>/_add", methods=["GET", "POST"])
 @session_util.require_login(change_formats=True)
 def upload_format(format_type):
     """Handler to save a specification.
@@ -156,7 +156,7 @@ def upload_format(format_type):
 
     if not format_type in FORMATS:
         flask.session["error"] = "Invalid format type."
-        return flask.redirect("/edit_formats")
+        return flask.redirect("/base/edit_formats")
 
     format = FORMATS[format_type]
 
@@ -177,19 +177,19 @@ def upload_format(format_type):
         if name == "":
             flask.session["error"] = "Name not specified. Please try again."
             return flask.redirect(
-                "/edit_formats/%s/_add" % format.url_component)
+                "/base/edit_formats/%s/_add" % format.url_component)
 
         if upload == None:
             flask.session["error"] = "Upload not provided. Please try again."
             return flask.redirect(
-                "/edit_formats/%s/_add" % format.url_component)
+                "/base/edit_formats/%s/_add" % format.url_component)
 
         safe_name = name.replace(" ", "")
         safe_name = urllib.quote_plus(safe_name)
 
         if format.load_model_function(safe_name) != None:
             flask.session["error"] = "\"%s\" already exists." % name
-            return flask.redirect("/edit_formats")
+            return flask.redirect("/base/edit_formats")
 
         # Check file upload valid
         if upload and file_util.allowed_file(upload.filename):
@@ -205,13 +205,13 @@ def upload_format(format_type):
             format.save_model_function(new_model)
             
             flask.session["confirmation"] = "\"%s\" added." % name
-            return flask.redirect("/edit_formats")
+            return flask.redirect("/base/edit_formats")
 
     flask.session["error"] = "File upload failed. Please try again."
-    return flask.redirect("/edit_formats")
+    return flask.redirect("/base/edit_formats")
 
 
-@app.route("/edit_formats/<format_type>/<format_name>/delete")
+@app.route("/base/edit_formats/<format_type>/<format_name>/delete")
 @session_util.require_login(change_formats=True)
 def delete_format(format_type, format_name):
     """
@@ -234,7 +234,7 @@ def delete_format(format_type, format_name):
     """
     if not format_type in FORMATS:
         flask.session["error"] = "Invalid format type."
-        return flask.redirect("/edit_formats")
+        return flask.redirect("/base/edit_formats")
 
     format = FORMATS[format_type]
 
@@ -242,17 +242,17 @@ def delete_format(format_type, format_name):
     if format_model == None:
         error_msg = "\"%s\" not found. Possibly already deleted." % format_name
         flask.session["error"] = error_msg
-        return flask.redirect("/edit_formats")
+        return flask.redirect("/base/edit_formats")
 
     filename = os.path.join(app.config["UPLOAD_FOLDER"], format_model.filename)
     os.remove(filename)
     format.delete_model_function(format_model.safe_name)
 
     flask.session["confirmation"] = "\"%s\" deleted." % format_name
-    return flask.redirect("/edit_formats")
+    return flask.redirect("/base/edit_formats")
 
 
-@app.route("/edit_formats/download/<filename>")
+@app.route("/base/edit_formats/download/<filename>")
 @session_util.require_login(change_formats=True)
 def uploaded_file(filename):
     """Controller to render an uploaded file.

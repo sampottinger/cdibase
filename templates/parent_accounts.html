@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block jsinclude %}
+<script type="text/javascript" src="/static/js/access_data.js"></script>
+{% endblock %}
+
+{% block contents %}
+<div class="hero-unit">
+    <h3>Ask parents to complete MCDIs online.</h3>
+    <p>
+        DaxlabBase sends emails to parents, asking them to complete MCDIs for their child or children online.
+    </p>
+</div>
+<div class="small-center-content" id="unselected-mcdi-selector">
+    <h3>Select child record type</h3>
+    <ul>
+        <li><a href="/base/parent_accounts/email">send MCDI forms by email >></a></li>
+        <li><a href="/base/parent_accounts/create">create parent accounts >></a></li>
+        <li><a href="/base/parent_accounts/edit">edit parent accounts >></a></li>
+    </ul>
+</div>
+{% endblock %}

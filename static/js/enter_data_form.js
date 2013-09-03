@@ -1,4 +1,4 @@
-var LOOKUP_URL_TEMPLATE = "/enter_data/lookup_global_id/%s/%s";
+var LOOKUP_URL_TEMPLATE = "/base/enter_data/lookup_global_id/%s/%s";
 var GLOBAL_ID_NOT_FOUND_VAL = "[ not found ]";
 var GLOBAL_ID_LABEL_TEMPLATE = "Participant global ID (%s)";
 

@@ -13,12 +13,12 @@
     {% for format in mcdi_formats %}
         <tr>
             <td>{{ format.human_name }}</td>
-            <td><a href="/edit_formats/download/{{ format.filename }}">download</a></td>
-            <td><a href="/edit_formats/mcdi/{{ format.safe_name }}/delete">delete</a></td>
+            <td><a href="/base/edit_formats/download/{{ format.filename }}">download</a></td>
+            <td><a href="/base/edit_formats/mcdi/{{ format.safe_name }}/delete">delete</a></td>
         </tr>
     {% endfor %}
     </tbody></table>
-    <a href="/edit_formats/mcdi/_add">Upload new MCDI format >></a>
+    <a href="/base/edit_formats/mcdi/_add">Upload new MCDI format >></a>
 </div>
 <div class="format-control">
     <h3>Data Presentation Formats</h3>
@@ -26,12 +26,12 @@
     {% for format in presentation_formats %}
         <tr>
             <td>{{ format.human_name }}</td>
-            <td><a href="/edit_formats/download/{{ format.filename }}">download</a></td>
-            <td><a href="/edit_formats/presentation/{{ format.safe_name }}/delete">delete</a></td>
+            <td><a href="/base/edit_formats/download/{{ format.filename }}">download</a></td>
+            <td><a href="/base/edit_formats/presentation/{{ format.safe_name }}/delete">delete</a></td>
         </tr>
     {% endfor %}
     </tbody></table>
-    <a href="/edit_formats/presentation/_add">Upload new presentation format >></a>
+    <a href="/base/edit_formats/presentation/_add">Upload new presentation format >></a>
 </div>
 <div class="format-control">
     <h3>MCDI Percentile Tables</h3>
@@ -39,11 +39,11 @@
     {% for table in percentile_tables %}
         <tr>
             <td>{{ table.human_name }}</td>
-            <td><a href="/edit_formats/download/{{ table.filename }}">download</a></td>
-            <td><a href="/edit_formats/percentile/{{ table.safe_name }}/delete">delete</a></td>
+            <td><a href="/base/edit_formats/download/{{ table.filename }}">download</a></td>
+            <td><a href="/base/edit_formats/percentile/{{ table.safe_name }}/delete">delete</a></td>
         </tr>
     {% endfor %}
     </tbody></table>
-    <a href="/edit_formats/percentile/_add">Upload new percentile table >></a>
+    <a href="/base/edit_formats/percentile/_add">Upload new percentile table >></a>
 </div>
 {% endblock %}

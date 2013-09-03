@@ -295,7 +295,8 @@ class User:
     """Record of a user account providing someone access to DaxlabBase."""
 
     def __init__(self, db_id, email, password_hash, can_enter_data,
-        can_access_data, can_change_formats, can_use_api_key, can_admin):
+        can_edit_parents, can_access_data, can_change_formats, can_use_api_key,
+        can_admin):
         """Create a new User record.
 
         @param db_id: The unique numerical ID assigned to this user account in
@@ -324,6 +325,7 @@ class User:
         self.email = email
         self.password_hash = password_hash
         self.can_enter_data = can_enter_data
+        self.can_edit_parents = can_edit_parents
         self.can_access_data = can_access_data
         self.can_change_formats = can_change_formats
         self.can_use_api_key = can_use_api_key

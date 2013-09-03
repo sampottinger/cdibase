@@ -21,7 +21,7 @@ from ..struct import models
 from daxlabbase import app
 
 
-@app.route("/access_data")
+@app.route("/base/access_data")
 @session_util.require_login(access_data=True)
 def access_data():
     """Index page for building database queries.
@@ -38,25 +38,25 @@ def access_data():
     )
 
 
-@app.route("/access_data/download_mcdi_results")
+@app.route("/base/access_data/download_mcdi_results")
 @session_util.require_login(access_data=True)
 def execute_access_request():
     session_util.set_waiting_on_download(True)
     flask.session["format"] = flask.request.args.get("format", "")
     if flask.request.args.get("consolidated_csv", "") == "on":
-        return flask.redirect("/access_data/download_mcdi_results.csv")
+        return flask.redirect("/base/access_data/download_mcdi_results.csv")
     else:
-        return flask.redirect("/access_data/download_mcdi_results.zip")
+        return flask.redirect("/base/access_data/download_mcdi_results.zip")
 
 
-@app.route("/access_data/is_waiting")
+@app.route("/base/access_data/is_waiting")
 @session_util.require_login(access_data=True)
 def is_waiting_on_download():
     ret_val = {'is_waiting': session_util.is_waiting_on_download()}
     return json.dumps(ret_val)
 
 
-@app.route("/access_data/abort")
+@app.route("/base/access_data/abort")
 @session_util.require_login(access_data=True)
 def abort_download():
     session_util.set_waiting_on_download(False)
@@ -65,7 +65,7 @@ def abort_download():
 
 
 
-@app.route("/access_data/download_mcdi_results.zip")
+@app.route("/base/access_data/download_mcdi_results.zip")
 @session_util.require_login(access_data=True)
 def execute_zip_access_request():
     """Controller for finding and rendering archive of database query results.
@@ -77,7 +77,7 @@ def execute_zip_access_request():
 
     if not session_util.get_filters():
         flask.session["error"] = "No filters selected! Please add at least one filter."
-        return flask.redirect("/access_data")
+        return flask.redirect("/base/access_data")
 
     snapshots = filter_util.run_search_query(
         session_util.get_filters(),
@@ -86,7 +86,7 @@ def execute_zip_access_request():
 
     if len(snapshots) == 0:
         flask.session["error"] = "No matching data found."
-        return flask.redirect("/access_data")
+        return flask.redirect("/base/access_data")
 
     # TODO: Handle unknown format
     pres_format_name = flask.session["format"]
@@ -107,7 +107,7 @@ def execute_zip_access_request():
     return response
 
 
-@app.route("/access_data/download_mcdi_results.csv")
+@app.route("/base/access_data/download_mcdi_results.csv")
 @session_util.require_login(access_data=True)
 def execute_csv_access_request():
     """Controller for finding and rendering archive of database query results.
@@ -119,7 +119,7 @@ def execute_csv_access_request():
 
     if not session_util.get_filters():
         flask.session["error"] = "No filters selected! Please add atleast one filter."
-        return flask.redirect("/access_data")
+        return flask.redirect("/base/access_data")
 
     snapshots = filter_util.run_search_query(
         session_util.get_filters(),
@@ -128,7 +128,7 @@ def execute_csv_access_request():
 
     if len(snapshots) == 0:
         flask.session["error"] = "No matching data found."
-        return flask.redirect("/access_data")
+        return flask.redirect("/base/access_data")
 
     # TODO: Handle unknown format
     pres_format_name = flask.session["format"]
@@ -149,7 +149,7 @@ def execute_csv_access_request():
     return response
 
 
-@app.route("/access_data/add_filter", methods=["POST"])
+@app.route("/base/access_data/add_filter", methods=["POST"])
 @session_util.require_login(access_data=True)
 def add_filter():
     """Controller to add a filter to the query the user is currently building.
@@ -170,23 +170,23 @@ def add_filter():
     # Check correct fields provided
     if field == None:
         flask.session["error"] = "Field not specified. Please try again."
-        return flask.redirect("/access_data")
+        return flask.redirect("/base/access_data")
     if operator == None:
         flask.session["error"] = "Operator not specified. Please try again."
-        return flask.redirect("/access_data")
+        return flask.redirect("/base/access_data")
     if operand == None:
         flask.session["error"] = "Operand not specified. Please try again."
-        return flask.redirect("/access_data")
+        return flask.redirect("/base/access_data")
 
     # Create new filter
     new_filter = models.Filter(field, operator, operand)
     session_util.add_filter(new_filter)
 
     flask.session["confirmation"] = "Filter created."
-    return flask.redirect("/access_data")
+    return flask.redirect("/base/access_data")
 
 
-@app.route("/access_data/delete_filter/<int:filter_index>")
+@app.route("/base/access_data/delete_filter/<int:filter_index>")
 @session_util.require_login(access_data=True)
 def delete_filter(filter_index):
     """Controller to delete a filter from query the user is currently building.
@@ -202,7 +202,7 @@ def delete_filter(filter_index):
     """
     if session_util.delete_filter(filter_index):
         flask.session["confirmation"] = "Filter deleted."
-        return flask.redirect("/access_data")
+        return flask.redirect("/base/access_data")
     else:
         flask.session["error"] = "Filter already deleted."
-        return flask.redirect("/access_data")
+        return flask.redirect("/base/access_data")

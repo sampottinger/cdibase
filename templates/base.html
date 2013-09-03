@@ -13,40 +13,42 @@
             <div class="navbar-inner">  
                 <div class="container">
                     <ul class="nav">
-                        <li {% if cur_page == "home" %}class="active"{% endif %}><a class="brand" href="/">DaxlabBase</a></li>
+                        <li {% if cur_page == "home" %}class="active"{% endif %}><a class="brand" href="/base">DaxlabBase</a></li>
                         {% if user %}
                         
                         {% if user.can_enter_data %}
-                        <li {% if cur_page == "enter_data" %}class="active"{% endif %}><a href="/enter_data">Enter Data</a></li>
+                        <li {% if cur_page == "enter_data" %}class="active"{% endif %}><a href="/base/enter_data">Enter Data</a></li>
+                        {% endif %}
+
+                        {% if user.can_edit_parents %}
+                        <li {% if cur_page == "edit_parents" %}class="active"{% endif %}><a href="/base/parent_accounts">Parent Accounts</a></li>
                         {% endif %}
                         
                         {% if user.can_access_data %}
-                        <li {% if cur_page == "access_data" %}class="active"{% endif %}><a href="/access_data">Access Data</a></li>
+                        <li {% if cur_page == "access_data" %}class="active"{% endif %}><a href="/base/access_data">Access Data</a></li>
                         {% endif %}
                         
                         {% if user.can_change_formats %}
-                        <li {% if cur_page == "edit_formats" %}class="active"{% endif %}><a href="/edit_formats">Edit Formats</a></li>
+                        <li {% if cur_page == "edit_formats" %}class="active"{% endif %}><a href="/base/edit_formats">Edit Formats</a></li>
                         {% endif %}
                         
                         {% if user.can_admin %}
-                        <li {% if cur_page == "edit_users" %}class="active"{% endif %}><a href="/edit_users">Edit Users</a></li>
+                        <li {% if cur_page == "edit_users" %}class="active"{% endif %}><a href="/base/edit_users">Edit Users</a></li>
                         {% endif %}
 
                         {% if user.can_use_api_key %}
-                        <li {% if cur_page == "conifg_api_key" %}class="active"{% endif %}><a href="/config_api_key">Configure API Key</a></li>
+                        <li {% if cur_page == "conifg_api_key" %}class="active"{% endif %}><a href="/base/config_api_key">API</a></li>
                         {% endif %}
                         
-                        <li {% if cur_page == "account" %}class="active"{% endif %}><a href="/account">Your Account</a></li>
-                        
                         {% else %}
-                        <li {% if cur_page == "login" %}class="active"{% endif %}><a href="/account/login">Login</a></li>
-                        <li {% if cur_page == "forgot_password" %}class="active"{% endif %}><a href="/account/forgot_password">Forgot Password</a></li>
+                        <li {% if cur_page == "login" %}class="active"{% endif %}><a href="/base/account/login">Login</a></li>
+                        <li {% if cur_page == "forgot_password" %}class="active"{% endif %}><a href="/base/account/forgot_password">Forgot Password</a></li>
                         {% endif %}
                     </ul>
                     <div class="pull-right align-right">
                         {% if email %}
-                        Logged in as {{ email }}<br>
-                        <a href="/account/logout">Logout</a>
+                        {{ email }}<br>
+                        <a href="/base/account">Your Account</a> - <a href="/base/account/logout">Logout</a>
                         {% endif %}
                     </div>
                 </div>

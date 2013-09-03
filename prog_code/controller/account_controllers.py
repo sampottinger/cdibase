@@ -12,7 +12,7 @@ from ..util import user_util
 from daxlabbase import app
 
 
-@app.route("/account/login", methods=["GET", "POST"])
+@app.route("/base/account/login", methods=["GET", "POST"])
 def login():
     """Controller to let a user authenticate with the application.
 
@@ -33,14 +33,14 @@ def login():
 
         if not user_util.check_user_password(email, password):
             flask.session["error"] = "Whoops! Either your username or password was wrong."
-            return flask.redirect("/account/login")
+            return flask.redirect("/base/account/login")
 
         flask.session["email"] = email
         flask.session["confirmation"] = "Hello %s! You logged in successfully." % email
-        return flask.redirect("/")
+        return flask.redirect("/base")
 
 
-@app.route("/account/forgot_password", methods=["GET", "POST"])
+@app.route("/base/account/forgot_password", methods=["GET", "POST"])
 def forgot_password():
     """Controller to let a user reset their password if they forgot it.
 
@@ -57,12 +57,15 @@ def forgot_password():
 
     elif request.method == "POST":
         email = request.form.get("email", "")
-        user_util.reset_password(email)
+
+        if user_util.get_user(email):
+            user_util.reset_password(email)
+
         flask.session["confirmation"] = "A new password has been sent to %s." % email
-        return flask.redirect("/account/login")
+        return flask.redirect("/base/account/login")
 
 
-@app.route("/account/logout")
+@app.route("/base/account/logout")
 def logout():
     """Controller to end a user's session with the application.
 
@@ -71,10 +74,10 @@ def logout():
     """
     session_util.logout()
     flask.session["confirmation"] = "Logged out."
-    return flask.redirect("/")
+    return flask.redirect("/base")
 
 
-@app.route("/account")
+@app.route("/base/account")
 @session_util.require_login()
 def account():
     """Controller to render index page of controlls for editing a user account.
@@ -89,7 +92,7 @@ def account():
     )
 
 
-@app.route("/account/change_password", methods=["GET", "POST"])
+@app.route("/base/account/change_password", methods=["GET", "POST"])
 @session_util.require_login()
 def change_password():
     """Controller to change a user password.
@@ -113,12 +116,12 @@ def change_password():
 
         if not user_util.check_user_password(email, cur_password):
             flask.session["error"] = "Current password incorrect."
-            return flask.redirect("/account/change_password")
+            return flask.redirect("/base/account/change_password")
 
         if not new_password == confirm_new_password:
             flask.session["error"] = "New password and confirmation of new password are not the same."
-            return flask.redirect("/account/change_password")
+            return flask.redirect("/base/account/change_password")
 
         user_util.change_user_password(email, new_password)
         flask.session["confirmation"] = "Your password has been updated."
-        return flask.redirect("/account")
+        return flask.redirect("/base/account")

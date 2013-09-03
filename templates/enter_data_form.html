@@ -16,7 +16,7 @@
                 {% if format.safe_name == selected_format.safe_name %}
                 {{ format.human_name }}
                 {% else %}
-                <a href="/enter_data/{{ format.safe_name }}">{{ format.human_name }}</a></li>
+                <a href="/base/enter_data/{{ format.safe_name }}">{{ format.human_name }}</a></li>
                 {% endif %}
             {% endfor %}
         </ul>

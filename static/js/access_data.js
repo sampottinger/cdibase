@@ -7,7 +7,7 @@ function restoreDownloadButton () {
 
 
 function checkIfDone () {
-    $.getJSON('/access_data/is_waiting', function(status) {
+    $.getJSON('/base/access_data/is_waiting', function(status) {
         if (!status.is_waiting)
             restoreDownloadButton();
         else
@@ -23,7 +23,7 @@ $(window).load(function () {
     $('#download-button').click(function() {
         $('#download-button-holder').hide();
         $('#status-display').slideDown(function () {
-            var url = '/access_data/download_mcdi_results?';
+            var url = '/base/access_data/download_mcdi_results?';
             url = url +  $('#mcdi-form').serialize();
             $('#hidden-frame').attr('src', url);
             checkIfDone();
