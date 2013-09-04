@@ -17,7 +17,7 @@ loadGlobalParticipantID = function()
   $.get(lookupURL, function(data) {
     if(data == GLOBAL_ID_NOT_FOUND_VAL)
     {
-      $("#global-id-label").html(GLOBAL_ID_LABEL_TEMPLATE.format(
+      $("#global-id-label").html(sprintf(GLOBAL_ID_LABEL_TEMPLATE,
         "Not found. Leave blank to make new ID."));
     }
     else

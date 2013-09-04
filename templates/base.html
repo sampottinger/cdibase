@@ -21,7 +21,7 @@
                         {% endif %}
 
                         {% if user.can_edit_parents %}
-                        <li {% if cur_page == "edit_parents" %}class="active"{% endif %}><a href="/base/parent_accounts">Parent Accounts</a></li>
+                        <li {% if cur_page == "edit_parents" %}class="active"{% endif %}><a href="/base/parent_accounts">Send Parent MCDIs</a></li>
                         {% endif %}
                         
                         {% if user.can_access_data %}
@@ -40,9 +40,6 @@
                         <li {% if cur_page == "conifg_api_key" %}class="active"{% endif %}><a href="/base/config_api_key">API</a></li>
                         {% endif %}
                         
-                        {% else %}
-                        <li {% if cur_page == "login" %}class="active"{% endif %}><a href="/base/account/login">Login</a></li>
-                        <li {% if cur_page == "forgot_password" %}class="active"{% endif %}><a href="/base/account/forgot_password">Forgot Password</a></li>
                         {% endif %}
                     </ul>
                     <div class="pull-right align-right">

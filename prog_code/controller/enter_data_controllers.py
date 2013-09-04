@@ -6,9 +6,11 @@
 
 import flask
 
+from ..util import constants
 from ..util import db_util
 from ..util import interp_util
 from ..util import math_util
+from ..struct import models
 from ..util import session_util
 from ..util import user_util
 
@@ -91,7 +93,7 @@ def enter_data_form(format_name):
         if global_id == "":
             error = "participant global id was empty."
         else:
-            global_id = util.safe_int_interpret(global_id)
+            global_id = interp_util.safe_int_interpret(global_id)
             if global_id == None:
                 error = "participant global id should be a whole number."
         
@@ -158,18 +160,18 @@ def enter_data_form(format_name):
 
         # Parse word entries
         languages = set()
-        count_as_spoken_vals = format.details["count_as_spoken"]
+        count_as_spoken_vals = selected_format.details["count_as_spoken"]
         word_entries = {}
         words_spoken = 0
         total_possible_words = 0
-        for category in format.details["categories"]:
+        for category in selected_format.details["categories"]:
             languages.add(category["language"])
             for word in category["words"]:
                 word_val = request.form.get("%s_report" % word, None)
                 if word_val == None:
                     flask.session["error"] = "%s value missing" % word
                     return flask.redirect(request.path)
-                word_val = util.safe_int_interpret(word_val)
+                word_val = interp_util.safe_int_interpret(word_val)
                 if word_val == None:
                     flask.session["error"] = "%s value invalid" % word
                     return flask.redirect(request.path)
@@ -180,11 +182,11 @@ def enter_data_form(format_name):
 
         # Determine approach percentiles
         if gender == constants.MALE:
-            percentile_table_name = format.details["percentiles"]["male"]
+            percentile_table_name = selected_format.details["percentiles"]["male"]
         elif gender == constants.FEMALE:
-            percentile_table_name = format.details["percentiles"]["female"]
+            percentile_table_name = selected_format.details["percentiles"]["female"]
         else:
-            percentile_table_name = format.details["percentiles"]["other"]
+            percentile_table_name = selected_format.details["percentiles"]["other"]
 
         # TODO(samp): This should be in db_util
         # Calculate percentiles
@@ -197,51 +199,30 @@ def enter_data_form(format_name):
         )
         percentile = int(round(percentile))
 
-        connection = db_util.get_db_connection()
-        cursor = connection.cursor()
-
         # Put in snapshot metadata
-        cmd = "INSERT INTO snapshots VALUES (%s)" % (", ".join("?" * 19))
-        cursor.execute(
-            cmd,
-            (
-                None,
-                global_id,
-                study_id,
-                study,
-                gender,
-                age,
-                birthday,
-                session_date,
-                session_num,
-                total_num_sessions,
-                words_spoken,
-                items_excluded,
-                percentile,
-                extra_categories,
-                revision,
-                ",".join(languages),
-                len(languages),
-                format.details["meta"]["mcdi_type"],
-                hard_of_hearing
-            )
+        new_snapshot = models.SnapshotMetadata(
+            None,
+            global_id,
+            study_id,
+            study,
+            gender,
+            age,
+            birthday,
+            session_date,
+            session_num,
+            total_num_sessions,
+            words_spoken,
+            items_excluded,
+            percentile,
+            extra_categories,
+            revision,
+            languages,
+            len(languages),
+            selected_format.details["meta"]["mcdi_type"],
+            hard_of_hearing
         )
-        new_snapshot_id = cursor.lastrowid
 
-        # Put in snapshot contents
-        for (word, val) in word_entries.items():
-            cursor.execute(
-                "INSERT INTO snapshot_content VALUES (?, ?, ?, ?)",
-                (
-                    new_snapshot_id,
-                    word,
-                    val,
-                    0
-                )
-            )
-
-        connection.commit()
-        connection.close()
+        db_util.insert_snapshot(new_snapshot, word_entries)
 
         flask.session["confirmation"] = "MCDI record added for participant %d." % global_id
 

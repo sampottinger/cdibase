@@ -11,12 +11,86 @@
         DaxlabBase sends emails to parents, asking them to complete MCDIs for their child or children online.
     </p>
 </div>
-<div class="small-center-content" id="unselected-mcdi-selector">
-    <h3>Select child record type</h3>
-    <ul>
-        <li><a href="/base/parent_accounts/email">send MCDI forms by email >></a></li>
-        <li><a href="/base/parent_accounts/create">create parent accounts >></a></li>
-        <li><a href="/base/parent_accounts/edit">edit parent accounts >></a></li>
-    </ul>
-</div>
+<form method="POST">
+    <h3>Send MCDI Forms by Email</h3>
+    <div class="star-legend">
+        * = required, ** = either study and study ID or a global ID is required. Other fields will be specified by the parent or will be filled by the database if left blank.
+    </div>
+    <div>
+        <div class="tiling-form-input">
+            <label>Child Name *</label>
+            <input id="child-name-input" type="text" name="child_name" placeholder="ex John Doe">
+        </div>
+        <div class="tiling-form-input">
+            <label>Parent E-Mail *</label>
+            <input type="text" name="parent_email" placeholder="ex samp@gleap.org">
+        </div>
+        <div class="tiling-form-input">
+            <label>MCDI type *</label>
+            <select name="mcdi-type">
+            {% for format in mcdi_formats %}
+                <option value="{{ format.safe_name }}">{{ format.human_name }}</option>
+            {% endfor %}
+            </select>
+        </div>
+        <div class="tiling-form-input">
+            <label>Study **</label>
+            <input id="study-input" type="text" name="study" placeholder="ex Traj-Wave2">
+        </div>
+        <div class="tiling-form-input">
+            <label>Participant study ID **</label>
+            <input id="study-id-input" type="text" name="study_id" placeholder="ex TR27-5">
+        </div>
+        <div class="tiling-form-input">
+            <label id="global-id-label">Participant global ID **</label>
+            <input type="text" id="global-id-input" name="global_id" placeholder="ex 4810">
+        </div>
+        <div class="tiling-form-input">
+            <label>Participant birthday</label>
+            <input type="text" name="birthday" placeholder="ex 12/30/1992">
+        </div>
+        <div class="tiling-form-input">
+            <label>Participant age (months)</label>
+            <input type="text" name="age" placeholder="ex 22.6">
+        </div>
+        <div class="tiling-form-input">
+            <label>Participant gender</label>
+            <select name="gender">
+                <option value="1">male</option>
+                <option value="2">female</option>
+                <option value="3">other</option>
+            </select>
+        </div>
+        <div class="tiling-form-input">
+            <label>Session num</label>
+            <input type="text" name="session_num" placeholder="ex 5">
+        </div>
+        <div class="tiling-form-input">
+            <label>Session date</label>
+            <input type="text" name="session_date" placeholder="ex 12/30/2012">
+        </div>
+        <div class="tiling-form-input">
+            <label>Items excluded</label>
+            <input type="text" name="items_excluded" placeholder="ex 0">
+        </div>
+        <div class="tiling-form-input">
+            <label>Extra categories</label>
+            <input type="text" name="extra_categories" placeholder="ex 0">
+        </div>
+        <div class="tiling-form-input">
+            <label>Languages (comma sep. no spaces)</label>
+            <input type="text" name="languages" placeholder="ex english,spanish">
+        </div>
+        <div class="tiling-form-input">
+            <label>Hard of hearing</label>
+            <label class="checkbox">
+                <input name="hard_of_hearing" type="checkbox">
+                Hard of hearing
+            </label>
+        </div>
+    </div>
+    <div class="padded-form-controls">
+        <input class="btn btn-primary" type="submit" value="Send MCDI by email">
+    </div>
+</form>
 {% endblock %}

@@ -524,3 +524,102 @@ def create_new_api_key(user_id, api_key):
     connection.close()
 
     return models.APIKey(user_id, api_key)
+
+
+# TODO: Combined for transaction
+def insert_snapshot(snapshot_metadata, word_entries):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    cmd = "INSERT INTO snapshots VALUES (%s)" % (", ".join("?" * 19))
+    cursor.execute(
+        cmd,
+        (
+            None,
+            snapshot_metadata.child_id,
+            snapshot_metadata.study_id,
+            snapshot_metadata.study,
+            snapshot_metadata.gender,
+            snapshot_metadata.age,
+            snapshot_metadata.birthday,
+            snapshot_metadata.session_date,
+            snapshot_metadata.session_num,
+            snapshot_metadata.total_num_sessions,
+            snapshot_metadata.words_spoken,
+            snapshot_metadata.items_excluded,
+            snapshot_metadata.percentile,
+            snapshot_metadata.extra_categories,
+            snapshot_metadata.revision,
+            ",".join(snapshot_metadata.languages),
+            snapshot_metadata.num_languages,
+            snapshot_metadata.mcdi_type,
+            snapshot_metadata.hard_of_hearing
+        )
+    )
+    new_snapshot_id = cursor.lastrowid
+    snapshot_metadata.database_id=new_snapshot_id
+
+    # Put in snapshot contents
+    for (word, val) in word_entries.items():
+        cursor.execute(
+            "INSERT INTO snapshot_content VALUES (?, ?, ?, ?)",
+            (
+                new_snapshot_id,
+                word,
+                val,
+                0
+            )
+        )
+
+    connection.commit()
+    connection.close()
+
+
+def insert_parent_form(form_metadata):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    cmd = "INSERT INTO parent_forms VALUES (%s)" % (", ".join("?" * 18))
+    cursor.execute(
+        cmd,
+        (
+            form_metadata.form_id,
+            form_metadata.child_name,
+            form_metadata.parent_email,
+            form_metadata.mcdi_type,
+            form_metadata.database_id,
+            form_metadata.study_id,
+            form_metadata.study,
+            form_metadata.gender,
+            form_metadata.age,
+            form_metadata.birthday,
+            form_metadata.session_date,
+            form_metadata.session_num,
+            form_metadata.items_excluded,
+            form_metadata.extra_categories,
+            form_metadata.revision,
+            form_metadata.languages,
+            form_metadata.num_languages,
+            form_metadata.hard_of_hearing
+        )
+    )
+
+    connection.commit()
+    connection.close()
+
+
+def get_parent_form_by_id(form_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "SELECT * FROM parent_forms WHERE form_id=?",
+        (form_id,)
+    )
+    form_info = cursor.fetchone()
+    connection.commit()
+    connection.close()
+
+    if form_info:
+        return models.ParentForm(*form_info)
+    else:
+        return None

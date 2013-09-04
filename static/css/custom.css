@@ -99,12 +99,32 @@
 {
     display: inline-block;
     padding: 5px 10px 5px 10px;
-    min-width: 140px;
+    min-width: 230px;
 }
 
 .word-entry-options
 {
     color: #808080;
+}
+
+.padded-form-controls
+{
+    text-align: right;
+    padding: 50px;
+}
+
+.star-legend
+{
+    font-size: 12px;
+    padding: 0 10px 20px 10px;
+}
+
+.detail
+{
+    margin-top: 80px;
+    font-size: 10px;
+    color: #A0A0A0;
+    text-align: right;
 }
 
 #login-form-container .wide-input

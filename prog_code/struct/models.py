@@ -242,6 +242,13 @@ class SnapshotMetadata:
         self.hard_of_hearing = hard_of_hearing
 
 
+class ParentMCDIForm(SnapshotMetadata):
+
+    def __init__(self, link_urls, *args):
+        super(*args)
+        self.link_urls = link_urls
+
+
 class SnapshotContent:
     """Record of a single MCDI word as part of a snapshot."""
 
@@ -330,6 +337,119 @@ class User:
         self.can_change_formats = can_change_formats
         self.can_use_api_key = can_use_api_key
         self.can_admin = can_admin
+
+
+
+class SnapshotMetadata:
+    """Information about a snapshot of a child's vocabulary (filled out MCDI)
+
+    Metadata about an inventory of a child's vocabulary according to macarthur
+    child development inventory.
+    """
+
+    def __init__(self, database_id, child_id, study_id, study, gender, age,
+        birthday, session_date, session_num, total_num_sessions, words_spoken,
+        items_excluded, percentile, extra_categories, revision, languages,
+        num_languages, mcdi_type, hard_of_hearing):
+        """Create a new snapshot metadata record.
+
+        @param database_id: The ID for this snapshot.
+        @type database_id: int
+        @param child_id: The global database-wide ID for the child.
+        @type child_id: int
+        @param study_id: The study specific ID for the child (not guaranteed to
+            be unique outside of study).
+        @type study_id: str
+        @param study: The name of this study this snapshot is part of.
+        @type study: str
+        @param gender: Constant corresponding to the gender of this child.
+        @type gender: int. Specifically, constants.MALE, constants.FEMALE, or
+            constants.OTHER_GENDER
+        @param age: The age in months of this participant at the time of the
+            study.
+        @type age: int
+        @param birthday: The birthday of the research participant. Should be in
+            format YYYY/MM/DD
+        @type birthday: str
+        @param session_date: The date this snapshot was taken (YYYY/MM/DD)
+        @type session_date: str
+        @param session_num: The number of sessions that came before this session
+            for this child as part of this study + 1.
+        @type session_num: int
+        @param total_num_sessions: The total number of sessions this participant
+            is expected to have as of this snapshot as part of this study.
+        @type total_num_sessions: int
+        @param words_spoken: The number of MCDI words recorded as "spoken"
+            (exact definition depends on MCDI format) at the time of this
+            snapshot.
+        @type words_spoken: int
+        @param items_excluded: The number of items execluded during the
+            administration of the MCDI for this snapshot.
+        @type items_excluded: int
+        @param percentile: The MCDI percentile of this child as measured by this
+            snapshot.
+        @type percentile: float
+        @param extra_categories: The number of extra MCDI categories
+            included during administeration of MCDI for this snapshot.
+        @type extra_categories: int
+        @param revision: The number of versions of this snapshot before this
+            one.
+        @type revision: int
+        @param languages: CSV field of languages included in this MCDI.
+        @type languages: str
+        @param num_languages: The number of languages included in this MCDI.
+        @type num_languages: int
+        @param mcdi_type: The safe name of the MCDI format used for this
+            snapshot.
+        @type mcdi_type: str
+        @param hard_of_hearing: Indicates if this child was indicated as hard
+            of hearing at the time of this snapshot.
+        @type hard_of_hearing: bool
+        """
+        self.database_id = database_id
+        self.child_id = child_id
+        self.study_id = study_id
+        self.study = study
+        self.gender = gender
+        self.age = age
+        self.birthday = birthday
+        self.session_date = session_date
+        self.session_num = session_num
+        self.total_num_sessions = total_num_sessions
+        self.words_spoken = words_spoken
+        self.items_excluded = items_excluded
+        self.percentile = percentile
+        self.extra_categories = extra_categories
+        self.revision = revision
+        self.languages = languages
+        self.num_languages = num_languages
+        self.mcdi_type = mcdi_type
+        self.hard_of_hearing = hard_of_hearing
+
+
+class ParentForm:
+    def __init__(self, form_id, child_name, parent_email, mcdi_type,
+        database_id, study_id, study, gender, age, birthday, session_date,
+        session_num, items_excluded, extra_categories, revision, languages,
+        num_languages, hard_of_hearing):
+        self.form_id = form_id
+        self.child_name = child_name
+        self.parent_email = parent_email
+        self.mcdi_type = mcdi_type
+        self.database_id = database_id
+        self.study_id = study_id
+        self.study = study
+        self.gender = gender
+        self.age = age
+        self.birthday = birthday
+        self.session_date = session_date
+        self.session_num = session_num
+        self.items_excluded = items_excluded
+        self.extra_categories = extra_categories
+        self.revision = revision
+        self.languages = languages
+        self.num_languages = num_languages
+        self.hard_of_hearing = hard_of_hearing
 
 
 class APIKey:
