@@ -118,7 +118,7 @@ def change_user_password(email, password):
     user.password_hash = werkzeug.generate_password_hash(password)
     db_util.save_user_model(user)
 
-def update_user(orig_email, email, can_enter_data, can_access_data,
+def update_user(orig_email, email, can_enter_data, can_edit_parents, can_access_data,
     can_change_formats, can_use_api_key, can_admin):
     """Change a user's account.
 
@@ -145,6 +145,7 @@ def update_user(orig_email, email, can_enter_data, can_access_data,
     user = db_util.load_user_model(orig_email)
     user.email = email
     user.can_enter_data = can_enter_data
+    user.can_edit_parents = can_edit_parents
     user.can_access_data = can_access_data
     user.can_change_formats = can_change_formats
     user.can_use_api_key = can_use_api_key

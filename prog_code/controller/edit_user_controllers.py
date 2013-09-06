@@ -84,6 +84,7 @@ def edit_user(email):
             email,
             new_email,
             request.form.get("can_enter_data", "") == "on",
+            request.form.get("can_edit_parents", "") == "on",
             request.form.get("can_access_data", "") == "on",
             request.form.get("can_change_formats", "") == "on",
             request.form.get("can_use_api_key", "") == "on",
