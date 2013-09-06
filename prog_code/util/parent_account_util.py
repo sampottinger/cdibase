@@ -5,7 +5,7 @@ import filter_util
 import mail_util
 import user_util
 
-MCDI_EMAIL_SUBJECT = 'CU Lanugage Project'
+MCDI_EMAIL_SUBJECT = 'CU Language Project'
 
 MCDI_EMAIL_TEMPLATE = '''Hello!
 
