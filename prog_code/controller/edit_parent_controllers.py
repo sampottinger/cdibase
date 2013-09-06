@@ -243,6 +243,27 @@ def handle_parent_mcdi_form(form_id):
         return flask.redirect('/base/parent_mcdi/_thanks')
 
     else:
+
+        child_id_filter = models.Filter(
+            "child_id",
+            "eq",
+            parent_form.database_id
+        )
+        results = filter_util.run_search_query([child_id_filter], "snapshots")
+        if len(results) == 0:
+            known_words = []
+        else:
+            latest_snapshot = results[0]
+            contents = db_util.load_snapshot_contents(latest_snapshot)
+            known_words_dec = filter(
+                lambda x: x.value in constants.TRUE_VALS,
+                contents
+            )
+            known_words = map(
+                lambda x: x.word,
+                known_words_dec
+            )
+
         return flask.render_template(
             "end_parent_form.html",
             selected_format=selected_format,
@@ -255,5 +276,7 @@ def handle_parent_mcdi_form(form_id):
             items_excluded=parent_form.items_excluded,
             extra_categories=parent_form.extra_categories,
             languages=parent_form.languages,
+            known_words=known_words,
+            known_val=constants.EXPLICIT_TRUE,
             **session_util.get_standard_template_values()
         )

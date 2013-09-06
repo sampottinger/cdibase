@@ -95,7 +95,7 @@
                             <div class="word-entry-options">
                             {% for option in selected_format.details.options %}
                                 <label class="checkbox">
-                                    <input type="radio" name="{{ word }}_report" value="{{ option.value }}"> {{ option.name }}
+                                    <input type="radio" name="{{ word }}_report" value="{{ option.value }}" {% if (option.value == known_val and word in known_words) or (option.value != known_val and not word in known_words) %}checked{% endif %}> {{ option.name }}
                                 </label>
                             {% endfor %}
                             </div>

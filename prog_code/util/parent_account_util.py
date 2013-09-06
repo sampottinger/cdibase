@@ -75,7 +75,7 @@ class AttributeResolutionResolver:
 
         parent_form.database_id = self.fill_field(
             parent_form.database_id,
-            "database_id"
+            "child_id"
         )
         
         parent_form.study = self.fill_field(
