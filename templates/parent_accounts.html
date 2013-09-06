@@ -27,7 +27,7 @@
         </div>
         <div class="tiling-form-input">
             <label>MCDI type *</label>
-            <select name="mcdi-type">
+            <select name="mcdi_type">
             {% for format in mcdi_formats %}
                 <option value="{{ format.safe_name }}">{{ format.human_name }}</option>
             {% endfor %}
@@ -47,11 +47,7 @@
         </div>
         <div class="tiling-form-input">
             <label>Participant birthday</label>
-            <input type="text" name="birthday" placeholder="ex 12/30/1992">
-        </div>
-        <div class="tiling-form-input">
-            <label>Participant age (months)</label>
-            <input type="text" name="age" placeholder="ex 22.6">
+            <input type="text" name="birthday" placeholder="ex 1992/12/30">
         </div>
         <div class="tiling-form-input">
             <label>Participant gender</label>
@@ -60,14 +56,6 @@
                 <option value="2">female</option>
                 <option value="3">other</option>
             </select>
-        </div>
-        <div class="tiling-form-input">
-            <label>Session num</label>
-            <input type="text" name="session_num" placeholder="ex 5">
-        </div>
-        <div class="tiling-form-input">
-            <label>Session date</label>
-            <input type="text" name="session_date" placeholder="ex 12/30/2012">
         </div>
         <div class="tiling-form-input">
             <label>Items excluded</label>

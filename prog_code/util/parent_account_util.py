@@ -72,30 +72,30 @@ class AttributeResolutionResolver:
     def fill_parent_form_defaults(self, parent_form):
         self.set_global_id(parent_form.database_id)
         self.set_study_id(parent_form.study, parent_form.study_id)
+
+        parent_form.database_id = self.fill_field(
+            parent_form.database_id,
+            "database_id"
+        )
         
+        parent_form.study = self.fill_field(
+            parent_form.study,
+            "study"
+        )
+
+        parent_form.study_id = self.fill_field(
+            parent_form.study_id,
+            "study_id"
+        )
+
         parent_form.gender = self.fill_field(
             parent_form.gender,
             "gender"
         )
 
-        parent_form.age = self.fill_field(
-            parent_form.age,
-            "age"
-        )
-
         parent_form.birthday = self.fill_field(
             parent_form.birthday,
             "birthday"
-        )
-
-        parent_form.session_date = self.fill_field(
-            parent_form.session_date,
-            "session_date"
-        )
-
-        parent_form.session_num = self.fill_field(
-            parent_form.session_num,
-            "session_num"
         )
 
         parent_form.items_excluded = self.fill_field(
@@ -106,11 +106,6 @@ class AttributeResolutionResolver:
         parent_form.extra_categories = self.fill_field(
             parent_form.extra_categories,
             "extra_categories"
-        )
-
-        parent_form.revision = self.fill_field(
-            parent_form.revision,
-            "revision"
         )
 
         parent_form.languages = self.fill_field(

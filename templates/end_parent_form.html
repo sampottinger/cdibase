@@ -8,4 +8,103 @@
         appreciated.
     </p>
 </div>
+<div>
+    <form method="POST">
+        <div class="form-section">
+            <div class="instructions">
+                <div class="header">Child Information</div>
+                <div class="body">Please verify the following information about your child.</div>
+            </div>
+            <div class="tiling-form-input">
+                <div>Child Name</div>
+                <div class="fake-input">{{ child_name }}</div>
+            </div>
+            {% if study == None %}
+            <div class="tiling-form-input">
+                <label>Study</label>
+                <input id="study-input" type="text" name="study" placeholder="ex Traj-Wave2">
+            </div>
+            {% endif %}
+            {% if study_id == None %}
+            <div class="tiling-form-input">
+                <label>Participant study ID</label>
+                <input id="study-id-input" type="text" name="study_id" placeholder="ex TR27-5">
+            </div>
+            {% endif %}
+            {% if database_id == None %}
+            <div class="tiling-form-input">
+                <label id="global-id-label">Participant global ID</label>
+                <input type="text" id="global-id-input" name="database_id" placeholder="ex 4810">
+            </div>
+            {% endif %}
+            {% if birthday == None %}
+            <div class="tiling-form-input">
+                <label>Participant birthday</label>
+                <input type="text" name="birthday" placeholder="ex 1992/12/30">
+            </div>
+            {% endif %}
+            {% if gender == None %}
+            <div class="tiling-form-input">
+                <label>Participant gender</label>
+                <select name="gender">
+                    <option value="1">male</option>
+                    <option value="2">female</option>
+                    <option value="3">other</option>
+                </select>
+            </div>
+            {% endif %}
+            {% if items_excluded == None %}
+            <div class="tiling-form-input">
+                <label>Items excluded</label>
+                <input type="text" name="items_excluded" placeholder="ex 0">
+            </div>
+            {% endif %}
+            {% if extra_categories == None %}
+            <div class="tiling-form-input">
+                <label>Extra categories</label>
+                <input type="text" name="extra_categories" placeholder="ex 0">
+            </div>
+            {% endif %}
+            {% if languages == None %}
+            <div class="tiling-form-input">
+                <label>Languages spoken (seperated by commas)</label>
+                <input type="text" name="languages" placeholder="ex english,spanish">
+            </div>
+            {% endif %}
+            {% if selected_format.details.meta.has_hard_of_hearing %}
+            <div class="tiling-form-input">
+                <label>Hard of hearing</label>
+                <label class="checkbox">
+                    <input name="hard_of_hearing" type="checkbox" {% if hard_of_hearing %}checked{% endif %}>
+                    Hard of hearing
+                </label>
+            </div>
+            {% endif %}
+        </div>
+        <div class="form-section">
+            <div class="instructions">
+                <div class="header">Words</div>
+                <div class="body">Children understand many more words than they say.  We are particularly interested in the words that your child SAYS.  Please go through the list and mark the words you have heard your child use.  If you child uses a different pronunciation of a word (for example, "raffe" instead of "giraffe" or "sketti" for "spaghetti"), mark the word anyway.  Remember that this is a "catalogue" of all the words that are used by many different children.  Don’t worry if you child knows only a few of these right now.</div>
+            </div>
+            {% for category in selected_format.details.categories %}
+                <div class="form-category">
+                    <h4>{{ category.name }} ({{ category.language }})</h4>
+                    {% for word in category.words %}
+                        <div class="word-entry tiling-form-input">
+                            {{ word }}:
+                            <div class="word-entry-options">
+                            {% for option in selected_format.details.options %}
+                                <label class="checkbox">
+                                    <input type="radio" name="{{ word }}_report" value="{{ option.value }}"> {{ option.name }}
+                                </label>
+                            {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <input class="btn btn-primary" type="submit" value="Send Completed Form to CU Language Project">
+        </div>
+    </form>
+</div>
 {% endblock %}

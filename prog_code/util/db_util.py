@@ -579,7 +579,7 @@ def insert_parent_form(form_metadata):
     connection = get_db_connection()
     cursor = connection.cursor()
 
-    cmd = "INSERT INTO parent_forms VALUES (%s)" % (", ".join("?" * 18))
+    cmd = "INSERT INTO parent_forms VALUES (%s)" % (", ".join("?" * 14))
     cursor.execute(
         cmd,
         (
@@ -591,13 +591,9 @@ def insert_parent_form(form_metadata):
             form_metadata.study_id,
             form_metadata.study,
             form_metadata.gender,
-            form_metadata.age,
             form_metadata.birthday,
-            form_metadata.session_date,
-            form_metadata.session_num,
             form_metadata.items_excluded,
             form_metadata.extra_categories,
-            form_metadata.revision,
             form_metadata.languages,
             form_metadata.num_languages,
             form_metadata.hard_of_hearing
@@ -623,3 +619,15 @@ def get_parent_form_by_id(form_id):
         return models.ParentForm(*form_info)
     else:
         return None
+
+
+def remove_parent_form(form_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        "DELETE FROM parent_forms WHERE form_id=?",
+        (form_id,)
+    )
+    form_info = cursor.fetchone()
+    connection.commit()
+    connection.close()

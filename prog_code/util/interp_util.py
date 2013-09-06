@@ -3,6 +3,21 @@
 @author: Sam Pottinger
 @license: GNU GPL v2
 """
+from calendar import monthrange
+from datetime import datetime, timedelta
+
+
+def monthdelta(d1, d2):
+    delta = 0
+    while True:
+        mdays = monthrange(d1.year, d1.month)[1]
+        d1 += timedelta(days=mdays)
+        if d1 <= d2:
+            delta += 1
+        else:
+            break
+    return delta
+
 
 def safe_int_interpret(target):
     """Interpret a value as an integer.

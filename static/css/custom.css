@@ -127,6 +127,32 @@
     text-align: right;
 }
 
+.instructions
+{
+    margin: 20px 0 20px 0;
+}
+
+.instructions .header
+{
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.instructions .body
+{
+    margin: 5px 0 5px 0;
+}
+
+.form-section
+{
+    padding: 30px 0 30px 0;
+}
+
+.fake-input
+{
+    padding: 11px 0 10px 0;
+}
+
 #login-form-container .wide-input
 {
     width: 100%;
