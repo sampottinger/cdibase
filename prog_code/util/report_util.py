@@ -31,6 +31,12 @@ PRESENTATION_VALUE_NAME_MAP = {
 }
 
 
+class NotFoundSnapshotContent:
+
+    def __init__(self):
+        self.value = constants.NO_DATA
+
+
 def interpret_word_value(value, presentation_format):
     """Convert underlying special database value to a string descriptions.
 
@@ -79,8 +85,9 @@ def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
         for entry in snapshot_contents:
             snapshot_contents_dict[entry.word] = entry
 
+        not_found_entry = NotFoundSnapshotContent()
         snapshot_contents_sorted = map(
-            lambda x: snapshot_contents_dict[x],
+            lambda x: snapshot_contents_dict.get(x, not_found_entry),
             word_listing
         )
 
