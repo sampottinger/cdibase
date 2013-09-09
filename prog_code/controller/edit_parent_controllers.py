@@ -109,42 +109,42 @@ def handle_parent_mcdi_form(form_id):
     if request.method == 'POST':
         
         study = parent_form.study
-        if study == None:
+        if study == None or study == '':
             study = request.form['study']
         
         study_id = parent_form.study_id
-        if study_id == None:
+        if study_id == None or study_id == '':
             study_id = request.form['study_id']
         
         database_id = parent_form.database_id
-        if database_id == None:
+        if database_id == None or database_id == '':
             database_id = interp_util.safe_int_interpret(
                 request.form['database_id'])
         
         birthday = parent_form.birthday
-        if birthday == None:
+        if birthday == None or birthday == '':
             birthday = request.form['birthday']
         
         gender = parent_form.gender
-        if gender == None:
+        if gender == None or gender == '':
             gender = request.form['gender']
         
         items_excluded = parent_form.items_excluded
-        if items_excluded == None:
+        if items_excluded == None or items_excluded == '':
             items_excluded = interp_util.safe_int_interpret(
                 request.form['items_excluded'])
         
         extra_categories = parent_form.extra_categories
-        if extra_categories == None:
+        if extra_categories == None or extra_categories == '':
             extra_categories = interp_util.safe_int_interpret(
                 request.form['extra_categories'])
         
         languages = parent_form.languages
-        if languages == None:
+        if languages == None or languages == '':
             languages = request.form['languages'].split(',')
         
         hard_of_hearing = parent_form.hard_of_hearing
-        if hard_of_hearing == None:
+        if hard_of_hearing == None or hard_of_hearing == '':
             hard_of_hearing = request.form.get('hard_of_hearing', 'off') == 'on'
 
         birthday_parts = birthday.split('/')
