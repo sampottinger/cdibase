@@ -4,6 +4,13 @@
 @license: GNU GPL v2
 """
 
+def get_with_end_max(collection, index):
+    if index >= len(collection):
+        return collection[-1]
+    else:
+        return collection[index]
+
+
 
 def find_percentile(table_entries, target_num_words, age_months, max_words):
     """Find the MCDI perentile for a child.
@@ -27,7 +34,8 @@ def find_percentile(table_entries, target_num_words, age_months, max_words):
     first_month = int(table_entries[0][1])
     month_index = int(age_months - first_month + 1)
 
-    words_per_percentile = map(lambda x: int(x[month_index]), table_entries)
+    words_per_percentile = map(lambda x: int(get_with_end_max(x, month_index)),
+        table_entries)
     words_per_percentile.append(0)
     words_per_percentile[0] = max_words
 
