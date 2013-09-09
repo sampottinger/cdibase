@@ -19,31 +19,31 @@
                 <div>Child Name</div>
                 <div class="fake-input">{{ child_name }}</div>
             </div>
-            {% if study == None %}
+            {% if study == None or study == '' %}
             <div class="tiling-form-input">
                 <label>Study</label>
                 <input id="study-input" type="text" name="study" placeholder="ex Traj-Wave2">
             </div>
             {% endif %}
-            {% if study_id == None %}
+            {% if study_id == None or study_id == '' %}
             <div class="tiling-form-input">
                 <label>Participant study ID</label>
                 <input id="study-id-input" type="text" name="study_id" placeholder="ex TR27-5">
             </div>
             {% endif %}
-            {% if database_id == None %}
+            {% if database_id == None or database_id == '' %}
             <div class="tiling-form-input">
                 <label id="global-id-label">Participant global ID</label>
                 <input type="text" id="global-id-input" name="database_id" placeholder="ex 4810">
             </div>
             {% endif %}
-            {% if birthday == None %}
+            {% if birthday == None or birthday == '' %}
             <div class="tiling-form-input">
                 <label>Participant birthday</label>
                 <input type="text" name="birthday" placeholder="ex 1992/12/30">
             </div>
             {% endif %}
-            {% if gender == None %}
+            {% if gender == None or gender == '' %}
             <div class="tiling-form-input">
                 <label>Participant gender</label>
                 <select name="gender">
@@ -53,19 +53,19 @@
                 </select>
             </div>
             {% endif %}
-            {% if items_excluded == None %}
+            {% if items_excluded == None or items_excluded == '' %}
             <div class="tiling-form-input">
                 <label>Items excluded</label>
                 <input type="text" name="items_excluded" placeholder="ex 0">
             </div>
             {% endif %}
-            {% if extra_categories == None %}
+            {% if extra_categories == None or extra_categories == '' %}
             <div class="tiling-form-input">
                 <label>Extra categories</label>
                 <input type="text" name="extra_categories" placeholder="ex 0">
             </div>
             {% endif %}
-            {% if languages == None %}
+            {% if languages == None or languages == '' %}
             <div class="tiling-form-input">
                 <label>Languages spoken (seperated by commas)</label>
                 <input type="text" name="languages" placeholder="ex english,spanish">
