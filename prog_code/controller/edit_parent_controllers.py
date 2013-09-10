@@ -141,7 +141,10 @@ def handle_parent_mcdi_form(form_id):
         
         languages = parent_form.languages
         if languages == None or languages == '':
-            languages = request.form['languages'].split(',')
+            languages = request.form['languages']
+            if isinstance(languages, basestring):
+                languages = [languages]
+            languages = ','.join(languages)
         
         hard_of_hearing = parent_form.hard_of_hearing
         if hard_of_hearing == None or hard_of_hearing == '':
