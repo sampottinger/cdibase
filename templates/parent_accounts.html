@@ -28,6 +28,7 @@
         <div class="tiling-form-input">
             <label>MCDI type *</label>
             <select name="mcdi_type">
+                <option value=""></option>
             {% for format in mcdi_formats %}
                 <option value="{{ format.safe_name }}">{{ format.human_name }}</option>
             {% endfor %}
@@ -52,9 +53,10 @@
         <div class="tiling-form-input">
             <label>Participant gender</label>
             <select name="gender">
-                <option value="1">male</option>
-                <option value="2">female</option>
-                <option value="3">other</option>
+                <option value=""></option>
+                <option value="{{ gender_male_constant }}">male</option>
+                <option value="{{ gender_female_constant }}">female</option>
+                <option value="{{ gender_other_constant }}">other</option>
             </select>
         </div>
         <div class="tiling-form-input">

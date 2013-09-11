@@ -44,6 +44,10 @@ def edit_parent_accounts():
         parent_email = request.form.get("parent_email")
         mcdi_type = request.form.get("mcdi_type")
 
+        if mcdi_type == None or mcdi_type == "":
+            flask.session["error"] = "MCDI type required."
+            return flask.redirect('/base/parent_accounts')
+
         if parent_email == "":
             flask.session["error"] = "Parent email required."
             return flask.redirect('/base/parent_accounts')
@@ -81,6 +85,9 @@ def edit_parent_accounts():
             cur_page="edit_parents",
             users=user_util.get_all_users(),
             mcdi_formats=db_util.load_mcdi_model_listing(),
+            gender_male_constant=constants.MALE,
+            gender_female_constant=constants.FEMALE,
+            gender_other_constant=constants.OTHER_GENDER,
             **session_util.get_standard_template_values()
         )
 
@@ -142,9 +149,7 @@ def handle_parent_mcdi_form(form_id):
         languages = parent_form.languages
         if languages == None or languages == '':
             languages = request.form['languages']
-            if isinstance(languages, basestring):
-                languages = [languages]
-            languages = ','.join(languages)
+        languages = languages.split(',')
         
         hard_of_hearing = parent_form.hard_of_hearing
         if hard_of_hearing == None or hard_of_hearing == '':
@@ -253,6 +258,7 @@ def handle_parent_mcdi_form(form_id):
             parent_form.database_id
         )
         results = filter_util.run_search_query([child_id_filter], "snapshots")
+        results.sort(key=lambda x: x.session_date, reverse=True)
         if len(results) == 0:
             known_words = []
         else:

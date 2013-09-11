@@ -565,7 +565,7 @@ def insert_snapshot(snapshot_metadata, word_entries):
             "INSERT INTO snapshot_content VALUES (?, ?, ?, ?)",
             (
                 new_snapshot_id,
-                word,
+                word.lower(),
                 val,
                 0
             )

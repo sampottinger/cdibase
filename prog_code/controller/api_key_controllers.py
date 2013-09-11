@@ -1,5 +1,6 @@
 import json
 
+import dateutil.parser as dateutil_parser
 import flask
 
 from ..struct import models
@@ -365,7 +366,7 @@ def send_parent_form():
         request.args.get("database_id", ""))
     study_id = request.form.get("study_id", "")
     study = request.args.get("study", "")
-    gender = interp_util.safe_int_interpret(request.form.get("gender", ""))
+    gender = request.args.get("gender", "")
     birthday = request.args.get("birthday", "")
     items_excluded = interp_util.safe_int_interpret(
         request.args.get("items_excluded", ""))
@@ -376,13 +377,26 @@ def send_parent_form():
     hard_of_hearing = request.args.get("hard_of_hearing", "off") == "on"
     child_name = request.args.get("child_name", "")
     parent_email = request.args.get("parent_email", "")
-    mcdi_type = request.args.get("mcdi_type", "")
+    mcdi_type = request.args.get("mcdi_type", None)
 
-    try:
-        birthday = datetime.datetime.strptime(birthday, "%Y-%m-%dT%H:%M:%S")
+    if mcdi_type == None or mcdi_type == "":
+        return generate_error('Must specify mcdi_type.', 400)
+
+    if db_util.load_mcdi_model(mcdi_type) == None:
+        msg = '%s not a valid mcdi_type.' % mcdi_type
+        return generate_error(msg, 400)
+
+    if birthday != None and birthday != "":
+        print birthday
+        try:
+            birthday = dateutil_parser.parse(birthday)
+        except ValueError:
+            return generate_error(
+                'Must provide ISO8601 date for birthday.',
+                400
+            )
         birthday = birthday.strftime('%Y/%m/%d')
-    except:
-        pass
+
 
     if parent_email == "":
         flask.session["error"] = "Parent email required."
