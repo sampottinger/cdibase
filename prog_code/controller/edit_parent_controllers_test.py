@@ -347,12 +347,12 @@ class TestEditParentControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         minimal_data_template = copy.copy(SEND_FORM_DATA_TEMPLATE)
-        del minimal_data_template['gender']
-        del minimal_data_template['birthday']
-        del minimal_data_template['items_excluded']
-        del minimal_data_template['extra_categories']
-        del minimal_data_template['languages']
-        del minimal_data_template['hard_of_hearing']
+        minimal_data_template['gender'] = ''
+        minimal_data_template['birthday'] = ''
+        minimal_data_template['items_excluded'] = ''
+        minimal_data_template['extra_categories'] = ''
+        minimal_data_template['languages'] = ''
+        minimal_data_template['hard_of_hearing'] = ''
 
         with self.app.test_client() as client:
 

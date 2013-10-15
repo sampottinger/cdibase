@@ -99,7 +99,7 @@ def send_mcdi_form():
                 return flask.redirect('/base/parent_accounts')
             birthday = birthday.strftime(DATE_OUT_STR)
 
-        if hard_of_hearing != None:
+        if hard_of_hearing != None and hard_of_hearing != '':
             if hard_of_hearing:
                 hard_of_hearing = constants.EXPLICIT_TRUE
             else:
@@ -110,7 +110,7 @@ def send_mcdi_form():
         items_excluded = interp_util.safe_int_interpret(items_excluded)
         extra_categories = interp_util.safe_int_interpret(extra_categories)
 
-        if languages != None:
+        if languages != None and languages != '':
             languages = languages.split(',')
             languages_str = ','.join(languages)
             num_languages = len(languages)
@@ -118,7 +118,8 @@ def send_mcdi_form():
             languages_str = None
             num_languages = None
 
-        if gender != None and not gender in VALID_GENDER_VALUES:
+        has_gender_info = gender != '' and gender != None
+        if has_gender_info and not gender in VALID_GENDER_VALUES:
             flask.session[constants.ERROR_ATTR] = GENDER_INVALID_MSG
             return flask.redirect('/base/parent_accounts')
 
