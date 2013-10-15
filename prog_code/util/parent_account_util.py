@@ -1,3 +1,5 @@
+import re
+
 from ..struct import models
 
 import db_util
@@ -21,6 +23,8 @@ Application Curator
 '''
 
 URL_TEMPLATE = 'https://daxlab.colorado.edu/base/parent_mcdi/%s'
+EMAIL_REGEX = re.compile('^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$',
+    re.IGNORECASE)
 
 
 class AttributeResolutionResolver:
@@ -108,20 +112,19 @@ class AttributeResolutionResolver:
             "extra_categories"
         )
 
-        parent_form.languages = self.fill_field(
-            parent_form.languages,
-            "languages"
-        )
-
-        parent_form.num_languages = self.fill_field(
-            parent_form.num_languages,
-            "num_languages"
-        )
+        languages_valid = self.is_valid_value(parent_form.languages)
+        if not languages_valid and self.__target_user != None:
+            parent_form.languages = self.__target_user.languages
+            parent_form.num_languages = self.__target_user.num_languages
 
         parent_form.hard_of_hearing = self.fill_field(
             parent_form.hard_of_hearing,
             "hard_of_hearing"
         )
+
+
+def is_likely_email_address(target):
+    return EMAIL_REGEX.match(target) != None
 
 
 def generate_unique_mcdi_form_id():

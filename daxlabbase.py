@@ -4,9 +4,6 @@
 @license: GNU GPL v2
 """
 
-import os
-import urllib
-
 import flask
 
 from flask_mail import Mail

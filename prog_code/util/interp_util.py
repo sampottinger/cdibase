@@ -24,8 +24,11 @@ def safe_int_interpret(target):
 
     @param target: The value to interpret.
     @return: Integer parsed or None if could not be parsed.
-    @rtype: int
+    @rtype: int or None
     """
+    if target == None:
+        return None
+
     try:
         return int(target)
     except ValueError:
@@ -36,8 +39,11 @@ def safe_float_interpret(target):
 
     @param target: The value to interpet.
     @return: Float parsed or None if could not be parsed.
-    @rtype: float
+    @rtype: float or None
     """
+    if target == None:
+        return None
+
     try:
         return float(target)
     except ValueError:

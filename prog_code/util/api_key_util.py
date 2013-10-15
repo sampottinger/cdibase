@@ -1,4 +1,4 @@
-"""Logic for managing user API keys.
+"""Logic for managing user API keys and other minuta.
 
 @author: Sam Pottinger
 @license: GNU GPL v2
@@ -6,6 +6,20 @@
 
 import db_util
 import user_util
+
+
+def interp_csv_field(target):
+    if target == '':
+        return []
+    else:
+        return target.split(',')
+
+
+def get_if_avail(target_list, index):
+    if len(target_list) != 0:
+        return target_list[index]
+    else:
+        return ''
 
 
 def generate_new_api_key():

@@ -351,6 +351,23 @@ class ParentForm:
         self.num_languages = num_languages
         self.hard_of_hearing = hard_of_hearing
 
+    def __eq__(self, other):
+        same = self.form_id == other.form_id
+        same = same and self.child_name == other.child_name
+        same = same and self.parent_email == other.parent_email
+        same = same and self.mcdi_type == other.mcdi_type
+        same = same and self.database_id == other.database_id
+        same = same and str(self.study_id) == str(other.study_id)
+        same = same and self.study == other.study
+        same = same and self.gender == other.gender
+        same = same and self.birthday == other.birthday
+        same = same and self.items_excluded == other.items_excluded
+        same = same and self.extra_categories == other.extra_categories
+        same = same and self.languages == other.languages
+        same = same and self.num_languages == other.num_languages
+        same = same and self.hard_of_hearing == other.hard_of_hearing
+        return same
+
 
 class APIKey:
     """Record of an API key allowing programmatic access for a specific user."""

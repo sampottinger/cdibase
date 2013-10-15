@@ -89,5 +89,5 @@ def send_msg(email, subject, message):
             )
             mail_keeper.get_mail_instance().send(flask_message)
         
-        else:
-            print message
+        #else:
+        #    print message

@@ -1,10 +1,15 @@
-"""Logic for managing parent accounts.
+"""Logic for managing parent accounts and parent MCDI forms.
+
+Loginc for managing parent accounts, sending parent MCDI forms, and processing
+MCDI parent form responses.
 
 @author: Sam Pottinger
 @license: GNU GPL v2
 """
 
 import datetime
+
+import dateutil.parser as dateutil_parser
 import flask
 
 from ..util import constants
@@ -20,36 +25,101 @@ from ..struct import models
 
 from daxlabbase import app
 
+VALID_GENDER_VALUES = [constants.MALE, constants.FEMALE, constants.OTHER_GENDER]
 
-@app.route("/base/parent_accounts", methods=["GET", "POST"])
+MCDI_TYPE_NOT_GIVEN_MSG = 'MCDI type required.'
+PARENT_EMAIL_NOT_GIVEN_MSG = 'Provided parent email appears not to be a ' \
+    'valid email address.'
+PARENT_FORM_SENT_MSG = 'MCDI form sent.'
+NO_ID_MSG = 'Must provide an integer global ID or both a study ID and study ' \
+    'name.'
+GLOBAL_ID_MUST_BE_INT_MSG = 'The global database ID for a child must be an ' \
+    'integer.'
+GENDER_INVALID_MSG = 'The provided gender for this child was not recognized.'
+DATE_OUT_STR = '%Y/%m/%d'
+DATE_INVALID_MSG = '%s is not a valid date.'
+
+
+@app.route('/base/parent_accounts', methods=['GET', 'POST'])
 @session_util.require_login(edit_parents=True)
-def edit_parent_accounts():
-    request = flask.request
-    if request.method == "POST":
-        form_id = parent_account_util.generate_unique_mcdi_form_id()
-        global_id = interp_util.safe_int_interpret(
-            request.form.get("global_id"))
-        study_id = request.form.get("study_id")
-        study = request.form.get("study")
-        gender = interp_util.safe_int_interpret(request.form.get("gender"))
-        birthday = request.form.get("birthday")
-        items_excluded = interp_util.safe_int_interpret(
-            request.form.get("items_excluded"))
-        extra_categories = interp_util.safe_int_interpret(
-            request.form.get("extra_categories"))
-        languages = request.form.get("languages")
-        languages = languages.split(",")
-        hard_of_hearing = request.form.get("hard_of_hearing") == "on"
-        child_name = request.form.get("child_name")
-        parent_email = request.form.get("parent_email")
-        mcdi_type = request.form.get("mcdi_type")
+def send_mcdi_form():
+    """Create and send a parent MCDI form.
 
-        if mcdi_type == None or mcdi_type == "":
-            flask.session["error"] = "MCDI type required."
+    @return: HTML page for creating parent forms if a GET request. Redirect
+        if POST. Session confirmation and error messages will be set by this
+        handler.
+    @rtype: Flask response.
+    """
+    request = flask.request
+    if request.method == 'POST':
+        form_id = parent_account_util.generate_unique_mcdi_form_id()
+        global_id = request.form.get('global_id')
+        gender = request.form.get('gender')
+        items_excluded = request.form.get('items_excluded')
+        extra_categories = request.form.get('extra_categories')
+        study_id = request.form.get('study_id')
+        study = request.form.get('study')
+        birthday = request.form.get('birthday')
+        languages = request.form.get('languages')
+        hard_of_hearing = request.form.get('hard_of_hearing')
+        hard_of_hearing = hard_of_hearing == constants.FORM_SELECTED_VALUE
+        child_name = request.form.get('child_name')
+        parent_email = request.form.get('parent_email')
+        mcdi_type = request.form.get('mcdi_type')
+
+        mcdi_model = db_util.load_mcdi_model(mcdi_type)
+        if mcdi_type == None or mcdi_type == '' or mcdi_model == None:
+            flask.session[constants.ERROR_ATTR] = MCDI_TYPE_NOT_GIVEN_MSG
             return flask.redirect('/base/parent_accounts')
 
-        if parent_email == "":
-            flask.session["error"] = "Parent email required."
+        missing_global_id = global_id == None or global_id == ''
+        missing_study_id = study_id == None or study_id == ''
+        missing_study = study == None or study == ''
+        if missing_global_id and (missing_study_id or missing_study):
+            flask.session[constants.ERROR_ATTR] = NO_ID_MSG
+            return flask.redirect('/base/parent_accounts')
+
+        if not missing_global_id:
+            try:
+                global_id = int(global_id)
+            except ValueError:
+                flask.session[constants.ERROR_ATTR] = GLOBAL_ID_MUST_BE_INT_MSG
+                return flask.redirect('/base/parent_accounts')
+
+        if not parent_account_util.is_likely_email_address(parent_email):
+            flask.session[constants.ERROR_ATTR] = PARENT_EMAIL_NOT_GIVEN_MSG
+            return flask.redirect('/base/parent_accounts')
+
+        if birthday != None and birthday != '':
+            try:
+                birthday = dateutil_parser.parse(birthday)
+            except ValueError:
+                msg = DATE_INVALID_MSG % birthday
+                flask.session[constants.ERROR_ATTR] = msg,
+                return flask.redirect('/base/parent_accounts')
+            birthday = birthday.strftime(DATE_OUT_STR)
+
+        if hard_of_hearing != None:
+            if hard_of_hearing:
+                hard_of_hearing = constants.EXPLICIT_TRUE
+            else:
+                hard_of_hearing = constants.EXPLICIT_FALSE
+
+        global_id = interp_util.safe_int_interpret(global_id)
+        gender = interp_util.safe_int_interpret(gender)
+        items_excluded = interp_util.safe_int_interpret(items_excluded)
+        extra_categories = interp_util.safe_int_interpret(extra_categories)
+
+        if languages != None:
+            languages = languages.split(',')
+            languages_str = ','.join(languages)
+            num_languages = len(languages)
+        else:
+            languages_str = None
+            num_languages = None
+
+        if gender != None and not gender in VALID_GENDER_VALUES:
+            flask.session[constants.ERROR_ATTR] = GENDER_INVALID_MSG
             return flask.redirect('/base/parent_accounts')
 
         new_form = models.ParentForm(
@@ -64,8 +134,8 @@ def edit_parent_accounts():
             birthday,
             items_excluded,
             extra_categories,
-            ",".join(languages),
-            len(languages),
+            languages_str,
+            num_languages,
             hard_of_hearing
         )
 
@@ -75,14 +145,14 @@ def edit_parent_accounts():
         db_util.insert_parent_form(new_form)
         parent_account_util.send_mcdi_email(new_form)
 
-        flask.session["confirmation"] = "MCDI form sent."
+        flask.session[constants.CONFIRMATION_ATTR] = PARENT_FORM_SENT_MSG
 
         return flask.redirect('/base/parent_accounts')
 
     else:
         return flask.render_template(
-            "parent_accounts.html",
-            cur_page="edit_parents",
+            'parent_accounts.html',
+            cur_page='edit_parents',
             users=user_util.get_all_users(),
             mcdi_formats=db_util.load_mcdi_model_listing(),
             gender_male_constant=constants.MALE,
@@ -204,7 +274,8 @@ def handle_parent_mcdi_form(form_id):
 
             # TODO(samp): This should be in db_util
             # Calculate percentiles
-            percentile_model = db_util.load_percentile_model(percentile_table_name)
+            percentile_model = db_util.load_percentile_model(
+                percentile_table_name)
             percentile = math_util.find_percentile(
                 percentile_model.details,
                 words_spoken,

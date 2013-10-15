@@ -169,7 +169,7 @@ def unserialize_filter(target_filter_dict):
     )
 
 
-def get_filters():
+def get_filters(session=None):
     """Get a collection of filters that the current user has created.
 
     Get all of the filters this current user has created as part of the query
@@ -178,23 +178,28 @@ def get_filters():
     @return: Collection of filters in the query the user is currently building.
     @rtype: Collection of models.Filter
     """
-    filters = flask.session.get("filters", None)
+    if session == None:
+        session = flask.session
+    filters = session.get("filters", None)
     if not filters:
         return []
     return map(unserialize_filter, filters)
 
 
-def add_filter(new_filter):
+def add_filter(new_filter, sess=None):
     """Add a filter to the query the user is currently building.
 
     @param new_filter: The filter to add to the current user's current query.
     @type new_filter: models.Filter
     """
-    filters = get_filters()
+    if sess == None:
+        sess = flask.session
+
+    filters = get_filters(sess)
     if not filters:
         filters = []
     filters.append(new_filter)
-    flask.session["filters"] = map(serialize_filter, filters)
+    sess["filters"] = map(serialize_filter, filters)
 
 
 def delete_filter(index):
@@ -214,9 +219,13 @@ def delete_filter(index):
     return True
 
 
-def set_waiting_on_download(value):
-    flask.session["waiting_on_download"] = value
+def set_waiting_on_download(value, session=None):
+    if session == None:
+        session = flask.session
+    session["waiting_on_download"] = value
 
 
-def is_waiting_on_download():
-    return flask.session.get("waiting_on_download", False)
+def is_waiting_on_download(session=None):
+    if session == None:
+        session = flask.session
+    return session.get("waiting_on_download", False)
