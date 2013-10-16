@@ -472,9 +472,6 @@ def handle_parent_mcdi_form(form_id):
         return flask.redirect('/base/parent_mcdi/_thanks')
 
     else:
-
-        # TODO: dedup with form_ values above
-
         # Get the most recent snapshot
         results = parent_account_util.get_snapshot_chronology_for_db_id(
             parent_form.database_id)

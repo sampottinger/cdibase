@@ -97,6 +97,10 @@ TEST_FORMAT = models.MCDIFormat(
             'female': FEMALE_TEST_PERCENTILE_NAME,
             'other': OTHER_TEST_PERCENTILE_NAME
         },
+        'options': [
+            {'name': 'said', 'value': 1},
+            {'name': 'not said', 'value': 0}
+        ],
         'count_as_spoken': [1],
         'meta': {'mcdi_type': 'multilingual-test'}
     }
@@ -257,6 +261,18 @@ TEMPLATE_WORD_SPOKEN_RECORD = dict(map(
     lambda (word, val): (word.replace('_report', ''), val),
     TEMPLATE_WORD_SPOKEN_VALUES.items()
 ))
+TESTING_SNAPSHOT_CONTENT = collections.namedtuple('TestSnapshotContent',
+    ['word', 'value'])
+ONE_WORD_KNOWN_SNAPSHOT_CONTENTS = [
+    TESTING_SNAPSHOT_CONTENT('cat_1_word_1', constants.EXPLICIT_TRUE),
+    TESTING_SNAPSHOT_CONTENT('cat_1_word_2', constants.EXPLICIT_FALSE),
+    TESTING_SNAPSHOT_CONTENT('cat_1_word_3', constants.EXPLICIT_FALSE)
+]
+TWO_WORD_KNOWN_SNAPSHOT_CONTENTS = [
+    TESTING_SNAPSHOT_CONTENT('cat_1_word_1', constants.EXPLICIT_TRUE),
+    TESTING_SNAPSHOT_CONTENT('cat_1_word_2', constants.EXPLICIT_TRUE),
+    TESTING_SNAPSHOT_CONTENT('cat_1_word_3', constants.EXPLICIT_FALSE)
+]
 
 
 class TestEditParentControllers(mox.MoxTestBase):
@@ -973,5 +989,28 @@ class TestEditParentControllers(mox.MoxTestBase):
                 self.assertTrue(constants.CONFIRMATION_ATTR in sess)
 
     def test_fill_parent_form_previous_snapshot(self):
-        pass
+        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_db_id')
+        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'load_snapshot_contents')
 
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            EXPECTED_PARENT_FORM)
+        chronology = copy.deepcopy([EXPECTED_SNAPSHOT, EXPECTED_SNAPSHOT_MOD])
+        chronology[0].database_id = 1
+        chronology[1].database_id = 2
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        user_util.get_user(None).AndReturn(None)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn(chronology)
+        db_util.load_snapshot_contents(chronology[0]).AndReturn(
+            TWO_WORD_KNOWN_SNAPSHOT_CONTENTS)
+
+        self.mox.ReplayAll()
+
+        with self.app.test_client() as client:
+            form = client.get(PARENT_MCDI_FORM_URL).data
+            self.assertEqual(form.count('"1" checked'), 2)
+            self.assertEqual(form.count('"0" checked'), 4)
