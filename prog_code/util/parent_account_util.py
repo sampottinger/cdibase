@@ -1,5 +1,7 @@
 import re
 
+import dateutil.parser as dateutil_parser
+
 from ..struct import models
 
 import db_util
@@ -144,3 +146,41 @@ def send_mcdi_email(parent_form):
         MCDI_EMAIL_SUBJECT,
         MCDI_EMAIL_TEMPLATE % (parent_form.child_name, form_url)
     )
+
+
+def get_snapshot_chronology_for_db_id(db_id):
+    child_id_filter = models.Filter(
+        "child_id",
+        "eq",
+        db_id
+    )
+    results = filter_util.run_search_query([child_id_filter], "snapshots")
+    results.sort(key=lambda x: x.session_date, reverse=True)
+    return results
+
+def get_snapshot_chronology_for_study_id(study, study_id):
+    study_filter = models.Filter(
+        'study',
+        'eq',
+        study
+    )
+    id_filter = models.Filter(
+        "study_id",
+        "eq",
+        study_id
+    )
+    results = filter_util.run_search_query(
+        [study_filter, id_filter],
+        "snapshots"
+    )
+    results.sort(key=lambda x: x.session_date, reverse=True)
+    return results
+
+def is_birthday_valid(birthday):
+    if birthday == None:
+        return False
+    try:
+        dateutil_parser.parse(birthday)
+        return True
+    except ValueError:
+        return False

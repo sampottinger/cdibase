@@ -4,9 +4,9 @@
 @license: GNU GPL v2
 """
 
+import datetime
 import json
 
-import dateutil.parser as dateutil_parser
 import flask
 
 from ..struct import models
@@ -81,7 +81,7 @@ NO_ID_MSG = 'Must provide an integer global ID or both a study ID and study ' \
     'name.'
 INVALID_PARENT_EMAIL = '%s is unlikely to be a valid email address.'
 INVALID_INTERPRETATION_MSG = 'Invalid presentation format name provided.'
-ISO_PARSE_STR = '%Y-%m-%dT%H:%M:%S'
+ISO_PARSE_STR = '%Y-%m-%d'
 DATE_OUT_STR = '%Y/%m/%d'
 
 INVALID_REQUEST_STATUS = 400
@@ -286,18 +286,26 @@ def send_parent_form():
     request = flask.request
     api_key = request.args.get(API_KEY_FIELD, None)
     
+    # Ensure that the current user has premissions necessary to send parent MCDI
+    # through the API layer.
     problem = verify_api_key_for_parent_forms(api_key)
     if problem != None:
         return problem
 
+    # Parse user provided information about the interpretation / presentation
+    # format, mapping necessary to interpreting user input for this API
+    # operation.
     interpretation_format_name = request.args.get(FORMAT_ATTR,
         DEFAULT_INTERPRETATION_FORMAT)
     interpretation_format = db_util.load_presentation_model(
         interpretation_format_name)
 
+    # Reject API request if the interpretation format was not provided or if the
+    # user requested an interpretation format that was not recognized.
     if interpretation_format == None:
         return generate_invalid_request_error(INVALID_INTERPRETATION_MSG)
 
+    # Parse the rest of user input.
     form_id = parent_account_util.generate_unique_mcdi_form_id()
     global_id = interp_util.safe_int_interpret(
         request.args.get('database_id', ''))
@@ -316,34 +324,74 @@ def send_parent_form():
     parent_email = request.args.get('parent_email', '')
     mcdi_type = request.args.get('mcdi_type', None)
 
+    # Check that an MCDI type was provided
     if mcdi_type == None or mcdi_type == '':
         return generate_invalid_request_error(MISSING_MCDI_TYPE_MSG)
 
+    # Ensure that the name of the desired MCDI format is specified / exists in
+    # the application database.
     if db_util.load_mcdi_model(mcdi_type) == None:
         msg = INVALID_MCDI_TYPE_MSG % mcdi_type
         return generate_invalid_request_error(msg)
 
-    if global_id == None and (study_id == '' or study == ''):
+    # Ensure that either a global ID or both a study and study ID were provided. 
+    global_id_missing = global_id == None or global_id == ''
+    study_id_missing = study_id == None or study_id == ''
+    study_missing = study == None or study == ''
+    if global_id_missing and (study_id_missing or study_missing):
         return generate_invalid_request_error(NO_ID_MSG)
 
+    # Ensure that the provided parent email address at least has the form of an
+    # email address. Note that, due to the asynchronous nature of email, there
+    # is currently no mechanism for reporting undelivered emails in this
+    # application.
     if not parent_account_util.is_likely_email_address(parent_email):
         message = INVALID_PARENT_EMAIL % parent_email
         return generate_invalid_request_error(message)
 
+    # Check that, if a birthday was provided, that the birthday has an
+    # appropriate ISO date format.
     if birthday != None and birthday != '':
         try:
-            birthday = dateutil_parser.parse(birthday)
-        except ValueError:
-            return generate_error(
-                ISO_DATE_INVALID_MSG,
-                INVALID_REQUEST_STATUS
-            )
-        birthday = birthday.strftime(DATE_OUT_STR)
+            birthday = datetime.datetime.strptime(birthday, ISO_PARSE_STR)
+            birthday = birthday.strftime(DATE_OUT_STR)
+        except ValueError as e:
+            return generate_invalid_request_error(ISO_DATE_INVALID_MSG)
 
+    # Use the specified interpretation / presentation format to parse the
+    # provided gender value.
+    interpretation_vals = interpretation_format.details
+    if gender != None and gender != '':
+        if isinstance(gender, int):
+            pass
+        elif gender == interpretation_vals['male']:
+            gender = constants.MALE
+        elif gender == interpretation_vals['female']:
+            gender = constants.FEMALE
+        elif gender == interpretation_vals['explicit_other']:
+            gender = constants.OTHER_GENDER
+        else:
+            return generate_invalid_request_error(INVALID_GENDER_VALUE_MSG)
 
-    if parent_email == '':
-        return generate_error(MISSING_PARENT_EMAIL_MSG, INVALID_REQUEST_STATUS)
+    # use the specified interpretation / presentation formation to parse the
+    # provided hard of hearing status.
+    if hard_of_hearing != None and hard_of_hearing != '':
+        if isinstance(hard_of_hearing, bool):
+            if hard_of_hearing:
+                hard_of_hearing = constants.EXPLICIT_TRUE
+            else:
+                hard_of_hearing = constants.EXPLICIT_FALSE
+        elif isinstance(hard_of_hearing, int):
+            pass
+        elif hard_of_hearing == interpretation_vals['explicit_true']:
+            hard_of_hearing = constants.EXPLICIT_TRUE
+        elif hard_of_hearing == interpretation_vals['explicit_false']:
+            hard_of_hearing = constants.EXPLICIT_FALSE
+        else:
+            return generate_invalid_request_error(INVALID_HARD_OF_HEARING_MSG)
 
+    # Create a new parent form model but wait to save it until resolving missing
+    # values by using a previous entry for the specified child.
     new_form = models.ParentForm(
         form_id,
         child_name,
@@ -361,35 +409,13 @@ def send_parent_form():
         hard_of_hearing
     )
 
+    # If a parent form model is missing information about a child, load the rest
+    # of the missing information from a previous MCDI snapshot for the child.
     resolver = parent_account_util.AttributeResolutionResolver()
     resolver.fill_parent_form_defaults(new_form)
 
-    interpretation_vals = interpretation_format.details
-    if isinstance(new_form.gender, int):
-        pass
-    elif new_form.gender == interpretation_vals['male']:
-        new_form.gender = constants.MALE
-    elif new_form.gender == interpretation_vals['female']:
-        new_form.gender = constants.FEMALE
-    elif new_form.gender == interpretation_vals['explicit_other']:
-        new_form.gender = constants.OTHER_GENDER
-    else:
-        return generate_invalid_request_error(INVALID_GENDER_VALUE_MSG)
-
-    if isinstance(new_form.hard_of_hearing, bool):
-        if new_form.hard_of_hearing:
-            new_form.hard_of_hearing = constants.EXPLICIT_TRUE
-        else:
-            new_form.hard_of_hearing = constants.EXPLICIT_FALSE
-    elif isinstance(new_form.hard_of_hearing, int):
-        pass
-    elif new_form.hard_of_hearing == interpretation_vals['explicit_true']:
-        new_form.hard_of_hearing = constants.EXPLICIT_TRUE
-    elif new_form.hard_of_hearing == interpretation_vals['explicit_false']:
-        new_form.hard_of_hearing = constants.EXPLICIT_FALSE
-    else:
-        return generate_invalid_request_error(INVALID_HARD_OF_HEARING_MSG)
-
+    # Save the filled parent form to the database and send a link for filling
+    # out that form to the specified parent email address.
     db_util.insert_parent_form(new_form)
     parent_account_util.send_mcdi_email(new_form)
 
@@ -459,10 +485,13 @@ def send_parent_forms():
     request = flask.request
     api_key = request.args.get(API_KEY_FIELD, None)
     
+    # Ensure that the current user has premissions necessary to send parent MCDI
+    # through the API layer.
     problem = verify_api_key_for_parent_forms(api_key)
     if problem != None:
         return problem
 
+    # Parse user input.
     global_id_str = request.args.get('database_id', '')
     study_id_str = request.args.get('study_id', '')
     study_str = request.args.get('study', '')
@@ -476,11 +505,23 @@ def send_parent_forms():
     parent_email = request.args.get('parent_email', '')
     mcdi_type_str = request.args.get('mcdi_type', '')
 
+    # Parse user provided information about the interpretation / presentation
+    # format, mapping necessary to interpreting user input for this API
+    # operation.
     interpretation_format_name = request.args.get(FORMAT_ATTR,
         DEFAULT_INTERPRETATION_FORMAT)
     interpretation_format = db_util.load_presentation_model(
         interpretation_format_name)
 
+    # Reject API request if the interpretation format was not provided or if the
+    # user requested an interpretation format that was not recognized.
+    if interpretation_format == None:
+        return generate_invalid_request_error(INVALID_INTERPRETATION_MSG)
+
+    # To support sending multiple MCDI forms in a single API call, split
+    # specified values by comma. Note that this API version does not allow for
+    # commas in the strings provided to this call unless they demark one input
+    # value from another.
     global_id_vals = api_key_util.interp_csv_field(global_id_str)
     study_id_vals = api_key_util.interp_csv_field(study_id_str)
     study_vals = api_key_util.interp_csv_field(study_str)
@@ -494,6 +535,8 @@ def send_parent_forms():
     parent_email_vals = api_key_util.interp_csv_field(parent_email)
     mcdi_type_vals = api_key_util.interp_csv_field(mcdi_type_str)
 
+    # Ensure that the same number of values were provided for each API
+    # parameter for this call.
     lengths = [
         len(global_id_vals),
         len(study_id_vals),
@@ -516,8 +559,14 @@ def send_parent_forms():
         return generate_invalid_request_error(MISMATCHED_CSV_LENGTHS_MSG)
     num_records = list(length_set)[0]
 
+    # Pair each element across all parameters, grouping the first indexed value
+    # of each parameter array (values loaded from CSV strings), the second
+    # indexed value of each parameter array, and so on. Each grouping of
+    # parameters results in a parent form sent by email.
     for i in range(0, num_records):
 
+        # Get the grouping of parameters across the parameter arrays. Note that
+        # get if avail returns '' if the parameter is not provided.
         global_id = interp_util.safe_int_interpret(
             api_key_util.get_if_avail(global_id_vals, i))
         study_id = api_key_util.get_if_avail(study_id_vals, i)
@@ -534,33 +583,83 @@ def send_parent_forms():
         parent_email = api_key_util.get_if_avail(parent_email_vals, i)
         mcdi_type = api_key_util.get_if_avail(mcdi_type_vals, i)
 
+        # Generate a new unique randomly generated ID for this new parent form.
         form_id = parent_account_util.generate_unique_mcdi_form_id()
 
+        # Ensure the desired type of MCDI form  was specified.
         if mcdi_type == None or mcdi_type == '':
             return generate_invalid_request_error(MISSING_MCDI_TYPE_MSG)
 
+        # Ensure that the name of the desired MCDI format has been specified / 
+        # the MCDI format is in the application's database.
         if db_util.load_mcdi_model(mcdi_type) == None:
             msg = INVALID_MCDI_TYPE_MSG % mcdi_type
             return generate_invalid_request_error(msg)
 
-        if global_id == None and (study_id == '' or study == ''):
+        # Ensure that the API client provided either a global ID or both a study
+        # and study ID.
+        global_id_missing = global_id == None or global_id == ''
+        study_id_missing = study_id == None or study_id == ''
+        study_missing = study == None or study == ''
+        if global_id_missing and (study_id_missing or study_missing):
             return generate_invalid_request_error(NO_ID_MSG)
 
+        # Ensure that the provided email address at least has the form of an
+        # email address. Note that, due to the asynchronous nature of email,
+        # there is currently no mechanism for reporting undelivered emails in
+        # this application.
         if not parent_account_util.is_likely_email_address(parent_email):
             message = INVALID_PARENT_EMAIL % parent_email
             return generate_invalid_request_error(message)
 
-        try:
-            birthday = datetime.datetime.strptime(birthday, ISO_PARSE_STR)
-            birthday = birthday.strftime(DATE_OUT_STR)
-        except:
-            pass
+        # Ensure that the provided birthday is in a correct ISO date string.
+        if birthday != None and birthday != '':
+            try:
+                birthday = datetime.datetime.strptime(birthday, ISO_PARSE_STR)
+                birthday = birthday.strftime(DATE_OUT_STR)
+            except:
+                return generate_invalid_request_error(ISO_DATE_INVALID_MSG)
 
-        if parent_email == '':
-            return generate_invalid_request_error(MISSING_PARENT_EMAIL_MSG)
-
+        # Parse the languages as a period seperated value.
         languages = languages.split('.')
 
+        interpretation_vals = interpretation_format.details
+
+        # Use the specified interpretation / presentation format to parse the
+        # provided gender value.
+        if gender != None and gender != '':
+            if isinstance(gender, int):
+                pass
+            elif gender == interpretation_vals['male']:
+                gender = constants.MALE
+            elif gender == interpretation_vals['female']:
+                gender = constants.FEMALE
+            elif gender == interpretation_vals['explicit_other']:
+                gender = constants.OTHER_GENDER
+            else:
+                return generate_invalid_request_error(INVALID_GENDER_VALUE_MSG)
+
+
+        # Use the specified interpretation / presentation formation to parse the
+        # provided hard of hearing status.
+        if hard_of_hearing != None and hard_of_hearing != '':
+            if isinstance(hard_of_hearing, bool):
+                if hard_of_hearing:
+                    hard_of_hearing = constants.EXPLICIT_TRUE
+                else:
+                    hard_of_hearing = constants.EXPLICIT_FALSE
+            elif isinstance(hard_of_hearing, int):
+                pass
+            if hard_of_hearing == interpretation_vals['explicit_true']:
+                hard_of_hearing = constants.EXPLICIT_TRUE
+            elif hard_of_hearing == interpretation_vals['explicit_false']:
+                hard_of_hearing = constants.EXPLICIT_FALSE
+            else:
+                return generate_invalid_request_error(
+                    INVALID_HARD_OF_HEARING_MSG)
+
+        # Create a new parent form model but wait to save it until resolving 
+        # missing values by using a previous entry for the specified child.
         new_form = models.ParentForm(
             form_id,
             child_name,
@@ -578,35 +677,14 @@ def send_parent_forms():
             hard_of_hearing
         )
 
+        # If a parent form model is missing information about a child, load the
+        # rest of the missing information from a previous MCDI snapshot for the
+        # child.
         resolver = parent_account_util.AttributeResolutionResolver()
         resolver.fill_parent_form_defaults(new_form)
 
-        interpretation_vals = interpretation_format.details
-        if isinstance(new_form.gender, int):
-            pass
-        elif new_form.gender == interpretation_vals['male']:
-            new_form.gender = constants.MALE
-        elif new_form.gender == interpretation_vals['female']:
-            new_form.gender = constants.FEMALE
-        elif new_form.gender == interpretation_vals['explicit_other']:
-            new_form.gender = constants.OTHER_GENDER
-        else:
-            return generate_invalid_request_error(INVALID_GENDER_VALUE_MSG)
-
-        if isinstance(new_form.hard_of_hearing, bool):
-            if new_form.hard_of_hearing:
-                new_form.hard_of_hearing = constants.EXPLICIT_TRUE
-            else:
-                new_form.hard_of_hearing = constants.EXPLICIT_FALSE
-        elif isinstance(new_form.hard_of_hearing, int):
-            pass
-        if new_form.hard_of_hearing == interpretation_vals['explicit_true']:
-            new_form.hard_of_hearing = constants.EXPLICIT_TRUE
-        elif new_form.hard_of_hearing == interpretation_vals['explicit_false']:
-            new_form.hard_of_hearing = constants.EXPLICIT_FALSE
-        else:
-            return generate_invalid_request_error(INVALID_HARD_OF_HEARING_MSG)
-
+        # Save the filled parent form to the database and send a link for
+        # filling out that form to the specified parent email address.
         db_util.insert_parent_form(new_form)
         parent_account_util.send_mcdi_email(new_form)
 

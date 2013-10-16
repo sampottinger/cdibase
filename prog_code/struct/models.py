@@ -241,6 +241,30 @@ class SnapshotMetadata:
         self.mcdi_type = mcdi_type
         self.hard_of_hearing = hard_of_hearing
 
+    def __eq__(self, other):
+        if other == None:
+            return False
+        same = self.database_id == other.database_id
+        same = self.child_id == other.child_id and same
+        same = self.study_id == other.study_id and same
+        same = self.study == other.study and same
+        same = self.gender == other.gender and same
+        same = self.age == other.age and same
+        same = self.birthday == other.birthday and same
+        same = self.session_date == other.session_date and same
+        same = self.session_num == other.session_num and same
+        same = self.total_num_sessions == other.total_num_sessions and same
+        same = self.words_spoken == other.words_spoken and same
+        same = self.items_excluded == other.items_excluded and same
+        same = self.percentile == other.percentile and same
+        same = self.extra_categories == other.extra_categories and same
+        same = self.revision == other.revision and same
+        same = self.languages == other.languages and same
+        same = self.num_languages == other.num_languages and same
+        same = self.mcdi_type == other.mcdi_type and same
+        same = self.hard_of_hearing == other.hard_of_hearing and same
+        return same
+
 
 class SnapshotContent:
     """Record of a single MCDI word as part of a snapshot."""

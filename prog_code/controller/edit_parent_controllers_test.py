@@ -1,4 +1,6 @@
+import collections
 import copy
+from datetime import date
 
 import mox
 
@@ -6,6 +8,8 @@ import daxlabbase
 from ..util import constants
 from ..util import db_util
 from ..util import filter_util
+from ..util import interp_util
+from ..util import math_util
 from ..util import parent_account_util
 from ..util import user_util
 from ..struct import models
@@ -27,6 +31,7 @@ TEST_NUM_LANGUAGES = 2
 TEST_HARD_OF_HEARING = False
 TEST_STUDY = 'test study'
 TEST_BIRTHDAY = '2011/09/12'
+TEST_BIRTHDAY_DATE = date(2011, 9, 12)
 TEST_PARENT_FORM_ID_MOD = 30
 TEST_CHILD_NAME_MOD = 'Test Child2'
 TEST_PARENT_EMAIL_MOD = 'parent2@example.com'
@@ -34,6 +39,7 @@ TEST_DB_ID_MOD = 321
 TEST_STUDY_ID_MOD = 654
 TEST_STUDY_MOD = 'test study 2'
 TEST_BIRTHDAY_MOD = '2011/09/13'
+TEST_BIRTHDAY_DATE_MOD = date(2011, 9, 13)
 TEST_ITEMS_EXCLUDED_MOD = 7
 TEST_EXTRA_CATEGORIES_MOD = 8
 TEST_NUM_LANGUAGES_MOD = 1
@@ -74,16 +80,25 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
     'standard',
     TEST_HARD_OF_HEARING
 )
+MALE_TEST_PERCENTILE_NAME = 'male_test_percentiles'
+FEMALE_TEST_PERCENTILE_NAME = 'female_test_percentiles'
+OTHER_TEST_PERCENTILE_NAME = 'other_test_percentiles'
 TEST_FORMAT = models.MCDIFormat(
     'standard',
     'standard',
     'standard.yaml',
     {
-        'male': 'male',
-        'female': 'female',
-        'explicit_other': 'other',
-        'explicit_true': 'true',
-        'explicit_false': 'false'
+        'categories': [
+            {'words':['cat_1_word_1', 'cat_1_word_2', 'cat_1_word_3']},
+            {'words':['cat_2_word_1', 'cat_2_word_2', 'cat_2_word_3']}
+        ],
+        'percentiles': {
+            'male': MALE_TEST_PERCENTILE_NAME,
+            'female': FEMALE_TEST_PERCENTILE_NAME,
+            'other': OTHER_TEST_PERCENTILE_NAME
+        },
+        'count_as_spoken': [1],
+        'meta': {'mcdi_type': 'multilingual-test'}
     }
 )
 TEST_PRESENTATION_FORMAT_METADATA = models.PresentationFormat(
@@ -179,6 +194,69 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
     'standard',
     TEST_HARD_OF_HEARING
 )
+PARENT_MCDI_FORM_URL = '/base/parent_mcdi/%d' % TEST_PARENT_FORM_ID
+TEMPLATE_WORD_SPOKEN_VALUES = {
+    'cat_1_word_1_report': 1,
+    'cat_1_word_2_report': 1,
+    'cat_1_word_3_report': 1,
+    'cat_2_word_1_report': 1,
+    'cat_2_word_2_report': 0,
+    'cat_2_word_3_report': 1
+}
+TEST_PERCENTILE = 50
+TEST_PERCENTILE_CLASS = collections.namedtuple('TestPercentileTable',
+    ['details'])
+TEST_PERCENTILE_TABLE = TEST_PERCENTILE_CLASS('test details')
+TODAY = date.today()
+TEST_SESSION_NUM = 1
+TEST_WORDS_SPOKEN = 5
+TEST_AGE = 21
+EXPECTED_SNAPSHOT = models.SnapshotMetadata(
+    None,
+    TEST_DB_ID,
+    TEST_STUDY_ID,
+    TEST_STUDY,
+    constants.MALE,
+    TEST_AGE,
+    TEST_BIRTHDAY,
+    TODAY.strftime('%Y/%m/%d'),
+    TEST_SESSION_NUM,
+    TEST_SESSION_NUM,
+    TEST_WORDS_SPOKEN,
+    TEST_ITEMS_EXCLUDED,
+    TEST_PERCENTILE,
+    TEST_EXTRA_CATEGORIES,
+    0,
+    TEST_LANGUAGES.split('.'),
+    TEST_NUM_LANGUAGES,
+    'multilingual-test',
+    constants.EXPLICIT_FALSE
+)
+EXPECTED_SNAPSHOT_MOD = models.SnapshotMetadata(
+    None,
+    TEST_DB_ID,
+    TEST_STUDY_ID,
+    TEST_STUDY,
+    constants.MALE,
+    TEST_AGE,
+    TEST_BIRTHDAY_MOD,
+    TODAY.strftime('%Y/%m/%d'),
+    TEST_SESSION_NUM,
+    TEST_SESSION_NUM,
+    TEST_WORDS_SPOKEN,
+    TEST_ITEMS_EXCLUDED_MOD,
+    TEST_PERCENTILE,
+    TEST_EXTRA_CATEGORIES_MOD,
+    0,
+    TEST_LANGUAGES.split('.'),
+    TEST_NUM_LANGUAGES,
+    'multilingual-test',
+    constants.EXPLICIT_FALSE
+)
+TEMPLATE_WORD_SPOKEN_RECORD = dict(map(
+    lambda (word, val): (word.replace('_report', ''), val),
+    TEMPLATE_WORD_SPOKEN_VALUES.items()
+))
 
 
 class TestEditParentControllers(mox.MoxTestBase):
@@ -417,3 +495,483 @@ class TestEditParentControllers(mox.MoxTestBase):
                 self.assertTrue(constants.CONFIRMATION_ATTR in sess)
                 self.assertNotEqual(sess[constants.CONFIRMATION_ATTR], '')
                 sess[constants.CONFIRMATION_ATTR] = ''
+
+    def test_handle_parent_mcdi_form_bad_id(self):
+        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_db_id')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_study_id')
+        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(None)
+
+        parent_form_no_db_id = copy.copy(EXPECTED_PARENT_FORM)
+        parent_form_no_db_id.database_id = None
+        user_util.get_user(None).AndReturn(None)
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            parent_form_no_db_id)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([])
+
+        parent_form_no_study_id = copy.copy(EXPECTED_PARENT_FORM)
+        parent_form_no_study_id.study_id = None
+        user_util.get_user(None).AndReturn(None)
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            parent_form_no_study_id)
+        parent_account_util.get_snapshot_chronology_for_study_id(
+            TEST_STUDY, TEST_STUDY_ID).AndReturn([])
+
+        parent_form_no_ids = copy.copy(EXPECTED_PARENT_FORM)
+        parent_form_no_ids.study_id = None
+        parent_form_no_ids.database_id = None
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            parent_form_no_ids)
+
+        # Should not be called
+        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
+        self.mox.StubOutWithMock(db_util, 'remove_parent_form')
+
+        self.mox.ReplayAll()
+
+        with self.app.test_client() as client:
+
+            # Testing with unexpected form ID
+            resp = client.post(PARENT_MCDI_FORM_URL)
+            self.assertEqual(resp.status_code, 404)
+
+            # Testing with invalid study id
+            client.post(PARENT_MCDI_FORM_URL)
+            self.assertEqual(resp.status_code, 404)
+
+            # Testing with invalid global id
+            client.post(PARENT_MCDI_FORM_URL)
+            self.assertEqual(resp.status_code, 404)
+
+            # Testing with no IDs
+            client.post(PARENT_MCDI_FORM_URL)
+            self.assertEqual(resp.status_code, 404)
+
+    def test_handle_parent_mcdi_form_bad_input(self):
+        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_db_id')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_study_id')
+        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+
+        no_birthday_form = copy.copy(EXPECTED_PARENT_FORM)
+        no_birthday_form.birthday = None
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            no_birthday_form)
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
+
+        no_gender_form = copy.copy(EXPECTED_PARENT_FORM)
+        no_gender_form.gender = None
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            no_gender_form)
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
+
+        missing_items_excluded_form = copy.copy(EXPECTED_PARENT_FORM)
+        missing_items_excluded_form.items_excluded = None
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            missing_items_excluded_form)
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
+
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            missing_items_excluded_form)
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
+
+        missing_extra_categories_form = copy.copy(EXPECTED_PARENT_FORM)
+        missing_extra_categories_form.extra_categories = None
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            missing_extra_categories_form)
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
+
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            missing_extra_categories_form)
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
+
+        no_languages_form = copy.copy(EXPECTED_PARENT_FORM)
+        no_languages_form.languages = None
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            no_languages_form)
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
+
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            no_languages_form)
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
+
+        self.mox.ReplayAll()
+
+        with self.app.test_client() as client:
+
+            resp = client.post(PARENT_MCDI_FORM_URL, data={
+                'birthday': 'invalid birthday'
+            })
+
+            with client.session_transaction() as sess:
+                self.assertTrue(constants.ERROR_ATTR in sess)
+                self.assertNotEqual(sess[constants.ERROR_ATTR], '')
+                sess[constants.ERROR_ATTR] = ''
+                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+
+            resp = client.post(PARENT_MCDI_FORM_URL, data={
+                'gender': 'invalid gender'
+            })
+
+            with client.session_transaction() as sess:
+                self.assertTrue(constants.ERROR_ATTR in sess)
+                self.assertNotEqual(sess[constants.ERROR_ATTR], '')
+                sess[constants.ERROR_ATTR] = ''
+                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+
+            resp = client.post(PARENT_MCDI_FORM_URL, data={
+                'items_excluded': 'invalid items excluded'
+            })
+
+            with client.session_transaction() as sess:
+                self.assertTrue(constants.ERROR_ATTR in sess)
+                self.assertNotEqual(sess[constants.ERROR_ATTR], '')
+                sess[constants.ERROR_ATTR] = ''
+                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+
+            resp = client.post(PARENT_MCDI_FORM_URL, data={
+                'items_excluded': -1
+            })
+
+            with client.session_transaction() as sess:
+                self.assertTrue(constants.ERROR_ATTR in sess)
+                self.assertNotEqual(sess[constants.ERROR_ATTR], '')
+                sess[constants.ERROR_ATTR] = ''
+                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+
+            resp = client.post(PARENT_MCDI_FORM_URL, data={
+                'extra_categories': 'invalid items excluded'
+            })
+
+            with client.session_transaction() as sess:
+                self.assertTrue(constants.ERROR_ATTR in sess)
+                self.assertNotEqual(sess[constants.ERROR_ATTR], '')
+                sess[constants.ERROR_ATTR] = ''
+                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+
+            resp = client.post(PARENT_MCDI_FORM_URL, data={
+                'extra_categories': -1
+            })
+
+            with client.session_transaction() as sess:
+                self.assertTrue(constants.ERROR_ATTR in sess)
+                self.assertNotEqual(sess[constants.ERROR_ATTR], '')
+                sess[constants.ERROR_ATTR] = ''
+                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+
+            resp = client.post(PARENT_MCDI_FORM_URL)
+
+            with client.session_transaction() as sess:
+                self.assertTrue(constants.ERROR_ATTR in sess)
+                self.assertNotEqual(sess[constants.ERROR_ATTR], '')
+                sess[constants.ERROR_ATTR] = ''
+                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+
+            resp = client.post(PARENT_MCDI_FORM_URL, data={
+                'languages': ''
+            })
+
+            with client.session_transaction() as sess:
+                self.assertTrue(constants.ERROR_ATTR in sess)
+                self.assertNotEqual(sess[constants.ERROR_ATTR], '')
+                sess[constants.ERROR_ATTR] = ''
+                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+
+    def test_missing_word_value(self):
+        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_db_id')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_study_id')
+        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            EXPECTED_PARENT_FORM)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            EXPECTED_PARENT_FORM)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+
+        self.mox.ReplayAll()
+
+        word_data_1 = copy.copy(TEMPLATE_WORD_SPOKEN_VALUES)
+        del word_data_1['cat_1_word_1_report']
+        word_data_2 = copy.copy(TEMPLATE_WORD_SPOKEN_VALUES)
+        del word_data_2['cat_2_word_3_report']
+
+        with self.app.test_client() as client:
+
+            client.post(PARENT_MCDI_FORM_URL, data=word_data_1)
+            with client.session_transaction() as sess:
+                self.assertTrue(constants.ERROR_ATTR in sess)
+                self.assertNotEqual(sess[constants.ERROR_ATTR], '')
+                sess[constants.ERROR_ATTR] = ''
+                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+
+            client.post(PARENT_MCDI_FORM_URL, data=word_data_2)
+            with client.session_transaction() as sess:
+                self.assertTrue(constants.ERROR_ATTR in sess)
+                self.assertNotEqual(sess[constants.ERROR_ATTR], '')
+                sess[constants.ERROR_ATTR] = ''
+                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+
+    def test_invalid_word_value(self):
+        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_db_id')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_study_id')
+        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            EXPECTED_PARENT_FORM)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+
+        self.mox.ReplayAll()
+
+        word_data = copy.copy(TEMPLATE_WORD_SPOKEN_VALUES)
+        word_data['cat_2_word_1_report'] = 'test invalid value'
+
+        with self.app.test_client() as client:
+
+            client.post(PARENT_MCDI_FORM_URL, data=word_data)
+            with client.session_transaction() as sess:
+                self.assertTrue(constants.ERROR_ATTR in sess)
+                self.assertNotEqual(sess[constants.ERROR_ATTR], '')
+                sess[constants.ERROR_ATTR] = ''
+                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+
+    def test_invalid_percentile_table(self):
+        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_db_id')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_study_id')
+        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'load_percentile_model')
+
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            EXPECTED_PARENT_FORM)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.load_percentile_model(MALE_TEST_PERCENTILE_NAME).AndReturn(
+            None)
+
+        self.mox.ReplayAll()
+
+        with self.app.test_client() as client:
+
+            client.post(PARENT_MCDI_FORM_URL, data=TEMPLATE_WORD_SPOKEN_VALUES)
+            with client.session_transaction() as sess:
+                self.assertTrue(constants.ERROR_ATTR in sess)
+                self.assertNotEqual(sess[constants.ERROR_ATTR], '')
+                sess[constants.ERROR_ATTR] = ''
+                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+
+    def test_submit_parent_form_no_params(self):
+        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_db_id')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_study_id')
+        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'load_percentile_model')
+        self.mox.StubOutWithMock(interp_util, 'monthdelta')
+        self.mox.StubOutWithMock(math_util, 'find_percentile')
+        self.mox.StubOutWithMock(filter_util, 'run_search_query')
+        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
+        self.mox.StubOutWithMock(db_util, 'remove_parent_form')
+
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            EXPECTED_PARENT_FORM)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.load_percentile_model(MALE_TEST_PERCENTILE_NAME).AndReturn(
+            TEST_PERCENTILE_TABLE)
+
+        interp_util.monthdelta(TEST_BIRTHDAY_DATE, TODAY).AndReturn(TEST_AGE)
+        
+        math_util.find_percentile(
+            'test details',
+            TEST_WORDS_SPOKEN,
+            TEST_AGE,
+            6
+        ).AndReturn(TEST_PERCENTILE)
+        
+        filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn([])
+
+        word_values = dict(map(
+            lambda (word, val): (word.replace('_report', ''), val),
+            TEMPLATE_WORD_SPOKEN_VALUES.items()
+        ))
+        db_util.insert_snapshot(EXPECTED_SNAPSHOT, mox.IsA(dict))
+        db_util.remove_parent_form(str(TEST_PARENT_FORM_ID))
+
+        self.mox.ReplayAll()
+
+        with self.app.test_client() as client:
+            client.post(PARENT_MCDI_FORM_URL, data=TEMPLATE_WORD_SPOKEN_VALUES)
+
+    def test_submit_parent_form_missing_record(self):
+        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_db_id')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_study_id')
+        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'load_percentile_model')
+        self.mox.StubOutWithMock(interp_util, 'monthdelta')
+        self.mox.StubOutWithMock(math_util, 'find_percentile')
+        self.mox.StubOutWithMock(filter_util, 'run_search_query')
+        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
+        self.mox.StubOutWithMock(db_util, 'remove_parent_form')
+
+        partial_parent_form = copy.copy(EXPECTED_PARENT_FORM)
+        partial_parent_form.items_excluded = None
+        partial_parent_form.extra_categories = None
+        partial_parent_form.child_name = None
+        partial_parent_form.parent_email = None
+        partial_parent_form.birthday = None
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            partial_parent_form)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.load_percentile_model(MALE_TEST_PERCENTILE_NAME).AndReturn(
+            TEST_PERCENTILE_TABLE)
+
+        interp_util.monthdelta(TEST_BIRTHDAY_DATE_MOD, TODAY).AndReturn(
+            TEST_AGE)
+        
+        math_util.find_percentile(
+            'test details',
+            TEST_WORDS_SPOKEN,
+            TEST_AGE,
+            6
+        ).AndReturn(TEST_PERCENTILE)
+        
+        filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn([])
+
+        word_values = dict(map(
+            lambda (word, val): (word.replace('_report', ''), val),
+            TEMPLATE_WORD_SPOKEN_VALUES.items()
+        ))
+        db_util.insert_snapshot(EXPECTED_SNAPSHOT_MOD, mox.IsA(dict))
+        db_util.remove_parent_form(str(TEST_PARENT_FORM_ID))
+
+        self.mox.ReplayAll()
+
+        data = copy.copy(TEMPLATE_WORD_SPOKEN_VALUES)
+        data['items_excluded'] = TEST_ITEMS_EXCLUDED_MOD
+        data['extra_categories'] = TEST_EXTRA_CATEGORIES_MOD
+        data['child_name'] = TEST_CHILD_NAME_MOD
+        data['parent_email'] = TEST_PARENT_EMAIL_MOD
+        data['birthday'] = TEST_BIRTHDAY_MOD
+        TEMPLATE_WORD_SPOKEN_VALUES
+        
+        with self.app.test_client() as client:
+            client.post(PARENT_MCDI_FORM_URL, data=data)
+
+            with client.session_transaction() as sess:
+                self.assertFalse(constants.ERROR_ATTR in sess)
+                self.assertTrue(constants.CONFIRMATION_ATTR in sess)
+
+    def test_submit_parent_form_favor_record_values(self):
+        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_db_id')
+        self.mox.StubOutWithMock(parent_account_util,
+            'get_snapshot_chronology_for_study_id')
+        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'load_percentile_model')
+        self.mox.StubOutWithMock(interp_util, 'monthdelta')
+        self.mox.StubOutWithMock(math_util, 'find_percentile')
+        self.mox.StubOutWithMock(filter_util, 'run_search_query')
+        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
+        self.mox.StubOutWithMock(db_util, 'remove_parent_form')
+
+        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+            EXPECTED_PARENT_FORM)
+        parent_account_util.get_snapshot_chronology_for_db_id(
+            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.load_percentile_model(MALE_TEST_PERCENTILE_NAME).AndReturn(
+            TEST_PERCENTILE_TABLE)
+
+        interp_util.monthdelta(TEST_BIRTHDAY_DATE, TODAY).AndReturn(
+            TEST_AGE)
+        
+        math_util.find_percentile(
+            'test details',
+            TEST_WORDS_SPOKEN,
+            TEST_AGE,
+            6
+        ).AndReturn(TEST_PERCENTILE)
+        
+        filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn([])
+
+        db_util.insert_snapshot(EXPECTED_SNAPSHOT, TEMPLATE_WORD_SPOKEN_RECORD)
+        db_util.remove_parent_form(str(TEST_PARENT_FORM_ID))
+
+        self.mox.ReplayAll()
+
+        data = copy.copy(TEMPLATE_WORD_SPOKEN_VALUES)
+        data['items_excluded'] = TEST_ITEMS_EXCLUDED_MOD
+        data['extra_categories'] = TEST_EXTRA_CATEGORIES_MOD
+        data['child_name'] = TEST_CHILD_NAME
+        data['parent_email'] = TEST_PARENT_EMAIL
+        data['birthday'] = TEST_BIRTHDAY_MOD
+        TEMPLATE_WORD_SPOKEN_VALUES
+        
+        with self.app.test_client() as client:
+            client.post(PARENT_MCDI_FORM_URL, data=data)
+
+            with client.session_transaction() as sess:
+                self.assertFalse(constants.ERROR_ATTR in sess)
+                self.assertTrue(constants.CONFIRMATION_ATTR in sess)
+
+    def test_fill_parent_form_previous_snapshot(self):
+        pass
+

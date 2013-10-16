@@ -30,7 +30,7 @@ TEST_ITEMS_EXCLUDED = 3
 TEST_EXTRA_CATEGORIES = 4
 TEST_LANGUAGES = 'english.spanish'
 TEST_NUM_LANGUAGES = 2
-TEST_HARD_OF_HEARING = False
+TEST_HARD_OF_HEARING = constants.EXPLICIT_FALSE
 TEST_STUDY = 'test study'
 TEST_BIRTHDAY = '2011/09/12'
 TEST_PARENT_FORM_ID_MOD = 30
@@ -40,6 +40,7 @@ TEST_DB_ID_MOD = 321
 TEST_STUDY_ID_MOD = 654
 TEST_STUDY_MOD = 'test study 2'
 TEST_BIRTHDAY_MOD = '2011/09/13'
+TEST_BIRTHDAY_MOD_ISO = '2011-09-13'
 TEST_ITEMS_EXCLUDED_MOD = 7
 TEST_EXTRA_CATEGORIES_MOD = 8
 TEST_NUM_LANGUAGES_MOD = 1
@@ -471,7 +472,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
                     'mcdi_type': 'standard',
                     'parent_email': TEST_PARENT_EMAIL,
                     'database_id': str(TEST_DB_ID),
-                    'min_birthday': 'invalid'
+                    'birthday': 'invalid'
                 })
             )
             self.assertTrue('error' in json.loads(resp.data))
@@ -563,7 +564,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
                     'study': TEST_STUDY_MOD,
                     'study_id': TEST_STUDY_ID_MOD,
                     'gender': 'female',
-                    'birthday': TEST_BIRTHDAY_MOD,
+                    'birthday': TEST_BIRTHDAY_MOD_ISO,
                     'items_excluded': TEST_ITEMS_EXCLUDED_MOD,
                     'extra_categories': TEST_EXTRA_CATEGORIES_MOD,
                     'languages': 'english',
@@ -652,10 +653,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
 
         db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
         db_util.load_presentation_model('invalid_format').AndReturn(None)
-        db_util.load_mcdi_model('standard').AndReturn(None)
 
         db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
@@ -788,7 +786,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
                     'mcdi_type': 'standard',
                     'parent_email': TEST_PARENT_EMAIL,
                     'database_id': str(TEST_DB_ID),
-                    'min_birthday': 'invalid'
+                    'birthday': 'invalid'
                 })
             )
             self.assertTrue('error' in json.loads(resp.data))
@@ -803,3 +801,89 @@ class TestAPIKeyControllers(mox.MoxTestBase):
                 })
             )
             self.assertTrue('error' in json.loads(resp.data))
+
+    def test_send_parent_forms_defaults(self):
+        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(filter_util, 'run_search_query')
+        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
+        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
+        self.mox.StubOutWithMock(parent_account_util,
+            'generate_unique_mcdi_form_id')
+
+        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
+            TEST_PARENT_FORM_ID)
+        db_util.load_presentation_model('standard').AndReturn(
+            TEST_PRESENTATION_FORMAT_METADATA)
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
+            [TEST_SNAPSHOT])
+        db_util.insert_parent_form(EXPECTED_PARENT_FORM)
+
+        self.mox.ReplayAll()
+
+        with self.app.test_client() as client:
+            
+            with client.session_transaction() as sess:
+                sess['email'] = TEST_EMAIL
+
+            resp = client.get('/base/api/v0/send_parent_forms?' +
+                urllib.urlencode({
+                    'api_key': TEST_API_KEY,
+                    'child_name': TEST_CHILD_NAME,
+                    'mcdi_type': 'standard',
+                    'parent_email': TEST_PARENT_EMAIL,
+                    'database_id': TEST_DB_ID
+                })
+            )
+            self.assertFalse('error' in json.loads(resp.data))
+
+    def test_send_parent_forms_non_defaults(self):
+        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
+        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(filter_util, 'run_search_query')
+        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
+        self.mox.StubOutWithMock(parent_account_util,
+            'generate_unique_mcdi_form_id')
+
+        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
+            TEST_PARENT_FORM_ID_MOD)
+        db_util.load_presentation_model('standard_mod').AndReturn(
+            TEST_PRESENTATION_FORMAT_METADATA)
+        db_util.load_mcdi_model('standard_mod').AndReturn(TEST_FORMAT)
+        filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
+            [TEST_SNAPSHOT])
+        db_util.insert_parent_form(EXPECTED_MODIFIED_PARENT_FORM)
+
+        self.mox.ReplayAll()
+
+        with self.app.test_client() as client:
+            
+            with client.session_transaction() as sess:
+                sess['email'] = TEST_EMAIL
+
+            resp = client.get('/base/api/v0/send_parent_forms?' +
+                urllib.urlencode({
+                    'api_key': TEST_API_KEY,
+                    'child_name': TEST_CHILD_NAME_MOD,
+                    'mcdi_type': 'standard_mod',
+                    'parent_email': TEST_PARENT_EMAIL_MOD,
+                    'study': TEST_STUDY_MOD,
+                    'study_id': TEST_STUDY_ID_MOD,
+                    'gender': 'female',
+                    'birthday': TEST_BIRTHDAY_MOD_ISO,
+                    'items_excluded': TEST_ITEMS_EXCLUDED_MOD,
+                    'extra_categories': TEST_EXTRA_CATEGORIES_MOD,
+                    'languages': 'english',
+                    'hard_of_hearing': 'true',
+                    'format': 'standard_mod'
+                })
+            )
+            self.assertFalse('error' in json.loads(resp.data))
