@@ -624,12 +624,18 @@ def insert_snapshot(snapshot_metadata, word_entries):
     connection = get_db_connection()
     cursor = connection.cursor()
 
+    if snapshot_metadata.child_id == None:
+        cursor.execute('SELECT MAX(child_id) FROM snapshots')
+        child_id = cursor.fetchone()[0] + 1
+    else:
+        child_id = snapshot_metadata.child_id
+
     cmd = 'INSERT INTO snapshots VALUES (%s)' % (', '.join('?' * 19))
     cursor.execute(
         cmd,
         (
             None,
-            snapshot_metadata.child_id,
+            child_id,
             snapshot_metadata.study_id,
             snapshot_metadata.study,
             snapshot_metadata.gender,
