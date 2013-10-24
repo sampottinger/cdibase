@@ -139,6 +139,19 @@ At this time, this project, unfortunately, does not have a staging server.
 
 ### Deployment
 
+You will need to be given the location of the code as well as directory access permissions by the server superuser. After securing that, navigate to the daxlabbase environment.
+
 The code can be uploaded by pulling from the master branch of the project's repository.
 ```
 $ git pull
+```
+
+The gunicorn server processes are monitored by supervisor. To reload the new code:
+```
+$ sudo supervisorctl
+supervisor> stop daxlabbase
+daxlabbase: stopped
+supervisor> start daxlabbase
+daxlabbase: started
+supervisor> exit
+```
