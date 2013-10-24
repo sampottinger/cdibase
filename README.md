@@ -117,10 +117,28 @@ $ sqlite3 daxlab.db < create_test_user.sql
 
 Use the forgot password feature to get a temporary password for that new user. Please be aware that ```create_test_user.sql``` gives test@example.com full permissions.
 
+Finally, before some features of the application can be used, you will also need to provide YAML descriptions of MCDI forms, a CSV of percentile information, and a YAML specification of a presentation format. Examples are available in a [private gist](https://gist.github.com/Samnsparky/db2ac1b742b98f954245).
+
+These can be provided through the edit formats tab or at ```http://127.0.0.1:5000/base/edit_formats```.
+
+
+### Notes on software architecture
+
+The application consists of models, views (templates), controllers, and utilities. While following MVC, those utilities split out more complex logic not dealing directly with user responses to increase testability. Both can be found in the utilities and controllers directories respectively under the prog_code directory.
+
+
 ### Standards, Conventions, and State of Development
+
+Ideally future development should follow an 80% unit testing coverage guidelines for the controllers with discretionary unit test coverage for the utilities. Python code should include [epydoc](http://epydoc.sourceforge.net/) inline documentation and should follow [Google's Python Style Guidelines](http://google-styleguide.googlecode.com/svn/trunk/pyguide.html).
 
 
 ### Staging
 
+At this time, this project, unfortunately, does not have a staging server.
+
 
 ### Deployment
+
+The code can be uploaded by pulling from the master branch of the project's repository.
+```
+$ git pull
