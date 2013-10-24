@@ -21,6 +21,7 @@ This allows lab members to:
 * Download existing MCDI data in CSV files using different "presentation formats" that, to support lab members' various custom and commercial software solutions, specifies how standard values like true, false, male, and female are reported in the resulting download.
 * Download MCDI data from multiple studies even if different MCDI forms were used, allowing the user to specify if the application should combine all results in a single CSV or if Daxlabbase should render a ZIP archive.
 * Fine tune user access control, specifying which lab members should have access to what functionality of the web application.
+* Send parent forms through external applications using Daxlabbase's API.
 
 
 ### Technologies Used
