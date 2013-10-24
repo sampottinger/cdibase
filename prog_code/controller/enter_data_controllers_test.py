@@ -176,7 +176,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
         self.mox.StubOutWithMock(db_util, 'insert_snapshot')
 
-        for i in range(0, 11):
+        for i in range(0, 10):
             user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
             db_util.load_mcdi_model(TEST_MCDI_FORMAT_NAME).AndReturn(
                 TEST_FORMAT)
@@ -189,16 +189,6 @@ class EnterDataControllersTests(mox.MoxTestBase):
             
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
-
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            del test_params['global_id']
-            client.post(target_url, data=test_params)
-
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
 
             test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
             del test_params['study_id']
@@ -309,6 +299,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
             user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
             db_util.load_mcdi_model(TEST_MCDI_FORMAT_NAME).AndReturn(
                 TEST_FORMAT)
+
 
         self.mox.ReplayAll()
 

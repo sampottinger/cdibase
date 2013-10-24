@@ -18,6 +18,8 @@ app.config.from_pyfile('flask_config.cfg')
 app.config['UPLOAD_FOLDER'] = file_util.UPLOAD_FOLDER
 if not app.config['NO_MAIL']:
     mail_util.init_mail(app)
+elif app.config['DEBUG_PRINT_EMAIL']:
+    mail_util.DEBUG_PRINT_EMAIL = True
 
 from prog_code.controller import access_data_controllers
 from prog_code.controller import account_controllers

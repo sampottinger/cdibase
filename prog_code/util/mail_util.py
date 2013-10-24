@@ -9,6 +9,7 @@ import threading
 import flask.ext.mail as flask_mail
 
 TESTING = False
+DEBUG_PRINT_EMAIL = False
 
 mail_lock = threading.Lock()
 
@@ -97,4 +98,5 @@ def send_msg(email, subject, message):
             mail_keeper.get_mail_instance().send(flask_message)
         
         else:
-            print message
+            if DEBUG_PRINT_EMAIL:
+                print message

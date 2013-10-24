@@ -139,6 +139,7 @@ def add_user():
             return flask.redirect(ADD_USERS_URL)
 
         on_val = constants.FORM_SELECTED_VALUE
+
         user_util.create_new_user(
             email,
             request.form.get('can_enter_data', '') == on_val,

@@ -32,17 +32,90 @@ Daxlabbase itself is written in [Flask](flask.pocoo.org/) and targets a [sqlite3
 
 New developers should seek access to [Daxlabbase's codebase](https://github.com/Samnsparky/daxlabbase), a git repository hosted privately on GitHub. After gaining access...
 
-Checkout the repository:
-```bash
-$ 
+* Checkout the repository:
 ```
+$ git clone git@github.com:Samnsparky/daxlabbase.git
+```
+
+* Development requires Python's [virtualenv](http://www.virtualenv.org/en/latest/). If you do not already have that installed, use [pip](http://www.pip-installer.org/en/latest/):
+```
+$ pip install virtualenv
+```
+
+* Create a new virtual environment:
+```
+$ cd daxlabbase
+$ virtualenv venv
+```
+
+* Enter into the virtual environment:
+```
+$ source venv/bin/activate
+```
+
+* Install required software:
+```
+$ pip install -r requirements.txt
+```
+
+* Get a copy of ```flask_config.cfg```. This is not included in the GitHub repo for security reasons. It can be found in a previous development environment or on the server itself. As with most Flask applications, flask_config.cfg lives in the root folder of the application.
+
+* Depending on your operating system, you may need to install [sqlite3](http://www.sqlite.org/) locally.
+
+* Create a local development db:
+```
+$ cd db
+$ sqlite3 daxlab.db < create_local_db.sql
+```
+
+* Create an uploads directory
+```
+$ mkdir uploads
+```
+
+You can leave the virtual environment with ```$ deactivate```.
+
+
+### Downloading a local copy of the production DB
+
+If you elect to use the production DB in your local development environment, be sure to download the uploads directory as well.
 
 
 ### Automated Testing
 
+Run unit tests with:
+```
+$ python run_test.py
+```
+
+You should see output that looks like:
+```
+$ python run_test.py 
+
+Ran 57 tests in 0.545s 
+
+OK
+```
+
 
 ### Local Testing
 
+Start the local development server with:
+```
+$ python runserver.py
+```
+
+Navigate to ```http://localhost:5000/base``` to access the locally running development server. 
+
+You may find it useful to have mail printed to the console as it does not send while in debug mode. Simply edit flask_config.cfg to read ```DEBUG_PRINT_EMAIL = True```.
+
+Note that, if you created the local testing DB, the local copy of the application does not have any user accounts. To create a test account for test@example.com,
+```
+$ cd db
+$ sqlite3 daxlab.db < create_test_user.sql
+```
+
+Use the forgot password feature to get a temporary password for that new user. Please be aware that ```create_test_user.sql``` gives test@example.com full permissions.
 
 ### Standards, Conventions, and State of Development
 

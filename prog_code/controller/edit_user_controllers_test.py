@@ -3,6 +3,7 @@ import mox
 import daxlabbase
 from ..struct import models
 from ..util import constants
+from ..util import db_util
 from ..util import user_util
 
 TEST_EMAIL = 'test.email@example.com'
@@ -136,6 +137,7 @@ class TestEditParentControllers(mox.MoxTestBase):
 
     def test_add_user(self):
         self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(user_util, 'create_new_user')
         
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
@@ -145,7 +147,7 @@ class TestEditParentControllers(mox.MoxTestBase):
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         user_util.get_user(NEW_EMAIL).AndReturn(None)
         user_util.create_new_user(
-            TEST_EMAIL,
+            NEW_EMAIL,
             True,
             False,
             True,
