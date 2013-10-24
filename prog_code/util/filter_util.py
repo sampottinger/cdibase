@@ -12,32 +12,32 @@ import oper_interp
 
 
 FIELD_MAP = {
-    "child_id": oper_interp.RawInterpretField("child_id"),
-    "study_id": oper_interp.RawInterpretField("study_id"),
-    "study": oper_interp.RawInterpretField("study"),
-    "gender": oper_interp.GenderField("gender"),
-    "birthday": oper_interp.RawInterpretField("birthday"),
-    "session_date": oper_interp.RawInterpretField("session_date"),
-    "session_num": oper_interp.NumericalField("session_num"),
-    "words_spoken": oper_interp.NumericalField("words_spoken"),
-    "items_excluded": oper_interp.NumericalField("items_excluded"),
-    "age": oper_interp.NumericalField("age"),
-    "total_num_sessions": oper_interp.NumericalField("total_num_sessions"),
-    "percentile": oper_interp.NumericalField("percentile"),
-    "extra_categories": oper_interp.NumericalField("extra_categories"),
-    "MCDI_type": oper_interp.RawInterpretField("mcdi_type"),
-    "specific_language": oper_interp.RawInterpretField("languages"),
-    "num_languages": oper_interp.NumericalField("num_languages"),
-    "hard_of_hearing": oper_interp.BooleanField("hard_of_hearing")
+    'child_id': oper_interp.RawInterpretField('child_id'),
+    'study_id': oper_interp.RawInterpretField('study_id'),
+    'study': oper_interp.RawInterpretField('study'),
+    'gender': oper_interp.GenderField('gender'),
+    'birthday': oper_interp.RawInterpretField('birthday'),
+    'session_date': oper_interp.RawInterpretField('session_date'),
+    'session_num': oper_interp.NumericalField('session_num'),
+    'words_spoken': oper_interp.NumericalField('words_spoken'),
+    'items_excluded': oper_interp.NumericalField('items_excluded'),
+    'age': oper_interp.NumericalField('age'),
+    'total_num_sessions': oper_interp.NumericalField('total_num_sessions'),
+    'percentile': oper_interp.NumericalField('percentile'),
+    'extra_categories': oper_interp.NumericalField('extra_categories'),
+    'MCDI_type': oper_interp.RawInterpretField('mcdi_type'),
+    'specific_language': oper_interp.RawInterpretField('languages'),
+    'num_languages': oper_interp.NumericalField('num_languages'),
+    'hard_of_hearing': oper_interp.BooleanField('hard_of_hearing')
 }
 
 OPERATOR_MAP = {
-    "eq": "==",
-    "lt": "<",
-    "gt": ">",
-    "neq": "!=",
-    "lteq": "<=",
-    "gteq": ">="
+    'eq': '==',
+    'lt': '<',
+    'gt': '>',
+    'neq': '!=',
+    'lteq': '<=',
+    'gteq': '>='
 }
 
 
@@ -74,19 +74,19 @@ def build_search_query(filters, table):
     filter_fields = map(lambda x: FIELD_MAP[x], filter_fields)
 
     operators = map(lambda x: x.operator, filters)
-    operators = map(lambda x: x.encode("utf8"), operators)
+    operators = map(lambda x: x.encode('utf8'), operators)
     operators = filter(lambda x: x in OPERATOR_MAP, operators)
     operators = map(lambda x: OPERATOR_MAP[x], operators)
 
     fields_and_operators = zip(filter_fields, operators)
 
     filter_fields_str = map(
-        lambda (field, op): "%s %s ?" % (field.get_field_name(), op), 
+        lambda (field, op): '%s %s ?' % (field.get_field_name(), op), 
         fields_and_operators
     )
-    clause = " AND ".join(filter_fields_str)
+    clause = ' AND '.join(filter_fields_str)
 
-    stmt = "SELECT * FROM %s WHERE %s" % (table, clause)
+    stmt = 'SELECT * FROM %s WHERE %s' % (table, clause)
 
     return QueryInfo(filter_fields, stmt)
 

@@ -42,8 +42,14 @@ INVALID_ITEMS_EXCLUDED_MSG = 'Invalid items count invalid.'
 INVALID_EXTRA_CATEGORIES_MSG = 'Extra categories invalid.'
 LANGUAGES_NOT_PROVIDED_MSG = 'Languages list not provided.'
 COULD_NOT_FIND_PERCENTILES_MSG = 'Could not find percentile information.'
+SUBMITTED_MSG = 'Form submitted to the lab.'
 PARENT_ACCOUNT_CONTROLS_URL = '/base/parent_accounts'
-
+WORD_RESPONSE_ID_TEMPL = '%s_report'
+BIRTHDAY_INVALID_MSG = 'Birthday invalid: %s'
+WORD_VALUE_MISSING_MSG = '%s word value missing'
+WORD_VALUE_INVALID_MSG = '%s word value invalid'
+NO_GLOBAL_ID_MSG = 'No global ID specified.'
+THANK_YOU_MSG_URL = '/base/parent_mcdi/_thanks'
 
 @app.route('/base/parent_accounts', methods=['GET', 'POST'])
 @session_util.require_login(edit_parents=True)
@@ -207,7 +213,7 @@ def send_mcdi_form():
         )
 
 
-@app.route("/base/parent_mcdi/_thanks")
+@app.route('/base/parent_mcdi/_thanks')
 def thank_parent_form():
     """Display a landing page thanking a parent for thier input.
 
@@ -221,7 +227,7 @@ def thank_parent_form():
     )
 
 
-@app.route("/base/parent_mcdi/<form_id>", methods=["GET", "POST"])
+@app.route('/base/parent_mcdi/<form_id>', methods=['GET', 'POST'])
 def handle_parent_mcdi_form(form_id):
     """Controller to display and handle a parent MCDI form.
 
@@ -301,7 +307,7 @@ def handle_parent_mcdi_form(form_id):
             results = parent_account_util.get_snapshot_chronology_for_study_id(
                 study, study_id)
             if len(results) == 0:
-                flask.session[constants.ERROR_ATTR] = 'No global ID specified.'
+                flask.session[constants.ERROR_ATTR] = NO_GLOBAL_ID_MSG
                 return flask.redirect(request.path)
         
         # Ensure that the parent form has birthday information or load it from
@@ -310,7 +316,7 @@ def handle_parent_mcdi_form(form_id):
         if birthday == None or birthday == '':
             birthday = request.form.get('birthday', None)
             if not parent_account_util.is_birthday_valid(birthday):
-                msg = 'Birthday invalid: %s' % birthday
+                msg = BIRTHDAY_INVALID_MSG % birthday
                 flask.session[constants.ERROR_ATTR] = msg
                 return flask.redirect(request.path)
         
@@ -389,19 +395,21 @@ def handle_parent_mcdi_form(form_id):
 
 
         # Parse word entries
-        count_as_spoken_vals = selected_format.details["count_as_spoken"]
+        count_as_spoken_vals = selected_format.details['count_as_spoken']
         word_entries = {}
         words_spoken = 0
         total_possible_words = 0
-        for category in selected_format.details["categories"]:
-            for word in category["words"]:
-                word_val = request.form.get("%s_report" % word, None)
+        for category in selected_format.details['categories']:
+            for word in category['words']:
+                word_val = request.form.get(WORD_RESPONSE_ID_TEMPL % word, None)
                 if word_val == None:
-                    flask.session["error"] = "%s value missing" % word
+                    msg = WORD_VALUE_MISSING_MSG % word
+                    flask.session[constants.ERROR_ATTR] = msg
                     return flask.redirect(request.path)
                 word_val = interp_util.safe_int_interpret(word_val)
                 if word_val == None:
-                    flask.session["error"] = "%s value invalid" % word
+                    msg = WORD_VALUE_INVALID_MSG % word
+                    flask.session[constants.ERROR_ATTR] = msg
                     return flask.redirect(request.path)
                 word_entries[word] = int(word_val)
                 if word_val in count_as_spoken_vals:
@@ -410,20 +418,21 @@ def handle_parent_mcdi_form(form_id):
 
         # Determine approach percentiles
         if age:
-            percentiles = selected_format.details["percentiles"]
+            percentiles = selected_format.details['percentiles']
             if gender == constants.MALE:
-                percentile_table_name = percentiles["male"]
+                percentile_table_name = percentiles['male']
             elif gender == constants.FEMALE:
-                percentile_table_name = percentiles["female"]
+                percentile_table_name = percentiles['female']
             else:
-                percentile_table_name = percentiles["other"]
+                percentile_table_name = percentiles['other']
 
             # TODO(samp): This should be in db_util
             # Calculate percentiles
             percentile_model = db_util.load_percentile_model(
                 percentile_table_name)
             if percentile_model == None:
-                flask.session["error"] = COULD_NOT_FIND_PERCENTILES_MSG
+                msg = COULD_NOT_FIND_PERCENTILES_MSG
+                flask.session[constants.ERROR_ATTR] = msg
                 return flask.redirect(request.path)
             
             percentile = math_util.find_percentile(
@@ -437,10 +446,10 @@ def handle_parent_mcdi_form(form_id):
             percentile = -1
 
         # Find prior entries in study
-        study_filter = models.Filter("study", "eq", study)
-        study_id_filter = models.Filter("study_id", "eq", study_id)
+        study_filter = models.Filter('study', 'eq', study)
+        study_id_filter = models.Filter('study_id', 'eq', study_id)
         results = filter_util.run_search_query([study_filter, study_id_filter],
-            "snapshots")
+            'snapshots')
         session_num = len(results) + 1
 
         # Put in snapshot metadata
@@ -452,7 +461,7 @@ def handle_parent_mcdi_form(form_id):
             gender,
             age,
             birthday,
-            datetime.date.today().strftime('%Y/%m/%d'),
+            datetime.date.today().strftime(DATE_OUT_STR),
             session_num,
             session_num,
             words_spoken,
@@ -462,14 +471,14 @@ def handle_parent_mcdi_form(form_id):
             0,
             languages,
             len(languages),
-            selected_format.details["meta"]["mcdi_type"],
+            selected_format.details['meta']['mcdi_type'],
             hard_of_hearing
         )
         db_util.insert_snapshot(new_snapshot, word_entries)
         db_util.remove_parent_form(form_id)
 
-        flask.session["confirmation"] = 'Form submitted to the lab.'
-        return flask.redirect('/base/parent_mcdi/_thanks')
+        flask.session[constants.CONFIRMATION_ATTR] = SUBMITTED_MSG
+        return flask.redirect(THANK_YOU_MSG_URL)
 
     else:
         # Get the most recent snapshot
@@ -493,7 +502,7 @@ def handle_parent_mcdi_form(form_id):
             )
 
         return flask.render_template(
-            "end_parent_form.html",
+            'end_parent_form.html',
             selected_format=selected_format,
             child_name=parent_form.child_name,
             study=parent_form.study,

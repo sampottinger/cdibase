@@ -84,7 +84,7 @@ def create_new_user(email, can_enter_data, can_edit_parents, can_access_data,
 
     mail_util.send_msg(
         email,
-        "Your DaxlabBase Account",
+        'Your DaxlabBase Account',
         SIGN_UP_MSG % (email, password)
     )
 
@@ -167,7 +167,7 @@ def reset_password(email, pass_len=10):
 
     mail_util.send_msg(
         email,
-        "Your DaxlabBase Account",
+        'Your DaxlabBase Account',
         RESET_PASSWORD_MSG % (email, new_pass)
     )
 

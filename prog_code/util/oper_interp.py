@@ -60,9 +60,9 @@ class GenderField(FieldInfo):
     User input interpreter for filter operand values that converts various
     string descriptions of gender to its numerical equivalent."""
 
-    MALE_VALUES = ["male", "boy", "man"]
-    FEMALE_VALUES = ["female", "girl", "lady"]
-    OTHER_VALUES = ["other", "transgender", "trans", "intersex"]
+    MALE_VALUES = ['male', 'boy', 'man']
+    FEMALE_VALUES = ['female', 'girl', 'lady', 'woman']
+    OTHER_VALUES = ['other', 'transgender', 'trans', 'intersex']
 
     def __init__(self, field_name):
         super(GenderField, self).__init__(field_name)
@@ -97,8 +97,8 @@ class BooleanField(FieldInfo):
     representations of boolean values to actual boolean values.
     """
 
-    TRUE_VALUES = ["true", "yes", "y", "t"]
-    FALSE_VALUES = ["false", "no", "n", "f"]
+    TRUE_VALUES = ['true', 'yes', 'y', 't', 'on']
+    FALSE_VALUES = ['false', 'no', 'n', 'f', 'off']
 
     def __init__(self, field_name):
         super(BooleanField, self).__init__(field_name)
@@ -130,9 +130,6 @@ class NumericalField(FieldInfo):
     User input interpreter for filter operand values that converts string
     representations of numerical values to actual numerical values.
     """
-
-    TRUE_VALUES = ["true", "yes", "y", "t"]
-    FALSE_VALUES = ["false", "no", "n", "f"]
 
     def __init__(self, field_name):
         super(NumericalField, self).__init__(field_name)

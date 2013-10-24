@@ -28,22 +28,51 @@ class SharedConnection:
 
     @classmethod
     def get_instance(cls):
+        """Get a shared instance of this database connection singleton.
+
+        Get a shared instance of this class-wide singleton that encloses a
+        connection to the application sqlite database.
+
+        @return: The shared singleton instance with a databae connection.
+        @rtype: SharedConnection
+        """
         if not cls.instance:
             cls.instance = SharedConnection()
         return cls.instance
 
     def __init__(self):
+        """Create a new instance of the SharedConnection singleton.
+
+        Create a new instance of the SharedConnection database connection
+        wrapper / singleton. This should only be called by SharedConnection
+        itself.
+        """
         self.__connection = sqlite3.connect('./db/daxlab.db')
         self.__lock = threading.Lock()
 
     def cursor(self):
+        """With thread-saftey, acquire a database cursor for the application DB.
+
+        @return: Cursor for the application database.
+        @rtype: sqlite3 database cursor
+        """
         self.__lock.acquire(True)
         return self.__connection.cursor()
 
     def commit(self):
+        """Commit changes made to the database.
+
+        Commit / save changes made to the database. This must be called for
+        changes to be persisted.
+        """
         self.__connection.commit()
 
     def close(self):
+        """Release the current thread's aquired connection.
+
+        Release the current thread's acquired connection back to the connection
+        pool.
+        """
         self.__lock.release()
 
 
@@ -65,7 +94,7 @@ def save_mcdi_model(newMetadataModel):
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "INSERT INTO mcdi_formats VALUES (?, ?, ?)",
+        'INSERT INTO mcdi_formats VALUES (?, ?, ?)',
         (
             newMetadataModel.human_name,
             newMetadataModel.safe_name,
@@ -85,7 +114,7 @@ def delete_mcdi_model(metadataModelName):
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "DELETE FROM mcdi_formats WHERE safe_name=?",
+        'DELETE FROM mcdi_formats WHERE safe_name=?',
         (metadataModelName,)
     )
     connection.commit()
@@ -101,7 +130,7 @@ def load_mcdi_model_listing():
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "SELECT human_name,safe_name,filename FROM mcdi_formats"
+        'SELECT human_name,safe_name,filename FROM mcdi_formats'
     )
     ret_val = map(lambda x: models.MCDIFormatMetadata(x[0], x[1], x[2]), cursor)
     connection.close()
@@ -148,7 +177,7 @@ def save_presentation_model(newMetadataModel):
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "INSERT INTO presentation_formats VALUES (?, ?, ?)",
+        'INSERT INTO presentation_formats VALUES (?, ?, ?)',
         (
             newMetadataModel.safe_name,
             newMetadataModel.human_name,
@@ -168,7 +197,7 @@ def delete_presentation_model(metadataModelName):
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "DELETE FROM presentation_formats WHERE safe_name=?",
+        'DELETE FROM presentation_formats WHERE safe_name=?',
         (metadataModelName,)
     )
     connection.commit()
@@ -184,7 +213,7 @@ def load_presentation_model_listing():
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "SELECT human_name,safe_name,filename FROM presentation_formats"
+        'SELECT human_name,safe_name,filename FROM presentation_formats'
     )
     ret_val = map(lambda x: models.PresentationFormatMetadata(x[0], x[1], x[2]),
         cursor)
@@ -235,7 +264,7 @@ def save_percentile_model(newMetadataModel):
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "INSERT INTO percentile_tables VALUES (?, ?, ?)",
+        'INSERT INTO percentile_tables VALUES (?, ?, ?)',
         (
             newMetadataModel.safe_name,
             newMetadataModel.human_name,
@@ -255,7 +284,7 @@ def delete_percentile_model(metadataModelName):
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "DELETE FROM percentile_tables WHERE safe_name=?",
+        'DELETE FROM percentile_tables WHERE safe_name=?',
         (metadataModelName,)
     )
     connection.commit()
@@ -271,7 +300,7 @@ def load_percentile_model_listing():
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "SELECT human_name,safe_name,filename FROM percentile_tables"
+        'SELECT human_name,safe_name,filename FROM percentile_tables'
     )
     ret_val = map(lambda x: models.PercentileTableMetadata(x[0], x[1], x[2]),
         cursor)
@@ -322,7 +351,7 @@ def load_snapshot_contents(snapshot):
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "SELECT * FROM snapshot_content WHERE snapshot_id=?",
+        'SELECT * FROM snapshot_content WHERE snapshot_id=?',
         (snapshot.database_id,)
     )
     ret_val = map(lambda x: models.SnapshotContent(*x), cursor.fetchall())
@@ -344,12 +373,12 @@ def load_user_model(identifier):
     cursor = connection.cursor()
     if isinstance(identifier, basestring):
         cursor.execute(
-            "SELECT * FROM users WHERE email=?",
+            'SELECT * FROM users WHERE email=?',
             (identifier,)
         )
     else:
         cursor.execute(
-            "SELECT * FROM users WHERE id=?",
+            'SELECT * FROM users WHERE id=?',
             (identifier,)
         )
     result = cursor.fetchone()
@@ -426,7 +455,7 @@ def delete_user_model(email):
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "DELETE FROM users WHERE email=?",
+        'DELETE FROM users WHERE email=?',
         (email,)
     )
     connection.commit()
@@ -441,18 +470,31 @@ def get_all_user_models():
     """
     connection = get_db_connection()
     cursor = connection.cursor()
-    cursor.execute("SELECT * FROM users")
+    cursor.execute('SELECT * FROM users')
     ret_val = map(lambda x: models.User(*x), cursor.fetchall())
     connection.close()
     return ret_val
 
 
-def lookup_global_participant_id(study_id, participant_study_id):
+def lookup_global_participant_id(study, participant_study_id):
+    """Get the global participant ID given study information.
+
+    Get the global participant ID for a child given that child's study ID and
+    participant study ID.
+
+    @param study: The name of the study to find the child in.
+    @type study: str
+    @param participant_study_id: The ID of the target child in that study.
+    @type participant_study_id: str
+    @return: The participant's global ID if the child was located in the
+        database. Returns None otherwise.
+    @rtype: int
+    """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "SELECT child_id FROM snapshots WHERE study=? AND study_id=?",
-        (study_id, participant_study_id)
+        'SELECT child_id FROM snapshots WHERE study=? AND study=?',
+        (study, participant_study_id)
     )
     ret_values = cursor.fetchone()
     if ret_values == None:
@@ -464,10 +506,19 @@ def lookup_global_participant_id(study_id, participant_study_id):
 
 
 def get_api_key_by_user(user_id):
+    """Get the API key for a user.
+
+    @param user_id: The ID of a user account. This function will return the API
+        key assigned to this user account.
+    @type user_id: int
+    @return: Record for the API key assigned to that user or None if a key has
+        not been assigned to that user.
+    @rtype: models.APIKey
+    """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "SELECT api_key FROM api_keys WHERE user_id=?",
+        'SELECT api_key FROM api_keys WHERE user_id=?',
         (user_id,)
     )
     api_key = cursor.fetchone()
@@ -481,10 +532,18 @@ def get_api_key_by_user(user_id):
 
 
 def get_api_key_by_key(api_key):
+    """Get the record for an API key.
+
+    @param api_key: The API key to find a record for.
+    @type api_key: str
+    @return: The API key record for the given API key. None if the provided API
+        key could not be found.
+    @rtype: models.APIKey
+    """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "SELECT user_id FROM api_keys WHERE api_key=?",
+        'SELECT user_id FROM api_keys WHERE api_key=?',
         (api_key,)
     )
     user_id = cursor.fetchone()
@@ -498,6 +557,18 @@ def get_api_key_by_key(api_key):
 
 
 def get_api_key(identifier):
+    """Get the record for an API key for a user ID or the API key iteself.
+
+    Given either an integer user ID or a string API key, this function returns
+    the API key record for that user or that string key.
+
+    @param identifier: Either a string API key or an integer user ID.
+    @type identifier: int or str
+    @return: The API key record for the provided user or string key. Returns
+        None if the provided user cannot be found, that user does not have an
+        API key, or the key could not be found in the database.
+    @rtype: models.APIKey
+    """
     if isinstance(identifier, basestring):
         return get_api_key_by_key(identifier)
     else:
@@ -505,20 +576,32 @@ def get_api_key(identifier):
 
 
 def delete_api_key(user_id):
+    """Delete a record of an API key for a user.
+
+    @param user_id: The integer ID of the user to delete an API key for.
+    @type user_id: int
+    """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "DELETE FROM api_keys WHERE user_id=?",
+        'DELETE FROM api_keys WHERE user_id=?',
         (user_id,)
     )
     connection.close()
 
 
 def create_new_api_key(user_id, api_key):
+    """Create a new record of an API key.
+
+    @param user_id: The integer ID of the user to create an API key record for.
+    @type user_id: int
+    @param api_key: The string API key to assign to this user.
+    @type api_key: str
+    """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "INSERT INTO api_keys VALUES (?, ?)",
+        'INSERT INTO api_keys VALUES (?, ?)',
         (user_id, api_key)
     )
     connection.close()
@@ -528,10 +611,20 @@ def create_new_api_key(user_id, api_key):
 
 # TODO: Combined for transaction
 def insert_snapshot(snapshot_metadata, word_entries):
+    """Insert a new MCDI snapshot.
+
+    @param snapshot_metadata: The metadata for this snapshot that should be
+        saved along with individual word entries.
+    @type snapshot_metadata: models.SnapshotMetadata
+    @param word_entries: Collection of records indicating what words were
+        spoken and what words were not. Keys should be words and values are
+        status indicators showing if those words were spoken or not.
+    @type: dict
+    """
     connection = get_db_connection()
     cursor = connection.cursor()
 
-    cmd = "INSERT INTO snapshots VALUES (%s)" % (", ".join("?" * 19))
+    cmd = 'INSERT INTO snapshots VALUES (%s)' % (', '.join('?' * 19))
     cursor.execute(
         cmd,
         (
@@ -550,7 +643,7 @@ def insert_snapshot(snapshot_metadata, word_entries):
             snapshot_metadata.percentile,
             snapshot_metadata.extra_categories,
             snapshot_metadata.revision,
-            ",".join(snapshot_metadata.languages),
+            ','.join(snapshot_metadata.languages),
             snapshot_metadata.num_languages,
             snapshot_metadata.mcdi_type,
             snapshot_metadata.hard_of_hearing
@@ -562,7 +655,7 @@ def insert_snapshot(snapshot_metadata, word_entries):
     # Put in snapshot contents
     for (word, val) in word_entries.items():
         cursor.execute(
-            "INSERT INTO snapshot_content VALUES (?, ?, ?, ?)",
+            'INSERT INTO snapshot_content VALUES (?, ?, ?, ?)',
             (
                 new_snapshot_id,
                 word.lower(),
@@ -576,10 +669,15 @@ def insert_snapshot(snapshot_metadata, word_entries):
 
 
 def insert_parent_form(form_metadata):
+    """Create a record of a parent form.
+
+    @param form_metadata: Information about the parent form to persist.
+    @type form_metadata: models.ParentForm
+    """
     connection = get_db_connection()
     cursor = connection.cursor()
 
-    cmd = "INSERT INTO parent_forms VALUES (%s)" % (", ".join("?" * 14))
+    cmd = 'INSERT INTO parent_forms VALUES (%s)' % (', '.join('?' * 14))
     cursor.execute(
         cmd,
         (
@@ -605,10 +703,18 @@ def insert_parent_form(form_metadata):
 
 
 def get_parent_form_by_id(form_id):
+    """Get information about a parent MCDI form.
+
+    @param form_id: The ID of the parent MCDI form to get the record for.
+    @type form_id: str
+    @return: The ParentForm corresponding to the provided ID or None if that
+        form could not be found.
+    @rtype: models.ParentForm
+    """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "SELECT * FROM parent_forms WHERE form_id=?",
+        'SELECT * FROM parent_forms WHERE form_id=?',
         (form_id,)
     )
     form_info = cursor.fetchone()
@@ -622,10 +728,15 @@ def get_parent_form_by_id(form_id):
 
 
 def remove_parent_form(form_id):
+    """Delete the record of a parent MCDI form.
+
+    @param form_id: The ID of the parent MCDI form to delete.
+    @type form_id: str
+    """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        "DELETE FROM parent_forms WHERE form_id=?",
+        'DELETE FROM parent_forms WHERE form_id=?',
         (form_id,)
     )
     form_info = cursor.fetchone()

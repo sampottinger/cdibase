@@ -218,8 +218,9 @@ class SnapshotMetadata:
             snapshot.
         @type mcdi_type: str
         @param hard_of_hearing: Indicates if this child was indicated as hard
-            of hearing at the time of this snapshot.
-        @type hard_of_hearing: bool
+            of hearing at the time of this snapshot. This should be a value from
+            constants.
+        @type hard_of_hearing: int
         """
         self.database_id = database_id
         self.child_id = child_id
@@ -242,6 +243,17 @@ class SnapshotMetadata:
         self.hard_of_hearing = hard_of_hearing
 
     def __eq__(self, other):
+        """Test to see if this snapshot has the same attribute values as other.
+
+        Test to see if this snapshot metadata record has the same attribute
+        values as another provided snapshot metadata record.
+
+        @param other: The snapshot metdata record to compare this instance to.
+        @type other: models.SnapshotMetadata
+        @return: True if the instances have the same attribute values and False
+            otherwise.
+        @rtype: bool
+        """
         if other == None:
             return False
         same = self.database_id == other.database_id
@@ -357,9 +369,61 @@ class User:
 
 
 class ParentForm:
+    """Record of a parent MCDI form that can be filled out online."""
+
     def __init__(self, form_id, child_name, parent_email, mcdi_type,
         database_id, study_id, study, gender, birthday, items_excluded,
         extra_categories, languages, num_languages, hard_of_hearing):
+        """Create a new parent form record.
+
+        Create a new parent form record. Note that this constructor does not
+        persist this new record to the database.
+
+        @param form_id: The unique ID to assign to this parent MCDI form.
+        @type form_id: str
+        @param child_name: The name of the child for which the MCDI report will
+            be recorded.
+        @type child_name: str
+        @param parent_email: The email address of the parent who should recieve
+            a link to this form by email.
+        @type parent_email: str
+        @param mcdi_type: The name of the MCDI format to present to the parent.
+        @type mcdi_type: str
+        @param database_id: The global ID of the child for which an MCDI form
+            should be recorded.
+        @type database_id: int
+        @param study_id: The MCDI report resulting from this parent form will be
+            associated with a study. This argument is the ID of the child within
+            that study.
+        @type study_id: str
+        @param study: The MCDI report resulting from this parent form will be
+            associated with a study. This argument is the name of the study that
+            should be associated.
+        @type study: str
+        @param gender: Constant corresponding to the gender of this child.
+        @type gender: int. Specifically, constants.MALE, constants.FEMALE, or
+            constants.OTHER_GENDER
+        @param birthday: The birthday of the research participant. Should be in
+            format YYYY/MM/DD
+        @type birthday: str
+        @param items_excluded: The number of items execluded during the
+            administration of the MCDI for this snapshot.
+        @type items_excluded: int
+        @param extra_categories: The number of extra MCDI categories
+            included during administeration of MCDI for this snapshot.
+        @type extra_categories: int
+        @param languages: CSV field of languages included in this MCDI.
+        @type languages: str
+        @param num_languages: The number of languages included in this MCDI.
+        @type num_languages: int
+        @param mcdi_type: The safe name of the MCDI format used for this
+            snapshot.
+        @type mcdi_type: str
+        @param hard_of_hearing: Indicates if this child was indicated as hard
+            of hearing at the time of this snapshot. This should be a value from
+            constants.
+        @type hard_of_hearing: int
+        """
         self.form_id = form_id
         self.child_name = child_name
         self.parent_email = parent_email
@@ -376,6 +440,17 @@ class ParentForm:
         self.hard_of_hearing = hard_of_hearing
 
     def __eq__(self, other):
+        """Test to see if this form has the same attribute values as other.
+
+        Test to see if this parent form record has the same attribute values as
+        another provided parent form record.
+
+        @param other: The parent form record to compare this instance to.
+        @type other: models.ParentForm
+        @return: True if the instances have the same attribute values and False
+            otherwise.
+        @rtype: bool
+        """
         same = self.form_id == other.form_id
         same = same and self.child_name == other.child_name
         same = same and self.parent_email == other.parent_email

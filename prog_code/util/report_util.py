@@ -12,28 +12,34 @@ import constants
 import db_util
 
 PRESENTATION_VALUE_NAME_MAP = {
-    constants.NO_DATA: "no_data",
-    constants.UNKNOWN: "unknown",
-    constants.POSSIBLY_WRONGLY_REC: "possibly_wrongly_recorded",
-    constants.EMERGENCY_REC: "emergency",
-    constants.IMPLIED_FALSE: "implied_false",
-    constants.EXPLICIT_TRUE: "explicit_true",
-    constants.EXPLICIT_FALSE: "explicit_false",
-    constants.EXPLICIT_NONE: "explicit_none",
-    constants.EXPLICIT_NA: "explicit_na",
-    constants.EXPLICIT_OTHER: "explicit_other",
-    constants.NO_EXTRA_CATEGORIES: "no_extra_categories",
-    constants.EXTRA_CATEGORIES: "extra_categories",
-    constants.MALE: "male",
-    constants.FEMALE: "female",
-    constants.OTHER_GENDER: "other_gender",
-    constants.ELEVEN_PRESUMED_TRUE: "eleven_presumed_true",
+    constants.NO_DATA: 'no_data',
+    constants.UNKNOWN: 'unknown',
+    constants.POSSIBLY_WRONGLY_REC: 'possibly_wrongly_recorded',
+    constants.EMERGENCY_REC: 'emergency',
+    constants.IMPLIED_FALSE: 'implied_false',
+    constants.EXPLICIT_TRUE: 'explicit_true',
+    constants.EXPLICIT_FALSE: 'explicit_false',
+    constants.EXPLICIT_NONE: 'explicit_none',
+    constants.EXPLICIT_NA: 'explicit_na',
+    constants.EXPLICIT_OTHER: 'explicit_other',
+    constants.NO_EXTRA_CATEGORIES: 'no_extra_categories',
+    constants.EXTRA_CATEGORIES: 'extra_categories',
+    constants.MALE: 'male',
+    constants.FEMALE: 'female',
+    constants.OTHER_GENDER: 'other_gender',
+    constants.ELEVEN_PRESUMED_TRUE: 'eleven_presumed_true'
 }
 
 
 class NotFoundSnapshotContent:
+    """A stand-in word snapshot content model.
+
+    A word snapshot content model that represents that a word value is not
+    available for a snapshot.
+    """
 
     def __init__(self):
+        """Create a new stand-in snapshot content model instance."""
         self.value = constants.NO_DATA
 
 
@@ -97,30 +103,33 @@ def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
         )
 
     if report_dict:
+        gender = interpret_word_value(snapshot.gender, presentation_format)
+        extra_categories = interpret_word_value(snapshot.extra_categories,
+            presentation_format)
         return_dict = {
-            "database_id": snapshot.database_id,
-            "child_id": snapshot.child_id,
-            "study_id": snapshot.study_id,
-            "study": snapshot.study,
-            "gender": interpret_word_value(snapshot.gender, presentation_format),
-            "age": snapshot.age,
-            "birthday": snapshot.birthday,
-            "session_date": snapshot.session_date,
-            "session_num": snapshot.session_num,
-            "total_num_sessions": snapshot.total_num_sessions,
-            "words_spoken": snapshot.words_spoken,
-            "items_excluded": snapshot.items_excluded,
-            "percentile": snapshot.percentile,
-            "extra_categories": interpret_word_value(snapshot.extra_categories, presentation_format),
-            "revision": snapshot.revision,
-            "languages": snapshot.languages,
-            "num_languages": snapshot.num_languages,
-            "mcdi_type": snapshot.mcdi_type,
-            "hard_of_hearing": snapshot.hard_of_hearing,
+            'database_id': snapshot.database_id,
+            'child_id': snapshot.child_id,
+            'study_id': snapshot.study_id,
+            'study': snapshot.study,
+            'gender': gender,
+            'age': snapshot.age,
+            'birthday': snapshot.birthday,
+            'session_date': snapshot.session_date,
+            'session_num': snapshot.session_num,
+            'total_num_sessions': snapshot.total_num_sessions,
+            'words_spoken': snapshot.words_spoken,
+            'items_excluded': snapshot.items_excluded,
+            'percentile': snapshot.percentile,
+            'extra_categories': extra_categories,
+            'revision': snapshot.revision,
+            'languages': snapshot.languages,
+            'num_languages': snapshot.num_languages,
+            'mcdi_type': snapshot.mcdi_type,
+            'hard_of_hearing': snapshot.hard_of_hearing
         }
 
         if include_words:
-            return_dict["words"] = word_values
+            return_dict['words'] = word_values
 
         return return_dict
 
@@ -151,7 +160,7 @@ def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
             return_list.extend(word_values)
 
         return_list = map(
-            lambda x: x.encode("utf-8","ignore") if isinstance(x, str) else x,
+            lambda x: x.encode('utf-8','ignore') if isinstance(x, str) else x,
             return_list
         )
 
@@ -172,7 +181,7 @@ def generate_study_report_rows(snapshots_from_study, presentation_format):
     """
     snapshot_contents = db_util.load_snapshot_contents(snapshots_from_study[0])
     word_listing = map(
-        lambda x: x.word.encode("utf-8","ignore"),
+        lambda x: x.word.encode('utf-8','ignore'),
         snapshot_contents
     )
     word_listing.sort()
@@ -183,25 +192,25 @@ def generate_study_report_rows(snapshots_from_study, presentation_format):
     )
     
     header_col = [
-        "database id",
-        "child id",
-        "study id",
-        "study",
-        "gender",
-        "age",
-        "birthday",
-        "session date",
-        "session num",
-        "total num sessions",
-        "words spoken",
-        "items excluded",
-        "percentile",
-        "extra categories",
-        "revision",
-        "languages",
-        "num languages",
-        "mcdi type",
-        "hard of hearing"
+        'database id',
+        'child id',
+        'study id',
+        'study',
+        'gender',
+        'age',
+        'birthday',
+        'session date',
+        'session num',
+        'total num sessions',
+        'words spoken',
+        'items excluded',
+        'percentile',
+        'extra categories',
+        'revision',
+        'languages',
+        'num languages',
+        'mcdi type',
+        'hard of hearing'
     ]
     header_col.extend(word_listing)
 
@@ -240,7 +249,7 @@ def generate_consolidated_study_report(snapshots, presentation_format):
     @return: Contents of the zip archive file.
     @rtype: StringIO.StringIO
     """
-    snapshots.sort(key=lambda x: "%s_%s" % (x.session_num, x.study_id))
+    snapshots.sort(key=lambda x: '%s_%s' % (x.session_num, x.study_id))
 
     return generate_study_report_csv(
         snapshots,
@@ -262,7 +271,7 @@ def generate_study_report(snapshots, presentation_format):
     @return: Contents of the zip archive file.
     @rtype: StringIO.StringIO
     """
-    snapshots.sort(key=lambda x: "%s_%s" % (x.session_num, x.study_id))
+    snapshots.sort(key=lambda x: '%s_%s' % (x.session_num, x.study_id))
 
     snapshots_by_study = {}
     for snapshot in snapshots:
@@ -277,10 +286,10 @@ def generate_study_report(snapshots, presentation_format):
             snapshots_by_study[study_name],
             presentation_format
         )
-        faux_files["%s.csv" % study_name] = report
+        faux_files['%s.csv' % study_name] = report
 
     faux_zip_file = string_io.StringIO()
-    zip_file = zipfile.ZipFile(faux_zip_file, mode="w")
+    zip_file = zipfile.ZipFile(faux_zip_file, mode='w')
     for (filename, faux_file) in faux_files.items():
         zip_file.writestr(filename, faux_file.getvalue())
 

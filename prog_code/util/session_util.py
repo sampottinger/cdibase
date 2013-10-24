@@ -8,7 +8,16 @@ import flask
 
 from ..struct import models
 
+import constants
 import user_util
+
+LOGIN_AGAIN_MSG = 'Whoops! For security, please log in again.'
+NOT_AUTHORIZED_ACCESS_DATA_MSG = 'You are not authorized to access data.'
+NOT_AUTHORIZED_PARENTS_MSG = 'You are not authorized to edit parent accounts.'
+NOT_AUTHORIZED_ADMIN_MSG = 'You are not authorized to admin.'
+NOT_AUTHORIZED_ENTER_DATA_MSG = 'You are not authorized to enter data.'
+NOT_AUTHORIZED_CHANGE_FORMATS_MSG = 'You are not authorized to change formats.'
+NOT_AUTHORIZED_API_KEYS_MSG = 'You are not authorized to use API keys.'
 
 
 def get_standard_template_values():
@@ -22,10 +31,10 @@ def get_standard_template_values():
     @rtype: dict
     """
     return {
-        "email": get_user_email(),
-        "confirmation": get_confirmation(),
-        "error": get_error(),
-        "user": user_util.get_user(get_user_email())
+        'email': get_user_email(),
+        'confirmation': get_confirmation(),
+        'error': get_error(),
+        'user': user_util.get_user(get_user_email())
     }
 
 
@@ -57,30 +66,34 @@ def require_login(access_data=False, admin=False, enter_data=False,
     def wrap(orig_view):
         def decorated_function(*args, **kwargs):
             if not is_logged_in():
-                flask.session["error"] = "Whoops! For security, please log in again."
+                flask.session[constants.ERROR_ATTR] = LOGIN_AGAIN_MSG
                 return flask.redirect("/base/account/login")
             user = user_util.get_user(get_user_email())
             if not user:
                 del flask.session["email"]
-                flask.session["error"] = "Whoops! For security, please log in again."
+                flask.session[constants.ERROR_ATTR] = LOGIN_AGAIN_MSG
                 return flask.redirect("/base/account/login")
             if access_data and not user.can_access_data:
-                flask.session["error"] = "You are not authorized to access data."
+                msg = NOT_AUTHORIZED_ACCESS_DATA_MSG
+                flask.session[constants.ERROR_ATTR] = msg
                 return flask.redirect("/base")
             if edit_parents and not user.can_edit_parents:
-                flask.session["error"] = "You are not authorized to edit parent accounts."
+                flask.session[constants.ERROR_ATTR] = NOT_AUTHORIZED_PARENTS_MSG
                 return flask.redirect("/base")
             if admin and not user.can_admin:
-                flask.session["error"] = "You are not authorized to admin."
+                flask.session[constants.ERROR_ATTR] = NOT_AUTHORIZED_ADMIN_MSG
                 return flask.redirect("/base")
             if enter_data and not user.can_enter_data:
-                flask.session["error"] = "You are not authorized to enter data."
+                msg = NOT_AUTHORIZED_ENTER_DATA_MSG
+                flask.session[constants.ERROR_ATTR] = msg
                 return flask.redirect("/base")
             if change_formats and not user.can_change_formats:
-                flask.session["error"] = "You are not authorized to change formats."
+                msg = NOT_AUTHORIZED_CHANGE_FORMATS_MSG
+                flask.session[constants.ERROR_ATTR] = msg
                 return flask.redirect("/base")
             if use_api_key and not user.can_use_api_key:
-                flask.session["error"] = "You are not authorized to use API keys."
+                msg = NOT_AUTHORIZED_API_KEYS_MSG
+                flask.session[constants.ERROR_ATTR] = msg
                 return flask.redirect("/base")
             return orig_view(*args, **kwargs)
         decorated_function.__name__ = orig_view.__name__
@@ -90,8 +103,8 @@ def require_login(access_data=False, admin=False, enter_data=False,
 
 def logout():
     """Remove user information from current visitor session."""
-    if "email" in flask.session:
-        del flask.session["email"]
+    if 'email' in flask.session:
+        del flask.session['email']
 
 
 def is_logged_in():
@@ -101,7 +114,7 @@ def is_logged_in():
         otherwise.
     @rtype: bool
     """
-    return "email" in flask.session
+    return 'email' in flask.session
 
 
 def get_error():
@@ -114,8 +127,8 @@ def get_error():
         message for the user.
     @rtype: str
     """
-    error = flask.session.get("error", None)
-    flask.session["error"] = None
+    error = flask.session.get(constants.ERROR_ATTR, None)
+    flask.session[constants.ERROR_ATTR] = None
     return error
 
 
@@ -126,7 +139,7 @@ def get_user_email():
         request or None if the current user is not currently authenticated.
     @rtype: str
     """
-    return flask.session.get("email", None)
+    return flask.session.get('email', None)
 
 
 def get_user_id():
@@ -147,25 +160,39 @@ def get_confirmation():
         pending message for the user.
     @rtype: str
     """
-    msg = flask.session.get("confirmation", None)
-    flask.session["confirmation"] = None
+    msg = flask.session.get(constants.CONFIRMATION_ATTR, None)
+    flask.session[constants.CONFIRMATION_ATTR] = None
     return msg
 
 
 def serialize_filter(target_filter):
+    """Turn a filter model into a dictionary serialization.
+
+    @param target_filter: The filter to serialize.
+    @type target_filter: models.Filter
+    @return: Dictionary serailzation of the provided filter.
+    @rtype: dict
+    """
     return {
-        "field": target_filter.field,
-        "operator": target_filter.operator,
-        "operand": target_filter.operand,
-        "operand_float": target_filter.operand_float
+        'field': target_filter.field,
+        'operator': target_filter.operator,
+        'operand': target_filter.operand,
+        'operand_float': target_filter.operand_float
     }
 
 
 def unserialize_filter(target_filter_dict):
+    """Turn a Filter model serialization into an actaul Filter model instance.
+
+    @param target_filter_dict: The dictionary serailization to deserialize.
+    @type target_filter_dict: dict
+    @return: Filter model instance loaded from the provided serialization.
+    @rtype: models.Filter
+    """
     return models.Filter(
-        target_filter_dict["field"],
-        target_filter_dict["operator"],
-        target_filter_dict["operand"]
+        target_filter_dict['field'],
+        target_filter_dict['operator'],
+        target_filter_dict['operand']
     )
 
 
@@ -180,7 +207,7 @@ def get_filters(session=None):
     """
     if session == None:
         session = flask.session
-    filters = session.get("filters", None)
+    filters = session.get('filters', None)
     if not filters:
         return []
     return map(unserialize_filter, filters)
@@ -199,7 +226,7 @@ def add_filter(new_filter, sess=None):
     if not filters:
         filters = []
     filters.append(new_filter)
-    sess["filters"] = map(serialize_filter, filters)
+    sess['filters'] = map(serialize_filter, filters)
 
 
 def delete_filter(index):
@@ -210,7 +237,7 @@ def delete_filter(index):
         collection returned by get_filters)
     @type index: int
     """
-    filters = flask.session.get("filters", None)
+    filters = flask.session.get('filters', None)
     if not filters:
         return False
     if index >= len(filters):
@@ -220,12 +247,25 @@ def delete_filter(index):
 
 
 def set_waiting_on_download(value, session=None):
+    """Indicate that the current user's status waiting for a download.
+
+    Indicate that the current user's status waiting for a download to be
+    rendered.
+
+    @param value: The value (from constants) to indicate for the user's status.
+    @type value: int
+    """
     if session == None:
         session = flask.session
-    session["waiting_on_download"] = value
+    session['waiting_on_download'] = value
 
 
 def is_waiting_on_download(session=None):
+    """Determine if a user is waiting on a download.
+
+    @return: True if the user is waiting on a download and False otherwise.
+    @rtype: bool
+    """
     if session == None:
         session = flask.session
-    return session.get("waiting_on_download", False)
+    return session.get('waiting_on_download', False)

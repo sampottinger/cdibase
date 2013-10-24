@@ -57,20 +57,20 @@ def operator_to_str(operator):
     @return: The code description of operator (ex. "==")
     @rtype: str
     """
-    if operator == "eq":
-        return "=="
-    elif operator == "lt":
-        return "<"
-    elif operator == "gt":
-        return ">"
-    elif operator == "neq":
-        return "!="
-    elif operator == "lteq":
-        return "<="
-    elif operator == "gteq":
-        return ">="
+    if operator == 'eq':
+        return '=='
+    elif operator == 'lt':
+        return '<'
+    elif operator == 'gt':
+        return '>'
+    elif operator == 'neq':
+        return '!='
+    elif operator == 'lteq':
+        return '<='
+    elif operator == 'gteq':
+        return '>='
     else:
-        return "?"
+        return '?'
 
 def filter_to_str(target):
     """Convert a filter to a SQL clause.
@@ -81,4 +81,4 @@ def filter_to_str(target):
     @rtype: str
     """
     operator_str = operator_to_str(target.operator)
-    return "%s %s %s" % (target.field, operator_str, target.operand)
+    return '%s %s %s' % (target.field, operator_str, target.operand)

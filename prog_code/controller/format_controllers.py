@@ -14,6 +14,7 @@ import urllib
 
 import flask
 
+from ..util import constants
 from ..util import db_util
 from ..util import file_util
 from ..util import session_util
@@ -22,6 +23,17 @@ from ..struct import models
 
 from daxlabbase import app
 
+INVALID_FORMAT_MSG = 'Invalid format type.'
+NAME_NOT_SPECIFIED_MSG = 'Name not specified. Please try again.'
+UPLOAD_NOT_PROVIDED_MSG = 'Upload not provided. Please try again.'
+ALREADY_EXISTS_MSG = '\"%s\" already exists.'
+FORMAT_ADDED_MSG = 'Format \"%s\" added.'
+FILE_UPLOAD_FAILED_MSG = 'File upload failed. Please try again.'
+EDIT_FORMATS_URL = '/base/edit_formats'
+ADD_FORMATS_URL = '/base/edit_formats/%s/_add'
+NOT_FOUND_ERROR_MSG = '\"%s\" not found. Possibly already deleted.'
+DELETED_CONFIRMATION_MSG = '\"%s\" deleted.'
+UPLOAD_FOLDER = 'UPLOAD_FOLDER'
 
 file_lock = threading.Lock()
 
@@ -75,40 +87,40 @@ class Format:
 
 
 FORMATS = {
-    "mcdi": Format(
-        "MCDI",
-        "mcdi",
+    'mcdi': Format(
+        'MCDI',
+        'mcdi',
         db_util.load_mcdi_model,
         db_util.save_mcdi_model,
         db_util.delete_mcdi_model,
         models.MCDIFormatMetadata,
         models.MCDIFormat,
-        ".yaml"
+        '.yaml'
     ),
-    "presentation": Format(
-        "Presentation",
-        "presentation",
+    'presentation': Format(
+        'Presentation',
+        'presentation',
         db_util.load_presentation_model,
         db_util.save_presentation_model,
         db_util.delete_presentation_model,
         models.PresentationFormatMetadata,
         models.PresentationFormat,
-        ".yaml"
+        '.yaml'
     ),
-    "percentile": Format(
-        "Percentile",
-        "percentile",
+    'percentile': Format(
+        'Percentile',
+        'percentile',
         db_util.load_percentile_model,
         db_util.save_percentile_model,
         db_util.delete_percentile_model,
         models.PercentileTableMetadata,
         models.PercentileTable,
-        ".csv"
+        '.csv'
     )
 }
 
 
-@app.route("/base/edit_formats")
+@app.route('/base/edit_formats')
 @session_util.require_login(change_formats=True)
 def edit_formats():
     """Index page for changing data management behavior.
@@ -121,8 +133,8 @@ def edit_formats():
     @rtype: flask.Response
     """
     return flask.render_template(
-        "edit_formats.html",
-        cur_page="edit_formats",
+        'edit_formats.html',
+        cur_page='edit_formats',
         mcdi_formats=db_util.load_mcdi_model_listing(),
         presentation_formats=db_util.load_presentation_model_listing(),
         percentile_tables=db_util.load_percentile_model_listing(),
@@ -130,7 +142,7 @@ def edit_formats():
     )
 
 
-@app.route("/base/edit_formats/<format_type>/_add", methods=["GET", "POST"])
+@app.route('/base/edit_formats/<format_type>/_add', methods=['GET', 'POST'])
 @session_util.require_login(change_formats=True)
 def upload_format(format_type):
     """Handler to save a specification.
@@ -155,41 +167,39 @@ def upload_format(format_type):
     request = flask.request
 
     if not format_type in FORMATS:
-        flask.session["error"] = "Invalid format type."
-        return flask.redirect("/base/edit_formats")
+        flask.session[constants.ERROR_ATTR] = INVALID_FORMAT_MSG
+        return flask.redirect(EDIT_FORMATS_URL)
 
     format = FORMATS[format_type]
 
     # Show form on browser vising page with GET
-    if request.method == "GET":
+    if request.method == 'GET':
         return flask.render_template(
-            "upload_format.html",
-            cur_page="edit_formats",
+            'upload_format.html',
+            cur_page='edit_formats',
             upload_type=format.upload_type,
             **session_util.get_standard_template_values()
         )
 
     # Safe file and add record to db
-    elif request.method == "POST":
-        name = request.form.get("name", "").lower()
-        upload = request.files.get("newfile", None)
+    elif request.method == 'POST':
+        name = request.form.get('name', '').lower()
+        upload = request.files.get('newfile', None)
 
-        if name == "":
-            flask.session["error"] = "Name not specified. Please try again."
-            return flask.redirect(
-                "/base/edit_formats/%s/_add" % format.url_component)
+        if name == '':
+            flask.session[constants.ERROR_ATTR] = NAME_NOT_SPECIFIED_MSG
+            return flask.redirect(ADD_FORMATS_URL % format.url_component)
 
         if upload == None:
-            flask.session["error"] = "Upload not provided. Please try again."
-            return flask.redirect(
-                "/base/edit_formats/%s/_add" % format.url_component)
+            flask.session[constants.ERROR_ATTR] = UPLOAD_NOT_PROVIDED_MSG
+            return flask.redirect(ADD_FORMATS_URL % format.url_component)
 
-        safe_name = name.replace(" ", "")
+        safe_name = name.replace(' ', '')
         safe_name = urllib.quote_plus(safe_name)
 
         if format.load_model_function(safe_name) != None:
-            flask.session["error"] = "\"%s\" already exists." % name
-            return flask.redirect("/base/edit_formats")
+            flask.session[constants.ERROR_ATTR] = ALREADY_EXISTS_MSG % name
+            return flask.redirect(EDIT_FORMATS_URL)
 
         # Check file upload valid
         if upload and file_util.allowed_file(upload.filename):
@@ -198,23 +208,26 @@ def upload_format(format_type):
             with file_lock:
                 filename = file_util.generate_unique_filename(
                     format.file_extension)
-                upload.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+                upload.save(os.path.join(app.config[UPLOAD_FOLDER], filename))
             
             # Create and save record
             new_model = format.model_metadata_class(name, safe_name, filename)
             format.save_model_function(new_model)
             
-            flask.session["confirmation"] = "\"%s\" added." % name
-            return flask.redirect("/base/edit_formats")
+            flask.session[constants.CONFIRMATION_ATTR] = FORMAT_ADDED_MSG % name
+            return flask.redirect(EDIT_FORMATS_URL)
 
-    flask.session["error"] = "File upload failed. Please try again."
-    return flask.redirect("/base/edit_formats")
+    flask.session[constants.ERROR_ATTR] = FILE_UPLOAD_FAILED_MSG
+    return flask.redirect(EDIT_FORMATS_URL)
 
 
-@app.route("/base/edit_formats/<format_type>/<format_name>/delete")
+@app.route('/base/edit_formats/<format_type>/<format_name>/delete')
 @session_util.require_login(change_formats=True)
 def delete_format(format_type, format_name):
-    """
+    """Delete an existing specification (presetation, MCDI, or precentile).
+
+    Delete a presentation format, MCDI format, or precentile table from the
+    database and uploads folder.
 
     format_type == mcdi
     Controller to delete an existing registered MCDI format specification.
@@ -227,32 +240,35 @@ def delete_format(format_type, format_name):
     Controller to handle delete of a table of data necessary to calculate
     percentiles for research participants against original MCDI distributions.
 
+    @param format_type: The type of format to delete. Should be mcdi,
+        presentation, percentile.
+    @type format_type: str
     @param format_name: The name of the format to delete.
     @type format_name: str
     @return: Redirect
     @rtype: flask.Response
     """
     if not format_type in FORMATS:
-        flask.session["error"] = "Invalid format type."
-        return flask.redirect("/base/edit_formats")
+        flask.session[constants.ERROR_ATTR] = INVALID_FORMAT_MSG
+        return flask.redirect(EDIT_FORMATS_URL)
 
     format = FORMATS[format_type]
 
     format_model = format.load_model_function(format_name)
     if format_model == None:
-        error_msg = "\"%s\" not found. Possibly already deleted." % format_name
-        flask.session["error"] = error_msg
-        return flask.redirect("/base/edit_formats")
+        error_msg = NOT_FOUND_ERROR_MSG % format_name
+        flask.session[constants.ERROR_ATTR] = error_msg
+        return flask.redirect(EDIT_FORMATS_URL)
 
-    filename = os.path.join(app.config["UPLOAD_FOLDER"], format_model.filename)
+    filename = os.path.join(app.config[UPLOAD_FOLDER], format_model.filename)
     os.remove(filename)
     format.delete_model_function(format_model.safe_name)
+    msg = DELETED_CONFIRMATION_MSG % format_name
+    flask.session[constants.CONFIRMATION_ATTR] = msg
+    return flask.redirect(EDIT_FORMATS_URL)
 
-    flask.session["confirmation"] = "\"%s\" deleted." % format_name
-    return flask.redirect("/base/edit_formats")
 
-
-@app.route("/base/edit_formats/download/<filename>")
+@app.route('/base/edit_formats/download/<filename>')
 @session_util.require_login(change_formats=True)
 def uploaded_file(filename):
     """Controller to render an uploaded file.
@@ -262,4 +278,4 @@ def uploaded_file(filename):
     @return: File contents
     @rtype: flask.Response
     """
-    return flask.send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+    return flask.send_from_directory(app.config[UPLOAD_FOLDER], filename)
