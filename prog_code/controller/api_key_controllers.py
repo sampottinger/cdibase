@@ -559,6 +559,8 @@ def send_parent_forms():
         return generate_invalid_request_error(MISMATCHED_CSV_LENGTHS_MSG)
     num_records = list(length_set)[0]
 
+    new_forms = []
+
     # Pair each element across all parameters, grouping the first indexed value
     # of each parameter array (values loaded from CSV strings), the second
     # indexed value of each parameter array, and so on. Each grouping of
@@ -682,6 +684,10 @@ def send_parent_forms():
         # child.
         resolver = parent_account_util.AttributeResolutionResolver()
         resolver.fill_parent_form_defaults(new_form)
+
+        new_forms.append(new_form)
+
+    for new_form in new_forms:
 
         # Save the filled parent form to the database and send a link for
         # filling out that form to the specified parent email address.

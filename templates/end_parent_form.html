@@ -47,9 +47,9 @@
             <div class="tiling-form-input">
                 <label>Participant gender</label>
                 <select name="gender">
-                    <option value="1">male</option>
-                    <option value="2">female</option>
-                    <option value="3">other</option>
+                    <option value="{{ male_value }}">male</option>
+                    <option value="{{ female_value }}">female</option>
+                    <option value="{{ other_gender_value }}">other</option>
                 </select>
             </div>
             {% endif %}
@@ -95,7 +95,7 @@
                             <div class="word-entry-options">
                             {% for option in selected_format.details.options %}
                                 <label class="checkbox">
-                                    <input type="radio" name="{{ word }}_report" value="{{ option.value }}" {% if (option.value == known_val and word in known_words) or (option.value != known_val and not word in known_words) %}checked{% endif %}> {{ option.name }}
+                                    <input type="radio" name="{{ word }}_report" value="{{ option.value }}" {% if (option.value == known_val and word.lower() in known_words) or (option.value != known_val and not word.lower() in known_words) %}checked{% endif %}> {{ option.name }}
                                 </label>
                             {% endfor %}
                             </div>

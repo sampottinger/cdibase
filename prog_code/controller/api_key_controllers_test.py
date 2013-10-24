@@ -841,6 +841,52 @@ class TestAPIKeyControllers(mox.MoxTestBase):
             )
             self.assertFalse('error' in json.loads(resp.data))
 
+    def test_send_parent_forms_fila_part_way(self):
+        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(filter_util, 'run_search_query')
+        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
+        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
+        self.mox.StubOutWithMock(parent_account_util,
+            'generate_unique_mcdi_form_id')
+
+        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+
+        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
+            TEST_PARENT_FORM_ID)
+        db_util.load_presentation_model('standard').AndReturn(
+            TEST_PRESENTATION_FORMAT_METADATA)
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
+            [TEST_SNAPSHOT])
+
+        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
+            TEST_PARENT_FORM_ID)
+        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+
+        self.mox.ReplayAll()
+
+        with self.app.test_client() as client:
+            
+            with client.session_transaction() as sess:
+                sess['email'] = TEST_EMAIL
+
+            resp = client.get('/base/api/v0/send_parent_forms?' +
+                urllib.urlencode({
+                    'api_key': TEST_API_KEY,
+                    'child_name': ','.join(['name1','name2']),
+                    'mcdi_type': 'standard,standard',
+                    'parent_email': ','.join([TEST_PARENT_EMAIL, 'fail']),
+                    'database_id': ','.join(
+                        [str(TEST_DB_ID), str(TEST_DB_ID_MOD)]
+                    )
+                })
+            )
+            self.assertTrue('error' in json.loads(resp.data))
+
+
     def test_send_parent_forms_non_defaults(self):
         self.mox.StubOutWithMock(db_util, 'get_api_key')
         self.mox.StubOutWithMock(user_util, 'get_user')

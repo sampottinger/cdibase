@@ -70,15 +70,22 @@ def init_mail(app):
     MailKeeper.init_mail(app)
 
 
+def get_mail_keeper():
+    return MailKeeper.get_instance()
+
+
 def send_msg(email, subject, message):
     """Send an email.
+
+    Sends an email through the current MailKeeper or takes no action if a
+    mail keeper is not available.
 
     @param message: The message to send.
     @type message: flaskext.mail.Message
     """
     with mail_lock:
         
-        mail_keeper = MailKeeper.get_instance()
+        mail_keeper = get_mail_keeper()
         
         if mail_keeper:
             flask_message = flask_mail.Message(
@@ -89,5 +96,5 @@ def send_msg(email, subject, message):
             )
             mail_keeper.get_mail_instance().send(flask_message)
         
-        #else:
-        #    print message
+        else:
+            print message

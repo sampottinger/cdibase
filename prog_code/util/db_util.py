@@ -493,7 +493,7 @@ def lookup_global_participant_id(study, participant_study_id):
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        'SELECT child_id FROM snapshots WHERE study=? AND study=?',
+        'SELECT child_id FROM snapshots WHERE study=? AND study_id=?',
         (study, participant_study_id)
     )
     ret_values = cursor.fetchone()

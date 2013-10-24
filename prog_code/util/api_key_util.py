@@ -35,7 +35,7 @@ def get_if_avail(target_list, index, default_value=''):
     @keyword default_value: The value to return if the given item is not found
         in the specifed collection.
     """
-    if len(target_list) != 0:
+    if len(target_list) > index:
         return target_list[index]
     else:
         return default_value

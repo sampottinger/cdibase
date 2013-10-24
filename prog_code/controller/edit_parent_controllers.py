@@ -300,15 +300,9 @@ def handle_parent_mcdi_form(form_id):
         if database_id != None:
             results = parent_account_util.get_snapshot_chronology_for_db_id(
                 database_id)
-            if len(results) == 0:
-                study = 'not specified'
-                study_id = database_id
         else:
             results = parent_account_util.get_snapshot_chronology_for_study_id(
                 study, study_id)
-            if len(results) == 0:
-                flask.session[constants.ERROR_ATTR] = NO_GLOBAL_ID_MSG
-                return flask.redirect(request.path)
         
         # Ensure that the parent form has birthday information or load it from
         # the user response, checking that it is of appropriate ISO format.
@@ -325,7 +319,9 @@ def handle_parent_mcdi_form(form_id):
         # value.
         gender = parent_form.gender
         if gender == None or gender == '':
-            gender = request.form.get('gender', None)
+            gender = interp_util.safe_int_interpret(
+                request.form.get('gender', None)
+            )
             if not gender in VALID_GENDER_VALUES:
                 flask.session[constants.ERROR_ATTR] = GENDER_INVALID_MSG
                 return flask.redirect(request.path)
@@ -500,6 +496,7 @@ def handle_parent_mcdi_form(form_id):
                 lambda x: x.word,
                 known_words_dec
             )
+            known_words = map(lambda x: x.lower(), known_words)
 
         return flask.render_template(
             'end_parent_form.html',
@@ -515,5 +512,8 @@ def handle_parent_mcdi_form(form_id):
             languages=parent_form.languages,
             known_words=known_words,
             known_val=constants.EXPLICIT_TRUE,
+            male_value=constants.MALE,
+            female_value=constants.FEMALE,
+            other_gender_value=constants.OTHER_GENDER,
             **session_util.get_standard_template_values()
         )

@@ -43,6 +43,7 @@ WORD_VALUE_MISSING_MSG = '%s value missing.'
 WORD_VALUE_INVALID_MSG = '%s value invalid'
 MCDI_ADDED_MSG = 'MCDI record added for participant %d.'
 ENTER_DATA_URL = '/base/enter_data'
+NEW_CHILD_MCDI_ADDED_MSG = 'New child and MCDI added.'
 DATE_REGEX = re.compile('\d{4}/\d{1,2}/\d{1,2}')
 
 
@@ -94,6 +95,9 @@ def enter_data_form(format_name):
             cur_page='enter_data',
             selected_format=selected_format,
             formats=db_util.load_mcdi_model_listing(),
+            male_val=constants.MALE,
+            female_val=constants.FEMALE,
+            other_gender_val=constants.OTHER_GENDER,
             **session_util.get_standard_template_values()
         )
 
@@ -117,12 +121,12 @@ def enter_data_form(format_name):
 
         # Check inclusion and interpret submission
         error = None
-        if global_id == '':
-            error = GLOBAL_ID_NOT_PROVIDED_MSG
-        else:
+        if global_id != '':
             global_id = interp_util.safe_int_interpret(global_id)
             if global_id == None:
                 error = GLOBAL_ID_NOT_INT_MSG
+        else:
+            global_id = None
         
         if study_id == '':
             error = STUDY_ID_NOT_PROVIDED_MSG
@@ -258,7 +262,11 @@ def enter_data_form(format_name):
 
         db_util.insert_snapshot(new_snapshot, word_entries)
 
-        flask.session[constants.CONFIRMATION_ATTR] = MCDI_ADDED_MSG % global_id
+        if global_id != None:
+            msg = MCDI_ADDED_MSG % global_id
+        else:
+            msg = NEW_CHILD_MCDI_ADDED_MSG
+        flask.session[constants.CONFIRMATION_ATTR] = msg
 
         return flask.redirect(request.path)
 

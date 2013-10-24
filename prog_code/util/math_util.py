@@ -1,4 +1,4 @@
-"""Misc. mathematical routines to suppor the application.
+"""Misc. mathematical routines to support the application.
 
 @author: Sam Pottinger
 @license: GNU GPL v2
@@ -6,10 +6,14 @@
 
 def get_with_end_max(collection, index):
     if index >= len(collection):
-        return collection[-1]
+        ret_val = collection[-1]
     else:
-        return collection[index]
+        ret_val = collection[index]
 
+    if ret_val == '%':
+        return 0
+    else:
+        return ret_val
 
 
 def find_percentile(table_entries, target_num_words, age_months, max_words):
@@ -60,7 +64,7 @@ def find_percentile(table_entries, target_num_words, age_months, max_words):
     else:
         lower_section_percentile = upper_section_percentile - 1
 
-    percentile_range = upper_section_percentile - lower_section_words
+    percentile_range = upper_section_percentile - lower_section_percentile
     word_range = upper_section_words - lower_section_words
     distance_from_lower = target_num_words - lower_section_words
 

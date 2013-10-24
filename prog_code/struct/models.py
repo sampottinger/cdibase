@@ -325,6 +325,8 @@ class Filter:
             self.operand_float = float(self.operand)
         except ValueError:
             self.operand_float = None
+        except TypeError:
+            self.operand_float = None
 
 
 class User:
