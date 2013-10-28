@@ -99,7 +99,7 @@ OK
 ```
 
 
-### Local Testing
+### Local Development Server
 
 Start the local development server with:
 ```
