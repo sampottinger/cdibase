@@ -16,6 +16,7 @@ from ..util import filter_util
 from ..util import interp_util
 from ..util import report_util
 from ..util import session_util
+from ..util import user_util
 
 from ..struct import models
 
@@ -30,6 +31,10 @@ FILTER_CREATED_MSG = 'Filter created.'
 FILTER_DELETED_MSG = 'Filter deleted.'
 FILTER_ALREADY_DELETED_MSG = 'Filter already deleted.'
 UNKNOWN_PRESENTATION_FORMAT_MSG = 'Unknown presentation format specified.'
+INVALID_CONFIRM_CREDENTIALS_MSG = 'The password you entered was incorrect. ' \
+    'Please enter your account password again to confirm this delete operation.'
+PLEASE_CONFIRM_MESSAGE = 'Please confirm this delete operation by entering ' \
+    'your password.'
 
 CONTENT_DISPOISTION_ZIP = 'attachment; filename=mcdi_results.zip'
 CONTENT_DISPOISTION_CSV = 'attachment; filename=mcdi_results.csv'
@@ -41,6 +46,7 @@ EXECUTE_URL = '/base/delete_data/execute'
 
 DELETE_WAITING_ATTR = 'is_waiting_delete'
 ERROR_ATTR = constants.ERROR_ATTR
+PASSWORD_ATTR = 'password'
 
 FORMAT_SESSION_ATTR = constants.FORMAT_SESSION_ATTR
 CONFIRMATION_ATTR = constants.CONFIRMATION_ATTR
@@ -51,7 +57,7 @@ HTML_CHECKBOX_SELECTED = 'on'
 
 
 @app.route('/base/delete_data')
-@session_util.require_login(delete_data=False)
+@session_util.require_login(delete_data=True)
 def delete_data():
     """Index page for building database queries.
 
@@ -67,9 +73,9 @@ def delete_data():
     )
 
 
-@app.route('/base/delete_data/delete_mcdi_results')
-@session_util.require_login(delete_data=False)
-def execute_delete_request():
+@app.route('/base/delete_data/delete_mcdi_results', methods=['POST'])
+@session_util.require_login(delete_data=True)
+def start_delete_request():
     """Execute a MCDI database query and download the results.
 
     Execute an MCDI database query queued in a user's session and return the
@@ -84,6 +90,15 @@ def execute_delete_request():
     @return: Redirect
     @rtype: flask.redirect
     """
+    password = flask.request.form.get(PASSWORD_ATTR, '')
+    confirm = user_util.check_user_password(
+        session_util.get_user_email(),
+        password
+    )
+    if not confirm:
+        flask.session[ERROR_ATTR] = INVALID_CONFIRM_CREDENTIALS_MSG
+        return flask.redirect(DELETE_DATA_URL)
+
     session_util.set_waiting_on_delete(True)
     flask.session[FORMAT_SESSION_ATTR] = flask.request.args.get(
         FORMAT_SESSION_ATTR, '')
@@ -92,7 +107,7 @@ def execute_delete_request():
 
 
 @app.route('/base/delete_data/is_waiting')
-@session_util.require_login(delete_data=False)
+@session_util.require_login(delete_data=True)
 def is_waiting_on_delete():
     """Determine if the user is waiting on a delete to start.
 
@@ -109,7 +124,7 @@ def is_waiting_on_delete():
 
 
 @app.route('/base/delete_data/add_filter', methods=['POST'])
-@session_util.require_login(delete_data=False)
+@session_util.require_login(delete_data=True)
 def add_filter_from_delete():
     """Controller to add a filter to the query the user is currently building.
 
@@ -150,7 +165,7 @@ def add_filter_from_delete():
 
 
 @app.route('/base/delete_data/delete_filter/<int:filter_index>')
-@session_util.require_login(delete_data=False)
+@session_util.require_login(delete_data=True)
 def delete_filter_from_delete(filter_index):
     """Controller to delete a filter from query the user is currently building.
 
@@ -173,7 +188,7 @@ def delete_filter_from_delete(filter_index):
 
 
 @app.route('/base/delete_data/execute')
-@session_util.require_login(delete_data=False)
+@session_util.require_login(delete_data=True)
 def execute_delete_request():
     """Controller for finding and rendering archive of database query results.
 
@@ -188,6 +203,10 @@ def execute_delete_request():
     """
     request = flask.request
 
+    if not session_util.is_waiting_on_delete():
+        flask.session[ERROR_ATTR] = PLEASE_CONFIRM_MESSAGE
+        return flask.redirect(DELETE_DATA_URL)
+
     if not session_util.get_filters():
         session_util.set_waiting_on_delete(False)
         flask.session[ERROR_ATTR] = NO_FILTER_MESSAGE
@@ -199,4 +218,4 @@ def execute_delete_request():
     )
 
     session_util.set_waiting_on_delete(False)
-    return response
+    return ''

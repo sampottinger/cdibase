@@ -642,7 +642,7 @@ def insert_snapshot(snapshot_metadata, word_entries):
     else:
         child_id = snapshot_metadata.child_id
 
-    cmd = 'INSERT INTO snapshots VALUES (%s)' % (', '.join('?' * 19))
+    cmd = 'INSERT INTO snapshots VALUES (%s)' % (', '.join('?' * 20))
     cursor.execute(
         cmd,
         (
@@ -664,7 +664,8 @@ def insert_snapshot(snapshot_metadata, word_entries):
             ','.join(snapshot_metadata.languages),
             snapshot_metadata.num_languages,
             snapshot_metadata.mcdi_type,
-            snapshot_metadata.hard_of_hearing
+            snapshot_metadata.hard_of_hearing,
+            snapshot_metadata.deleted
         )
     )
     new_snapshot_id = cursor.lastrowid

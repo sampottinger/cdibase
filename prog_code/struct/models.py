@@ -165,7 +165,7 @@ class SnapshotMetadata:
     def __init__(self, database_id, child_id, study_id, study, gender, age,
         birthday, session_date, session_num, total_num_sessions, words_spoken,
         items_excluded, percentile, extra_categories, revision, languages,
-        num_languages, mcdi_type, hard_of_hearing):
+        num_languages, mcdi_type, hard_of_hearing, deleted):
         """Create a new snapshot metadata record.
 
         @param database_id: The ID for this snapshot.
@@ -221,6 +221,9 @@ class SnapshotMetadata:
             of hearing at the time of this snapshot. This should be a value from
             constants.
         @type hard_of_hearing: int
+        @param deleted: Indicates if this snapshot was deleted / was marked as
+            deleted.
+        @type deleted: bool
         """
         self.database_id = database_id
         self.child_id = child_id
@@ -241,6 +244,7 @@ class SnapshotMetadata:
         self.num_languages = num_languages
         self.mcdi_type = mcdi_type
         self.hard_of_hearing = hard_of_hearing
+        self.delted = deleted
 
     def __eq__(self, other):
         """Test to see if this snapshot has the same attribute values as other.
