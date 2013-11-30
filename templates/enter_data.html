@@ -2,14 +2,14 @@
 
 {% block contents %}
 <div class="hero-unit">
-    <h3>Add new MCDI results.</h3>
+    <h3>Add new CDI results.</h3>
     <p>
-        DaxlabBase makes adding new MCDIs easy. Start by selecting an MCDI format below.
+        DaxlabBase makes adding new CDIs easy. Start by selecting an CDI format below.
     </p>
 </div>
 
 <div class="small-center-content" id="unselected-mcdi-selector">
-    <h3>Select MCDI format</h3>
+    <h3>Select CDI format</h3>
     <ul>
         {% for format in formats %}
         <li><a href="/base/enter_data/{{ format.safe_name }}">{{ format.human_name }}</a></li>

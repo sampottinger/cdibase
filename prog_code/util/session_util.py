@@ -16,6 +16,8 @@ NOT_AUTHORIZED_ACCESS_DATA_MSG = 'You are not authorized to access data.'
 NOT_AUTHORIZED_PARENTS_MSG = 'You are not authorized to edit parent accounts.'
 NOT_AUTHORIZED_ADMIN_MSG = 'You are not authorized to admin.'
 NOT_AUTHORIZED_ENTER_DATA_MSG = 'You are not authorized to enter data.'
+NOT_AUTHORIZED_DELETE_DATA_MSG = 'You are not authorized to delete data.'
+NOT_AUTHORIZED_IMPORT_DATA_MSG = 'You are not authorized to import data.'
 NOT_AUTHORIZED_CHANGE_FORMATS_MSG = 'You are not authorized to change formats.'
 NOT_AUTHORIZED_API_KEYS_MSG = 'You are not authorized to use API keys.'
 
@@ -39,7 +41,8 @@ def get_standard_template_values():
 
 
 def require_login(access_data=False, admin=False, enter_data=False,
-    edit_parents=False,change_formats=False, use_api_key=False):
+    delete_data=False, import_data=False, edit_parents=False,
+    change_formats=False, use_api_key=False):
     """Decorator that requires that a user be logged in to do an operation.
 
     Decorator that requires that a user be logged in to do an operation and
@@ -85,6 +88,14 @@ def require_login(access_data=False, admin=False, enter_data=False,
                 return flask.redirect("/base")
             if enter_data and not user.can_enter_data:
                 msg = NOT_AUTHORIZED_ENTER_DATA_MSG
+                flask.session[constants.ERROR_ATTR] = msg
+                return flask.redirect("/base")
+            if delete_data and not user.can_delete_data:
+                msg = NOT_AUTHORIZED_DELETE_DATA_MSG
+                flask.session[constants.ERROR_ATTR] = msg
+                return flask.redirect("/base")
+            if import_data and not user.can_import_data:
+                msg = NOT_AUTHORIZED_IMPORT_DATA_MSG
                 flask.session[constants.ERROR_ATTR] = msg
                 return flask.redirect("/base")
             if change_formats and not user.can_change_formats:
@@ -244,6 +255,31 @@ def delete_filter(index):
         return False
     del filters[index]
     return True
+
+
+def set_waiting_on_delete(value, session=None):
+    """Indicate that the current user's status waiting for a download.
+
+    Indicate that the current user's status waiting for a download to be
+    rendered.
+
+    @param value: The value (from constants) to indicate for the user's status.
+    @type value: int
+    """
+    if session == None:
+        session = flask.session
+    session['waiting_on_delete'] = value
+
+
+def is_waiting_on_delete(session=None):
+    """Determine if a user is waiting on a download.
+
+    @return: True if the user is waiting on a download and False otherwise.
+    @rtype: bool
+    """
+    if session == None:
+        session = flask.session
+    return session.get('waiting_on_delete', False)
 
 
 def set_waiting_on_download(value, session=None):

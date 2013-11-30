@@ -24,9 +24,9 @@
         {% else %}
         <h3>Logged in.</h3>
         <ul>
-            {% if user.can_enter_data %}<li><a href="/base/enter_data">Enter new MCDI records >></a></li>{% endif %}
-            {% if user.can_access_data %}<li><a href="/base/access_data">Access lab MCDI database >></a></li>{% endif %}
-            {% if user.can_change_formats %}<li><a href="/base/edit_formats">Edit MCDI and presentation formats >></a></li>{% endif %}
+            {% if user.can_enter_data %}<li><a href="/base/enter_data">Enter new CDI records >></a></li>{% endif %}
+            {% if user.can_access_data %}<li><a href="/base/access_data">Access lab CDI database >></a></li>{% endif %}
+            {% if user.can_change_formats %}<li><a href="/base/edit_formats">Edit CDI and presentation formats >></a></li>{% endif %}
             {% if user.can_admin %}<li><a href="/base/edit_users">Edit users >></a></li>{% endif %}
             {% if user.can_use_api_key %}<li><a href="/base/config_api_key">Configure API keys >></a></li>{% endif %}
             <li><a href="/base/account">Edit your account >></a></li>

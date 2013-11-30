@@ -27,6 +27,7 @@ from prog_code.controller import api_key_controllers
 from prog_code.controller import edit_parent_controllers
 from prog_code.controller import edit_user_controllers
 from prog_code.controller import enter_data_controllers
+from prog_code.controller import delete_data_controllers
 from prog_code.controller import format_controllers
 
 @app.route("/base")

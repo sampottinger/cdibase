@@ -58,16 +58,7 @@ class QueryInfo:
         self.query_str = query_str
 
 
-def build_search_query(filters, table):
-    """Build a string SQL query from the given filters.
-
-    @param filters: The filters to build the query out of.
-    @type filters: Iterable over models.Filter
-    @param table: The name of the table to query.
-    @type table: str
-    @return: SQL select query for the given table with the given filters.
-    @rtype: str
-    """
+def build_query(filters, table, statement_template):
     filter_fields = map(lambda x: x.field, filters)
     # TODO: might want to catch this as a security exception
     filter_fields = filter(lambda x: x in FIELD_MAP, filter_fields)
@@ -86,9 +77,27 @@ def build_search_query(filters, table):
     )
     clause = ' AND '.join(filter_fields_str)
 
-    stmt = 'SELECT * FROM %s WHERE %s' % (table, clause)
+    stmt = statement_template % (table, clause)
 
     return QueryInfo(filter_fields, stmt)
+
+
+def build_search_query(filters, table):
+    """Build a string SQL query from the given filters.
+
+    @param filters: The filters to build the query out of.
+    @type filters: Iterable over models.Filter
+    @param table: The name of the table to query.
+    @type table: str
+    @return: SQL select query for the given table with the given filters.
+    @rtype: str
+    """
+    return build_query(filters, table, 'SELECT * FROM %s WHERE %s')
+
+
+def build_delete_query(filters, table):
+    return build_query(filters, table, 'UPDATE %s SET deleted=1 WHERE %s')
+
 
 def run_search_query(filters, table):
     """Builds and runs a SQL select query on the given table with given filters.
@@ -116,3 +125,29 @@ def run_search_query(filters, table):
     ret_val = map(lambda x: models.SnapshotMetadata(*x), db_cursor.fetchall())
     db_connection.close()
     return ret_val
+
+
+def run_delete_query(filters, table):
+    """Builds and runs a SQL select query on the given table with given filters.
+
+    @param filters: The filters to build the query out of.
+    @type: Iterable over models.Filter
+    @param table: The name of the table to query.
+    @type table: str
+    @return: Results of SQL select query for the given table with the given
+        filters.
+    @rtype: Iterable over models.SnapshotMetadata
+    """
+    db_connection = db_util.get_db_connection()
+    db_cursor = db_connection.cursor()
+
+    query_info = build_delete_query(filters, table)
+    raw_operands = map(lambda x: x.operand, filters)
+    filter_fields_and_operands = zip(query_info.filter_fields, raw_operands)
+    operands = map(
+        lambda (field, operand): field.interpret_value(operand),
+        filter_fields_and_operands
+    )
+    db_cursor.execute(query_info.query_str, operands)
+
+    db_connection.close()

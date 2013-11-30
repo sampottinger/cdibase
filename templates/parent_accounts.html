@@ -6,13 +6,13 @@
 
 {% block contents %}
 <div class="hero-unit">
-    <h3>Ask parents to complete MCDIs online.</h3>
+    <h3>Ask parents to complete CDIs online.</h3>
     <p>
-        DaxlabBase sends emails to parents, asking them to complete MCDIs for their child or children online.
+        DaxlabBase sends emails to parents, asking them to complete CDIs for their child or children online.
     </p>
 </div>
 <form method="POST">
-    <h3>Send MCDI Forms by Email</h3>
+    <h3>Send CDI Forms by Email</h3>
     <div class="star-legend">
         * = required, ** = either study and study ID or a global ID is required. Other fields will be specified by the parent or will be filled by the database if left blank.
     </div>
@@ -26,7 +26,7 @@
             <input type="text" name="parent_email" placeholder="ex samp@gleap.org">
         </div>
         <div class="tiling-form-input">
-            <label>MCDI type *</label>
+            <label>CDI type *</label>
             <select name="mcdi_type">
                 <option value=""></option>
             {% for format in mcdi_formats %}
@@ -80,7 +80,7 @@
         </div>
     </div>
     <div class="padded-form-controls">
-        <input class="btn btn-primary" type="submit" value="Send MCDI by email">
+        <input class="btn btn-primary" type="submit" value="Send CDI by email">
     </div>
 </form>
 {% endblock %}
