@@ -35,6 +35,7 @@ INVALID_CONFIRM_CREDENTIALS_MSG = 'The password you entered was incorrect. ' \
     'Please enter your account password again to confirm this delete operation.'
 PLEASE_CONFIRM_MESSAGE = 'Please confirm this delete operation by entering ' \
     'your password.'
+DELETED_MESSAGE = 'Entries deleted.'
 
 CONTENT_DISPOISTION_ZIP = 'attachment; filename=mcdi_results.zip'
 CONTENT_DISPOISTION_CSV = 'attachment; filename=mcdi_results.csv'
@@ -217,5 +218,6 @@ def execute_delete_request():
         SNAPSHOTS_DB_TABLE
     )
 
+    flask.session[CONFIRMATION_ATTR] = DELETED_MESSAGE
     session_util.set_waiting_on_delete(False)
-    return ''
+    return flask.redirect(DELETE_DATA_URL)

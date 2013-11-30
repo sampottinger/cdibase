@@ -72,7 +72,7 @@
     <div class="span2"></div>
     <div class="span5">
         <h3>Remove Matching Entries</h3>
-        <form method="POST" id="mcdi-form" action="/base/delete_data/delete_mcdi_results">
+        <form method="POST" id="delete-form" action="/base/delete_data/delete_mcdi_results">
             <div class="form-entry">
                 <label>Presentation format</label>
                 <select name="format">
@@ -86,7 +86,7 @@
                 <input type="password" name="password">
             </div>
             <div id="download-button-holder">
-                <button class="btn btn-primary" id="download-button">Delete Matching Entries</button>
+                <button class="btn btn-primary" id="delete-button">Delete Matching Entries</button>
             </div>
             <div id="status-display">
                 <img src="/static/img/ajax-loader.gif"> Please wait...
@@ -97,5 +97,4 @@
         </form>
     </div>
 </div>
-<iframe id="hidden-frame" src=""></iframe>
 {% endblock %}

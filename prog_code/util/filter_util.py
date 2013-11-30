@@ -149,5 +149,5 @@ def run_delete_query(filters, table):
         filter_fields_and_operands
     )
     db_cursor.execute(query_info.query_str, operands)
-
+    db_connection.commit()
     db_connection.close()
