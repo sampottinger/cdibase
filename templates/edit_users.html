@@ -12,11 +12,13 @@
         <tr>
             <th>email</th>
             <th>can enter data</th>
+            <th>can delete data</th>
+            <th>can import data</th>
             <th>can edit parents</th>
-            <th>can access data</th>
-            <th>can change formats</th>
-            <th>can use API key</th>
-            <th>can change user accounts</th>
+            <th>can read data</th>
+            <th>can edit formats</th>
+            <th>can use API</th>
+            <th>can edit users</th>
             <th>edit account</th>
             <th>delete account</th>
         </tr>
@@ -24,6 +26,8 @@
         <tr>
             <td>{{ user.email }}</td>
             <td>{{ user.can_enter_data == 1 }}</td>
+            <td>{{ user.can_delete_data == 1 }}</td>
+            <td>{{ user.can_import_data == 1 }}</td>
             <td>{{ user.can_edit_parents == 1 }}</td>
             <td>{{ user.can_access_data == 1 }}</td>
             <td>{{ user.can_change_formats == 1 }}</td>

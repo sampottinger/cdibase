@@ -99,6 +99,8 @@ def edit_user(email):
             email,
             new_email,
             request.form.get('can_enter_data', '') == on_val,
+            request.form.get('can_delete_data', '') == on_val,
+            request.form.get('can_import_data', '') == on_val,
             request.form.get('can_edit_parents', '') == on_val,
             request.form.get('can_access_data', '') == on_val,
             request.form.get('can_change_formats', '') == on_val,
@@ -143,6 +145,8 @@ def add_user():
         user_util.create_new_user(
             email,
             request.form.get('can_enter_data', '') == on_val,
+            request.form.get('can_delete_data', '') == on_val,
+            request.form.get('can_import_data', '') == on_val,
             request.form.get('can_edit_parents', '') == on_val,
             request.form.get('can_access_data', '') == on_val,
             request.form.get('can_change_formats', '') == on_val,

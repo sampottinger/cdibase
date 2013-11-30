@@ -373,12 +373,16 @@ def load_user_model(identifier):
     cursor = connection.cursor()
     if isinstance(identifier, basestring):
         cursor.execute(
-            'SELECT * FROM users WHERE email=?',
+            '''SELECT id,email,password_hash,can_enter_data,can_delete_data,
+            can_import_data,can_edit_parents,can_access_data,can_change_formats,
+            can_use_api_key,can_admin FROM users WHERE email=?''',
             (identifier,)
         )
     else:
         cursor.execute(
-            'SELECT * FROM users WHERE id=?',
+            '''SELECT id,email,password_hash,can_enter_data,can_delete_data,
+            can_import_data,can_edit_parents,can_access_data,can_change_formats,
+            can_use_api_key,can_admin FROM users WHERE id=?''',
             (identifier,)
         )
     result = cursor.fetchone()
@@ -401,12 +405,15 @@ def save_user_model(user, existing_email=None):
     cursor = connection.cursor()
     cursor.execute(
         '''UPDATE users SET email=?,password_hash=?,can_enter_data=?,
-            can_edit_parents=?,can_access_data=?,can_change_formats=?,
-            can_use_api_key=?,can_admin=? WHERE email=?''',
+            can_delete_data=?,can_import_data=?,can_edit_parents=?,
+            can_access_data=?,can_change_formats=?,can_use_api_key=?,
+            can_admin=? WHERE email=?''',
         (
             user.email,
             user.password_hash,
             user.can_enter_data,
+            user.can_delete_data,
+            user.can_import_data,
             user.can_edit_parents,
             user.can_access_data,
             user.can_change_formats,
@@ -429,12 +436,15 @@ def create_user_model(user):
     cursor = connection.cursor()
     cursor.execute(
         '''INSERT INTO users (email, password_hash, can_enter_data,
-            can_edit_parents,can_access_data, can_change_formats,
-            can_use_api_key, can_admin) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+            can_delete_data, can_import_data, can_edit_parents, can_access_data,
+            can_change_formats, can_use_api_key, can_admin)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
         (
             user.email,
             user.password_hash,
             user.can_enter_data,
+            user.can_import_data,
+            user.can_delete_data,
             user.can_edit_parents,
             user.can_access_data,
             user.can_change_formats,
@@ -470,7 +480,9 @@ def get_all_user_models():
     """
     connection = get_db_connection()
     cursor = connection.cursor()
-    cursor.execute('SELECT * FROM users')
+    cursor.execute('''SELECT id, email, password_hash, can_enter_data,
+        can_delete_data, can_import_data, can_edit_parents, can_access_data,
+        can_change_formats, can_use_api_key, can_admin FROM users''')
     ret_val = map(lambda x: models.User(*x), cursor.fetchall())
     connection.close()
     return ret_val

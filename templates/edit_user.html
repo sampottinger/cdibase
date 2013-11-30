@@ -20,6 +20,14 @@
             Can enter data
         </label>
         <label class="checkbox">
+            <input name="can_delete_data" type="checkbox" {% if target_user and target_user.can_delete_data%}checked{% endif %}>
+            Can delete data
+        </label>
+        <label class="checkbox">
+            <input name="can_import_data" type="checkbox" {% if target_user and target_user.can_import_data%}checked{% endif %}>
+            Can import data
+        </label>
+        <label class="checkbox">
             <input name="can_edit_parents" type="checkbox" {% if target_user and target_user.can_edit_parents%}checked{% endif %}>
             Can edit parents
         </label>

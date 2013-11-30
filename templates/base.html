@@ -20,8 +20,16 @@
                         <li {% if cur_page == "enter_data" %}class="active"{% endif %}><a href="/base/enter_data">Enter Data</a></li>
                         {% endif %}
 
+                        {% if user.can_delete_data %}
+                        <li {% if cur_page == "delete_data" %}class="active"{% endif %}><a href="/base/delete_data">Delete Data</a></li>
+                        {% endif %}
+
+                        {% if user.can_import_data %}
+                        <li {% if cur_page == "import_data" %}class="active"{% endif %}><a href="/base/import_data">Import Data</a></li>
+                        {% endif %}
+
                         {% if user.can_edit_parents %}
-                        <li {% if cur_page == "edit_parents" %}class="active"{% endif %}><a href="/base/parent_accounts">Send Parent MCDIs</a></li>
+                        <li {% if cur_page == "edit_parents" %}class="active"{% endif %}><a href="/base/parent_accounts">Parents</a></li>
                         {% endif %}
                         
                         {% if user.can_access_data %}
@@ -29,11 +37,11 @@
                         {% endif %}
                         
                         {% if user.can_change_formats %}
-                        <li {% if cur_page == "edit_formats" %}class="active"{% endif %}><a href="/base/edit_formats">Edit Formats</a></li>
+                        <li {% if cur_page == "edit_formats" %}class="active"{% endif %}><a href="/base/edit_formats">Formats</a></li>
                         {% endif %}
                         
                         {% if user.can_admin %}
-                        <li {% if cur_page == "edit_users" %}class="active"{% endif %}><a href="/base/edit_users">Edit Users</a></li>
+                        <li {% if cur_page == "edit_users" %}class="active"{% endif %}><a href="/base/edit_users">Users</a></li>
                         {% endif %}
 
                         {% if user.can_use_api_key %}

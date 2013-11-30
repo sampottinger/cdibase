@@ -333,8 +333,8 @@ class User:
     """Record of a user account providing someone access to DaxlabBase."""
 
     def __init__(self, db_id, email, password_hash, can_enter_data,
-        can_edit_parents, can_access_data, can_change_formats, can_use_api_key,
-        can_admin):
+        can_delete_data, can_import_data, can_edit_parents, can_access_data,
+        can_change_formats, can_use_api_key, can_admin):
         """Create a new User record.
 
         @param db_id: The unique numerical ID assigned to this user account in
@@ -347,6 +347,11 @@ class User:
         @param can_enter_data: Indicates if this user can add new data to the
             database.
         @type can_enter_data: bool
+        @param can_delete_data: Indicates if this user can delete data from the
+            database.
+        @type can_delete_data: bool
+        @param can_import_data: Indicates if this user can import data via CSV.
+        @type can_import_data: bool
         @param can_access_data: Indicates if this user can download data from
             the database.
         @type can_access_data: bool
@@ -363,6 +368,8 @@ class User:
         self.email = email
         self.password_hash = password_hash
         self.can_enter_data = can_enter_data
+        self.can_delete_data = can_delete_data
+        self.can_import_data = can_import_data
         self.can_edit_parents = can_edit_parents
         self.can_access_data = can_access_data
         self.can_change_formats = can_change_formats

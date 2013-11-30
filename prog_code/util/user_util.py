@@ -55,14 +55,21 @@ def generate_password(pass_len=10):
     return ''.join([random.choice(chars) for i in range(pass_len)])
 
 
-def create_new_user(email, can_enter_data, can_edit_parents, can_access_data,
-    can_change_formats, can_use_api_key, can_admin):
+def create_new_user(email, can_enter_data, can_delete_data, can_import_data,
+    can_edit_parents, can_access_data, can_change_formats, can_use_api_key,
+    can_admin):
     """Create and persist a new user, sending account info by email in process.
 
     @param email: The email address of the user to create an account for.
     @type email: str
     @param can_enter_data: Indicates if the user can add new data to the lab
         dataset.
+    @type can_enter_data: bool
+    @param can_delete_data: Indicates if the user can delete data from the lab
+        dataset.
+    @type can_delete_data: bool
+    @param can_enter_data: Indicates if the user can add new data to the lab
+        dataset by importing a CSV file.
     @type can_enter_data: bool
     @param can_access_data: Indicates if the user can access existing lab data.
     @type can_access_data: bool
@@ -77,9 +84,21 @@ def create_new_user(email, can_enter_data, can_edit_parents, can_access_data,
     """
     email = email.lower()
     password = generate_password()
-    pass_hash = werkzeug.generate_password_hash(password)
-    user = models.User(-1, email, pass_hash, can_enter_data, can_edit_parents,
-        can_access_data, can_change_formats, can_use_api_key, can_admin)
+    pass_hash = werkzeug.generate_password_hash(password,
+        method='sha512')
+    user = models.User(
+        -1,
+        email,
+        pass_hash,
+        can_enter_data,
+        can_import_data,
+        can_delete_data,
+        can_edit_parents,
+        can_access_data,
+        can_change_formats,
+        can_use_api_key,
+        can_admin
+    )
     db_util.create_user_model(user)
 
     mail_util.send_msg(
@@ -103,7 +122,10 @@ def check_user_password(email, password):
     if not user:
         return False
     pass_hash = user.password_hash
-    return werkzeug.check_password_hash(pass_hash, password)
+    try:
+        return werkzeug.check_password_hash(pass_hash, password)
+    except:
+        return False
 
 def change_user_password(email, password):
     """Change a user's account password.
@@ -115,11 +137,13 @@ def change_user_password(email, password):
     """
     email = email.lower()
     user = db_util.load_user_model(email)
-    user.password_hash = werkzeug.generate_password_hash(password)
+    user.password_hash = werkzeug.generate_password_hash(password,
+        method='sha512')
     db_util.save_user_model(user)
 
-def update_user(orig_email, email, can_enter_data, can_edit_parents, can_access_data,
-    can_change_formats, can_use_api_key, can_admin):
+def update_user(orig_email, email, can_enter_data, can_delete_data,
+    can_import_data, can_edit_parents, can_access_data, can_change_formats,
+    can_use_api_key, can_admin):
     """Change a user's account.
 
     @param orig_email: The email of the user whose account permissions is being
@@ -130,6 +154,12 @@ def update_user(orig_email, email, can_enter_data, can_edit_parents, can_access_
     @param can_enter_data: Indicate if the user can enter new data into the lab
         database.
     @type can_enter_data: bool
+    @param can_delete_data: Indicate if the user can delete data from the lab
+        database.
+    @type can_delete_data: bool
+    @param can_import_data: Indicate if the user can import data from the lab
+        database.
+    @type can_import_data: bool
     @param can_access_data: Indicate if the user can access existing lab data.
     @type can_access_data: bool
     @param can_change_formats: Indicate if the user can change MCDI forms, CSV
@@ -145,6 +175,8 @@ def update_user(orig_email, email, can_enter_data, can_edit_parents, can_access_
     user = db_util.load_user_model(orig_email)
     user.email = email
     user.can_enter_data = can_enter_data
+    user.can_delete_data = can_delete_data
+    user.can_import_data = can_import_data
     user.can_edit_parents = can_edit_parents
     user.can_access_data = can_access_data
     user.can_change_formats = can_change_formats
