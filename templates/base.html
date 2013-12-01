@@ -60,8 +60,8 @@
             </div>
         </div>
         <div class="content">
-            {% if confirmation %}<p class="confirmation">{{ confirmation }}</p>{% endif %}
-            {% if error %}<p class="error">{{ error }}</p>{% endif %}
+            {% if confirmation %}<p class="confirmation"><i class="icon-thumbs-up icon-white"></i> {{ confirmation }}</p>{% endif %}
+            {% if error %}<p class="error"><i class="icon-ban-circle icon-white"></i> {{ error }}</p>{% endif %}
 
             {% block contents %}
             {% endblock %}

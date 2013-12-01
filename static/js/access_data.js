@@ -1,32 +1,13 @@
-function restoreDownloadButton () {
-    $('#status-display').hide();
-    $('#download-button-holder').slideDown(function () {
-        $('#coming-msg').fadeIn();
-    });
-}
-
-
-function checkIfDone () {
-    $.getJSON('/base/access_data/is_waiting', function(status) {
-        if (!status.is_waiting)
-            restoreDownloadButton();
-        else
-            setTimeout(checkIfDone, 1000);
-    });
-}
-
-
 $(window).load(function () {
     $('#status-display').hide();
     $('#coming-msg').hide();
 
     $('#download-button').click(function() {
+        $('#coming-msg').hide();
         $('#download-button-holder').hide();
-        $('#status-display').slideDown(function () {
-            var url = '/base/access_data/download_mcdi_results?';
-            url = url +  $('#mcdi-form').serialize();
-            $('#hidden-frame').attr('src', url);
-            checkIfDone();
+        $('#coming-msg').slideDown(function () {
+            $('#mcdi-form').submit();
+            $('#download-button-holder').fadeIn();
         });
         return false;
     });

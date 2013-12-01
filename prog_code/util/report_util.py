@@ -125,7 +125,8 @@ def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
             'languages': snapshot.languages,
             'num_languages': snapshot.num_languages,
             'mcdi_type': snapshot.mcdi_type,
-            'hard_of_hearing': snapshot.hard_of_hearing
+            'hard_of_hearing': snapshot.hard_of_hearing,
+            'deleted': snapshot.deleted
         }
 
         if include_words:
@@ -153,7 +154,8 @@ def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
             snapshot.languages,
             snapshot.num_languages,
             snapshot.mcdi_type,
-            snapshot.hard_of_hearing
+            snapshot.hard_of_hearing,
+            snapshot.deleted
         ]
 
         if include_words:
@@ -210,7 +212,8 @@ def generate_study_report_rows(snapshots_from_study, presentation_format):
         'languages',
         'num languages',
         'mcdi type',
-        'hard of hearing'
+        'hard of hearing',
+        'deleted'
     ]
     header_col.extend(word_listing)
 

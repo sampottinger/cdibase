@@ -244,7 +244,7 @@ class SnapshotMetadata:
         self.num_languages = num_languages
         self.mcdi_type = mcdi_type
         self.hard_of_hearing = hard_of_hearing
-        self.delted = deleted
+        self.deleted = deleted
 
     def __eq__(self, other):
         """Test to see if this snapshot has the same attribute values as other.

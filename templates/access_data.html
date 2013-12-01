@@ -83,9 +83,12 @@
             </div>
             <div class="form-entry">
                 <label class="checkbox">
-                    <input name="consolidated_csv" type="checkbox">
-                    Single CSV
+                    <input name="consolidated_csv" type="checkbox" checked>Single CSV
                 </label>
+            </div>
+            <div class="form-entry">
+                <label class="radio"><input type="radio" name="deleted" value="ignore" checked>Ignore deleted entries.</label>
+                <label class="radio"><input type="radio" name="deleted" value="include">Include deleted entries.</label>
             </div>
             <div id="download-button-holder">
                 <button class="btn btn-primary" id="download-button">Download as CSV</button>
@@ -99,5 +102,4 @@
         </form>
     </div>
 </div>
-<iframe id="hidden-frame" src=""></iframe>
 {% endblock %}

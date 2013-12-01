@@ -28,7 +28,8 @@ FIELD_MAP = {
     'MCDI_type': oper_interp.RawInterpretField('mcdi_type'),
     'specific_language': oper_interp.RawInterpretField('languages'),
     'num_languages': oper_interp.NumericalField('num_languages'),
-    'hard_of_hearing': oper_interp.BooleanField('hard_of_hearing')
+    'hard_of_hearing': oper_interp.BooleanField('hard_of_hearing'),
+    'deleted': oper_interp.BooleanField('deleted')
 }
 
 OPERATOR_MAP = {
@@ -102,7 +103,7 @@ def build_delete_query(filters, table, restore):
         return build_query(filters, table, 'UPDATE %s SET deleted=1 WHERE %s')
 
 
-def run_search_query(filters, table):
+def run_search_query(filters, table, exclude_deleted):
     """Builds and runs a SQL select query on the given table with given filters.
 
     @param filters: The filters to build the query out of.
@@ -116,6 +117,9 @@ def run_search_query(filters, table):
     db_connection = db_util.get_db_connection()
     db_cursor = db_connection.cursor()
 
+    if exclude_deleted:
+        filters.append(models.Filter('deleted', 'eq', 0))
+
     query_info = build_search_query(filters, table)
     raw_operands = map(lambda x: x.operand, filters)
     filter_fields_and_operands = zip(query_info.filter_fields, raw_operands)
@@ -123,6 +127,8 @@ def run_search_query(filters, table):
         lambda (field, operand): field.interpret_value(operand),
         filter_fields_and_operands
     )
+    print operands
+    print query_info.query_str
     db_cursor.execute(query_info.query_str, operands)
 
     ret_val = map(lambda x: models.SnapshotMetadata(*x), db_cursor.fetchall())

@@ -36,8 +36,8 @@ CONTENT_DISPOISTION_CSV = 'attachment; filename=mcdi_results.csv'
 CSV_MIME_TYPE = 'text/csv'
 OCTET_MIME_TYPE = 'application/octet-stream'
 
-CONSOLIDATED_FILE_URL = '/base/access_data/download_mcdi_results.csv'
-ARCHIVE_FILE_URL = '/base/access_data/download_mcdi_results.zip'
+CONSOLIDATED_FILE_URL = '/base/access_data/download_mcdi_results.csv?deleted=%s'
+ARCHIVE_FILE_URL = '/base/access_data/download_mcdi_results.zip?deleted=%s'
 ACCESS_DATA_URL = '/base/access_data'
 
 DOWNLOAD_WAITING_ATTR = 'is_waiting'
@@ -68,7 +68,7 @@ def access_data():
     )
 
 
-@app.route('/base/access_data/download_mcdi_results')
+@app.route('/base/access_data/download_mcdi_results', methods=['POST'])
 @session_util.require_login(access_data=True)
 def execute_access_request():
     """Execute a MCDI database query and download the results.
@@ -86,18 +86,23 @@ def execute_access_request():
     @rtype: flask.redirect
     """
     session_util.set_waiting_on_download(True)
-    flask.session[FORMAT_SESSION_ATTR] = flask.request.args.get(
+    flask.session[FORMAT_SESSION_ATTR] = flask.request.form.get(
         FORMAT_SESSION_ATTR, '')
 
-    use_consolidated = flask.request.args.get(
+    use_consolidated = flask.request.form.get(
         'consolidated_csv',
         ''
     )
+
+    include_deleted_str = flask.request.form.get(
+        'deleted',
+        'ignore'
+    )
     
     if use_consolidated == HTML_CHECKBOX_SELECTED:
-        return flask.redirect(CONSOLIDATED_FILE_URL)
+        return flask.redirect(CONSOLIDATED_FILE_URL % include_deleted_str)
     else:
-        return flask.redirect(ARCHIVE_FILE_URL)
+        return flask.redirect(ARCHIVE_FILE_URL % include_deleted_str)
 
 
 @app.route('/base/access_data/is_waiting')
@@ -173,7 +178,7 @@ def add_filter():
     new_filter = models.Filter(field, operator, operand)
     session_util.add_filter(new_filter)
 
-    #flask.session[CONFIRMATION_ATTR] = FILTER_CREATED_MSG
+    flask.session[CONFIRMATION_ATTR] = FILTER_CREATED_MSG
     return flask.redirect(ACCESS_DATA_URL)
 
 
@@ -193,7 +198,7 @@ def delete_filter(filter_index):
     @rtype: flask.Response
     """
     if session_util.delete_filter(filter_index):
-        #flask.session[CONFIRMATION_ATTR] = FILTER_DELETED_MSG
+        flask.session[CONFIRMATION_ATTR] = FILTER_DELETED_MSG
         return flask.redirect(ACCESS_DATA_URL)
     else:
         flask.session[ERROR_ATTR] = FILTER_ALREADY_DELETED_MSG
@@ -223,7 +228,8 @@ def execute_zip_access_request():
 
     snapshots = filter_util.run_search_query(
         session_util.get_filters(),
-        SNAPSHOTS_DB_TABLE
+        SNAPSHOTS_DB_TABLE,
+        request.args.get('deleted', 'ignore') == 'ignore'
     )
 
     if len(snapshots) == 0:
@@ -270,7 +276,8 @@ def execute_csv_access_request():
 
     snapshots = filter_util.run_search_query(
         session_util.get_filters(),
-        SNAPSHOTS_DB_TABLE
+        SNAPSHOTS_DB_TABLE,
+        request.args.get('deleted', 'ignore') == 'ignore'
     )
 
     if len(snapshots) == 0:
