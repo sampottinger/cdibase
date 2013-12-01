@@ -173,7 +173,7 @@ def add_filter():
     new_filter = models.Filter(field, operator, operand)
     session_util.add_filter(new_filter)
 
-    flask.session[CONFIRMATION_ATTR] = FILTER_CREATED_MSG
+    #flask.session[CONFIRMATION_ATTR] = FILTER_CREATED_MSG
     return flask.redirect(ACCESS_DATA_URL)
 
 
@@ -193,7 +193,7 @@ def delete_filter(filter_index):
     @rtype: flask.Response
     """
     if session_util.delete_filter(filter_index):
-        flask.session[CONFIRMATION_ATTR] = FILTER_DELETED_MSG
+        #flask.session[CONFIRMATION_ATTR] = FILTER_DELETED_MSG
         return flask.redirect(ACCESS_DATA_URL)
     else:
         flask.session[ERROR_ATTR] = FILTER_ALREADY_DELETED_MSG

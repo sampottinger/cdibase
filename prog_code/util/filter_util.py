@@ -95,8 +95,11 @@ def build_search_query(filters, table):
     return build_query(filters, table, 'SELECT * FROM %s WHERE %s')
 
 
-def build_delete_query(filters, table):
-    return build_query(filters, table, 'UPDATE %s SET deleted=1 WHERE %s')
+def build_delete_query(filters, table, restore):
+    if restore:
+        return build_query(filters, table, 'UPDATE %s SET deleted=0 WHERE %s')
+    else:
+        return build_query(filters, table, 'UPDATE %s SET deleted=1 WHERE %s')
 
 
 def run_search_query(filters, table):
@@ -127,7 +130,7 @@ def run_search_query(filters, table):
     return ret_val
 
 
-def run_delete_query(filters, table):
+def run_delete_query(filters, table, restore):
     """Builds and runs a SQL select query on the given table with given filters.
 
     @param filters: The filters to build the query out of.
@@ -141,7 +144,7 @@ def run_delete_query(filters, table):
     db_connection = db_util.get_db_connection()
     db_cursor = db_connection.cursor()
 
-    query_info = build_delete_query(filters, table)
+    query_info = build_delete_query(filters, table, restore)
     raw_operands = map(lambda x: x.operand, filters)
     filter_fields_and_operands = zip(query_info.filter_fields, raw_operands)
     operands = map(

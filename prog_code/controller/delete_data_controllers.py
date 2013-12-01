@@ -36,6 +36,9 @@ INVALID_CONFIRM_CREDENTIALS_MSG = 'The password you entered was incorrect. ' \
 PLEASE_CONFIRM_MESSAGE = 'Please confirm this delete operation by entering ' \
     'your password.'
 DELETED_MESSAGE = 'Entries deleted.'
+RESTORED_MESSAGE = 'Entries restored.'
+NEED_OPERATION_MSG = 'Please specify if you want to delete or restore ' \
+    'matching entries.'
 
 CONTENT_DISPOISTION_ZIP = 'attachment; filename=mcdi_results.zip'
 CONTENT_DISPOISTION_CSV = 'attachment; filename=mcdi_results.csv'
@@ -43,11 +46,15 @@ CSV_MIME_TYPE = 'text/csv'
 OCTET_MIME_TYPE = 'application/octet-stream'
 
 DELETE_DATA_URL = '/base/delete_data'
-EXECUTE_URL = '/base/delete_data/execute'
+EXECUTE_URL = '/base/delete_data/execute?operation=%s'
 
 DELETE_WAITING_ATTR = 'is_waiting_delete'
 ERROR_ATTR = constants.ERROR_ATTR
 PASSWORD_ATTR = 'password'
+OPERATION_ATTR = 'operation'
+
+DELETE_OPERATION = 'delete'
+RESTORE_OPERATION = 'restore'
 
 FORMAT_SESSION_ATTR = constants.FORMAT_SESSION_ATTR
 CONFIRMATION_ATTR = constants.CONFIRMATION_ATTR
@@ -100,11 +107,16 @@ def start_delete_request():
         flask.session[ERROR_ATTR] = INVALID_CONFIRM_CREDENTIALS_MSG
         return flask.redirect(DELETE_DATA_URL)
 
+    operation_str = flask.request.form.get(OPERATION_ATTR, '')
+    if not operation_str in [DELETE_OPERATION, RESTORE_OPERATION]:
+        flask.session[ERROR_ATTR] = NEED_OPERATION_MSG
+        return flask.redirect(DELETE_DATA_URL)
+
     session_util.set_waiting_on_delete(True)
     flask.session[FORMAT_SESSION_ATTR] = flask.request.args.get(
         FORMAT_SESSION_ATTR, '')
     
-    return flask.redirect(EXECUTE_URL)
+    return flask.redirect(EXECUTE_URL % operation_str)
 
 
 @app.route('/base/delete_data/is_waiting')
@@ -161,7 +173,7 @@ def add_filter_from_delete():
     new_filter = models.Filter(field, operator, operand)
     session_util.add_filter(new_filter)
 
-    flask.session[CONFIRMATION_ATTR] = FILTER_CREATED_MSG
+    #flask.session[CONFIRMATION_ATTR] = FILTER_CREATED_MSG
     return flask.redirect(DELETE_DATA_URL)
 
 
@@ -181,7 +193,7 @@ def delete_filter_from_delete(filter_index):
     @rtype: flask.Response
     """
     if session_util.delete_filter(filter_index):
-        flask.session[CONFIRMATION_ATTR] = FILTER_DELETED_MSG
+        #flask.session[CONFIRMATION_ATTR] = FILTER_DELETED_MSG
         return flask.redirect(DELETE_DATA_URL)
     else:
         flask.session[ERROR_ATTR] = FILTER_ALREADY_DELETED_MSG
@@ -203,6 +215,7 @@ def execute_delete_request():
     @rtype: flask.Response
     """
     request = flask.request
+    operation = request.args.get('operation', RESTORE_OPERATION)
 
     if not session_util.is_waiting_on_delete():
         flask.session[ERROR_ATTR] = PLEASE_CONFIRM_MESSAGE
@@ -215,9 +228,13 @@ def execute_delete_request():
 
     snapshots = filter_util.run_delete_query(
         session_util.get_filters(),
-        SNAPSHOTS_DB_TABLE
+        SNAPSHOTS_DB_TABLE,
+        operation == RESTORE_OPERATION
     )
 
-    flask.session[CONFIRMATION_ATTR] = DELETED_MESSAGE
+    if operation == RESTORE_OPERATION:
+        flask.session[CONFIRMATION_ATTR] = RESTORED_MESSAGE
+    else:
+        flask.session[CONFIRMATION_ATTR] = DELETED_MESSAGE
     session_util.set_waiting_on_delete(False)
     return flask.redirect(DELETE_DATA_URL)
