@@ -13,8 +13,13 @@
             <div class="navbar-inner">  
                 <div class="container">
                     <ul class="nav">
+
                         <li {% if cur_page == "home" %}class="active"{% endif %}><a class="brand" href="/base">DaxlabBase</a></li>
                         {% if user %}
+
+                        {% if user.can_access_data %}
+                        <li {% if cur_page == "access_data" %}class="active"{% endif %}><a href="/base/access_data">Access Data</a></li>
+                        {% endif %}
                         
                         {% if user.can_enter_data %}
                         <li {% if cur_page == "enter_data" %}class="active"{% endif %}><a href="/base/enter_data">Enter Data</a></li>
@@ -30,10 +35,6 @@
 
                         {% if user.can_edit_parents %}
                         <li {% if cur_page == "edit_parents" %}class="active"{% endif %}><a href="/base/parent_accounts">Parents</a></li>
-                        {% endif %}
-                        
-                        {% if user.can_access_data %}
-                        <li {% if cur_page == "access_data" %}class="active"{% endif %}><a href="/base/access_data">Access Data</a></li>
                         {% endif %}
                         
                         {% if user.can_change_formats %}
