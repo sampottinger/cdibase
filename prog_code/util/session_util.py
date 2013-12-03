@@ -36,7 +36,8 @@ def get_standard_template_values():
         'email': get_user_email(),
         'confirmation': get_confirmation(),
         'error': get_error(),
-        'user': user_util.get_user(get_user_email())
+        'user': user_util.get_user(get_user_email()),
+        'scroll': get_scroll()
     }
 
 
@@ -174,6 +175,21 @@ def get_confirmation():
     msg = flask.session.get(constants.CONFIRMATION_ATTR, None)
     flask.session[constants.CONFIRMATION_ATTR] = None
     return msg
+
+
+def get_scroll():
+    """Get any waiting confirmation messages for the current user.
+
+    Get any confirmation messages waiting for the current user and delete that
+    message as it is returned.
+
+    @return: None if no message waiting or error description if there is a
+        pending message for the user.
+    @rtype: str
+    """
+    scroll = flask.session.get('scroll', False)
+    flask.session['scroll'] = False
+    return scroll
 
 
 def serialize_filter(target_filter):

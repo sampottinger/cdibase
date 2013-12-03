@@ -34,7 +34,7 @@
 
 .content
 {
-    margin:0 10px 0 10px;
+    margin:20px;
 }
 
 .format-control
@@ -153,6 +153,12 @@
     padding: 11px 0 10px 0;
 }
 
+.center-panel
+{
+    width: 400px;
+    margin: 20px auto;
+}
+
 #login-form-container .wide-input
 {
     width: 100%;
@@ -161,4 +167,16 @@
 #hidden-frame 
 {
     visibility: hidden;
+}
+
+#import-form input
+{
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+#import-button-holder
+{
+    margin-top: 30px;
+    text-align: right;
 }

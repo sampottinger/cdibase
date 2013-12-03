@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block jsinclude %}
+<script type="text/javascript" src="/static/js/upload_data.js"></script>
+{% endblock %}
+
+{% block contents %}
+<div class="hero-unit">
+    <h3>Import CSV data.</h3>
+    <p>
+        DaxlabBase allows users to import larger sets of CDI results using CSV files conforming to a prescribed format.
+    </p>
+</div>
+<div class="center-panel">
+    <form method="POST" id="import-form" action="/base/import_data" enctype="multipart/form-data">
+        <div class="form-entry">
+            <label>CDI Type</label>
+            <select name="cdi-type">
+                {% for format in formats %}
+                <option value="{{ format.safe_name }}">{{ format.human_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-entry">
+            <label>CSV File</label>
+            <input type="file" name="file"> 
+        </div>
+        <div id="import-button-holder">
+            <button class="btn btn-primary" id="import-button">Upload CSV</button>
+        </div>
+        <div id="status-display">
+            <img src="/static/img/ajax-loader.gif"> Please wait...
+        </div>
+        <div id="coming-msg">
+            Carrying out database operations...
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -622,7 +622,7 @@ def create_new_api_key(user_id, api_key):
 
 
 # TODO: Combined for transaction
-def insert_snapshot(snapshot_metadata, word_entries):
+def insert_snapshot(snapshot_metadata, word_entries, cursor=None):
     """Insert a new MCDI snapshot.
 
     @param snapshot_metadata: The metadata for this snapshot that should be
@@ -633,8 +633,10 @@ def insert_snapshot(snapshot_metadata, word_entries):
         status indicators showing if those words were spoken or not.
     @type: dict
     """
-    connection = get_db_connection()
-    cursor = connection.cursor()
+    cursor_provided = cursor != None
+    if not cursor_provided:
+        connection = get_db_connection()
+        cursor = connection.cursor()
 
     if snapshot_metadata.child_id == None:
         cursor.execute('SELECT MAX(child_id) FROM snapshots')
@@ -683,8 +685,9 @@ def insert_snapshot(snapshot_metadata, word_entries):
             )
         )
 
-    connection.commit()
-    connection.close()
+    if not cursor_provided:
+        connection.commit()
+        connection.close()
 
 
 def insert_parent_form(form_metadata):

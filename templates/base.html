@@ -68,6 +68,9 @@
         </div>
         <script type="text/javascript" src="/static/js/jquery-1.8.3.min.js"></script>
         <script type="text/javascript" src="/static/js/toasts.js"></script>
+        {% if scroll %}
+        <script type="text/javascript">$(window).scrollTop($(document).height());</script>
+        {% endif %}
         {% block jsinclude %}
         {% endblock %}
     </body>
