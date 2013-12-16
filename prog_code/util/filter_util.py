@@ -103,7 +103,7 @@ def build_delete_query(filters, table, restore):
         return build_query(filters, table, 'UPDATE %s SET deleted=1 WHERE %s')
 
 
-def run_search_query(filters, table, exclude_deleted):
+def run_search_query(filters, table, exclude_deleted=True):
     """Builds and runs a SQL select query on the given table with given filters.
 
     @param filters: The filters to build the query out of.
