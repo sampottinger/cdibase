@@ -368,7 +368,8 @@ def build_snapshot(prototype, mcdi_type, languages, hard_of_hearing, cursor):
         len(languages),
         mcdi_type,
         hard_of_hearing,
-        0
+        0,
+        False
     )
 
     words = {}
