@@ -468,7 +468,8 @@ def handle_parent_mcdi_form(form_id):
             languages,
             len(languages),
             selected_format.details['meta']['mcdi_type'],
-            hard_of_hearing
+            hard_of_hearing,
+            False
         )
         db_util.insert_snapshot(new_snapshot, word_entries)
         db_util.remove_parent_form(form_id)
