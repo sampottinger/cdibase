@@ -799,7 +799,8 @@ def get_child_info_by_api():
     
     matching_snapshots = filter_util.run_search_query(
         db_filters,
-        SNAPSHOTS_DB_TABLE
+        SNAPSHOTS_DB_TABLE,
+        True
     )
     serialized_snapshots_by_child_id = {}
 
