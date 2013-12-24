@@ -1,3 +1,5 @@
+import io
+
 import flask
 
 from daxlabbase import app
@@ -21,7 +23,9 @@ def import_data():
             **session_util.get_standard_template_values()
         )
     else:
-        contents = flask.request.files['file']
+        contents = io.StringIO(
+            unicode(flask.request.files['file'].read()), newline=None
+        )
         mcdi_type = flask.request.form.get('cdi-type', '')
         results = csv_import_util.parse_csv(
             contents,
