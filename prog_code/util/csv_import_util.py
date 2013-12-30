@@ -340,7 +340,7 @@ class UploadParserAutomaton:
             known_words_count = len(known_words)
             all_words_count = len(all_words)
             percentile = math_util.find_percentile(
-                self.__percentile_table,
+                self.__percentile_table[target_prototype['gender']],
                 known_words_count,
                 target_prototype['age'],
                 all_words_count
@@ -425,13 +425,30 @@ def build_snapshot(prototype, mcdi_type, languages, hard_of_hearing, cursor):
     return metadata
 
 
-def parse_csv(contents, mcdi_type, percentile_table, languages, hard_of_hearing,
+def parse_csv(contents, mcdi_type, languages, hard_of_hearing,
     act_as_file=False):
     
     connection = db_util.get_db_connection()
     cursor = connection.cursor()
 
-    parse_info = parse_csv_prototypes(contents, percentile_table, act_as_file)
+    mcdi_model = db_util.load_mcdi_model(mcdi_type)
+    percentile_names = mcdi_model.details['percentiles']
+    
+    male_percentiles_name = percentile_names['male']
+    female_percentiles_name = percentile_names['female']
+    other_percentiles_name = percentile_names['other']
+    
+    male_percentiles = db_util.load_percentile_model(male_percentiles_name)
+    female_percentiles = db_util.load_percentile_model(female_percentiles_name)
+    other_percentiles = db_util.load_percentile_model(other_percentiles_name)
+    
+    percentile_tables = {
+        constants.MALE: male_percentiles,
+        constants.FEMALE: female_percentiles,
+        constants.OTHER_GENDER: other_percentiles
+    }
+
+    parse_info = parse_csv_prototypes(contents, percentile_tables, act_as_file)
     if parse_info['error']:
         connection.commit()
         connection.close()

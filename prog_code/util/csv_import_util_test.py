@@ -11,7 +11,11 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
 
     def setUp(self):
         mox.MoxTestBase.setUp(self)
-        self.__test_automaton = csv_import_util.UploadParserAutomaton([-1])
+        self.__test_automaton = csv_import_util.UploadParserAutomaton({
+            constants.MALE: [-1],
+            constants.FEMALE: [-2],
+            constants.OTHER_GENDER: [-3]
+        })
     
     def test_enter_error_state(self):
         self.__test_automaton.enter_error_state('test error')
@@ -665,7 +669,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
 
     def test_finish_without_error(self):
         self.mox.StubOutWithMock(math_util, 'find_percentile')
-        math_util.find_percentile([-1], 2, 789.3, 3).AndReturn(50)
+        math_util.find_percentile([-3], 2, 789.3, 3).AndReturn(50)
         self.mox.ReplayAll()
 
         self.__test_automaton.set_prototypes([
@@ -679,6 +683,11 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
 
         self.__test_automaton.parse_age(
             ['', 'Age (months)', '123.1', '456.2', '789.3'],
+            1
+        )
+
+        self.__test_automaton.parse_gender(
+            ['', 'Gender', 'M', 'F', 'O'],
             1
         )
 
