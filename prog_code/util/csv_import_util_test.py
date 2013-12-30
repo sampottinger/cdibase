@@ -4,12 +4,14 @@ import mox
 
 import constants
 import csv_import_util
+import math_util
 
 
 class UploadParserAutomatonTests(mox.MoxTestBase):
 
     def setUp(self):
-        self.__test_automaton = csv_import_util.UploadParserAutomaton()
+        mox.MoxTestBase.setUp(self)
+        self.__test_automaton = csv_import_util.UploadParserAutomaton([-1])
     
     def test_enter_error_state(self):
         self.__test_automaton.enter_error_state('test error')
@@ -516,7 +518,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(csv_import_util.STATE_PARSE_PERCENTILE)
         self.__test_automaton.parse_percentile(
-            ['', 'Percentile', '80.1', '90.2', '95.3'],
+            ['', 'Percentile', '80.1', '90.2', 'calculate'],
             1
         )
         
@@ -527,9 +529,27 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
             csv_import_util.STATE_PARSE_EXTRA_CATEGORIES
         )
 
+        needing_precentile = self.__test_automaton.get_list_needing_precentile()
+        self.assertEqual(needing_precentile, [2])
+
         self.assertEqual(prototypes[0]['percentile'], 80.1)
         self.assertEqual(prototypes[1]['percentile'], 90.2)
-        self.assertEqual(prototypes[2]['percentile'], 95.3)
+        self.assertEqual(prototypes[2]['percentile'], -1)
+
+    def test_parse_non_standard_percentile(self):
+        self.__test_automaton.set_prototypes([{}, {}, {}])
+        self.__test_automaton.set_state(csv_import_util.STATE_PARSE_PERCENTILE)
+        self.__test_automaton.parse_percentile(
+            ['', 'Percentile', '80.1', '90.2', ''],
+            1
+        )
+        
+        prototypes = self.__test_automaton.get_prototypes()
+        self.assertEqual(len(prototypes), 3)
+        self.assertEqual(
+            self.__test_automaton.get_state(),
+            csv_import_util.STATE_FOUND_ERROR
+        )
 
     def test_parse_percentile_invalid(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
@@ -642,6 +662,42 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
             self.__test_automaton.get_state(),
             csv_import_util.STATE_FOUND_ERROR
         )
+
+    def test_finish_without_error(self):
+        self.mox.StubOutWithMock(math_util, 'find_percentile')
+        math_util.find_percentile([-1], 2, 789.3, 3).AndReturn(50)
+        self.mox.ReplayAll()
+
+        self.__test_automaton.set_prototypes([
+            {'words': []}, {'words': []}, {'words': []}
+        ])
+
+        self.__test_automaton.parse_percentile(
+            ['', 'Percentile', '80.1', '90.2', 'calculate'],
+            1
+        )
+
+        self.__test_automaton.parse_age(
+            ['', 'Age (months)', '123.1', '456.2', '789.3'],
+            1
+        )
+
+        self.__test_automaton.parse_words(['1', 'test', '1', '0', 'na'], 1)
+        self.__test_automaton.parse_words(['1', 'test', '1', '0', '0'], 2)
+        self.__test_automaton.parse_words(['1', 'test', '1', '0', '1'], 3)
+        self.__test_automaton.parse_words(['1', 'test', '1', '0', '1'], 4)
+
+        target_prototype = self.__test_automaton.get_prototypes()[2]
+        self.assertEqual(target_prototype['percentile'], -1)
+
+        self.__test_automaton.finish()
+
+        target_prototype = self.__test_automaton.get_prototypes()[2]
+        self.assertEqual(target_prototype['percentile'], 50)
+
+    def test_finish_with_error(self):
+        self.__test_automaton.set_state(csv_import_util.STATE_FOUND_ERROR)
+        self.__test_automaton.finish()
 
 
 if __name__ == '__main__':

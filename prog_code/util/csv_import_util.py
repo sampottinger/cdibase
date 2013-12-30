@@ -35,11 +35,14 @@ from ..struct import models
 
 import constants
 import db_util
+import math_util
 
 
 class UploadParserAutomaton:
 
-    def __init__(self, state=STATE_PARSE_CHILD_DB_ID):
+    def __init__(self, percentile_table=None, state=STATE_PARSE_CHILD_DB_ID):
+        self.__percentile_table = percentile_table
+        self.__needing_percentiles = []
         self.__state_matrix = {
             STATE_PARSE_CHILD_DB_ID: self.parse_child_db_id,
             STATE_PARSE_CHILD_STUDY_ID: self.parse_child_study_id,
@@ -248,17 +251,26 @@ class UploadParserAutomaton:
         if not self.sanity_check(step_val, 'Percentile', row_num):
             return
 
+        index = 0
         for (val, prototype) in zip(step_val[2:], self.__prototypes):
-            converted_val = self.safe_parse_float(val, row_num)
-            if converted_val == None:
-                return
-            elif converted_val < 0 or converted_val > 100:
-                self.enter_error_state(
-                    INVALID_PERCENT_ERR % (converted_val, row_num),
-                )
-                return
+            if val == 'calculate':
+                self.__needing_percentiles.append(index)
+                prototype['percentile'] = -1
             else:
-                prototype['percentile'] = converted_val
+                converted_val = self.safe_parse_float(val, row_num)
+                if converted_val == None:
+                    self.enter_error_state(
+                        INVALID_PERCENT_ERR % (converted_val, row_num),
+                    )
+                    return
+                elif converted_val < 0 or converted_val > 100:
+                    self.enter_error_state(
+                        INVALID_PERCENT_ERR % (converted_val, row_num),
+                    )
+                    return
+                else:
+                    prototype['percentile'] = converted_val
+            index += 1
 
         self.__state += 1
 
@@ -310,6 +322,32 @@ class UploadParserAutomaton:
                     'val': converted_val
                 })
 
+    def finish(self):
+        if self.__state == STATE_FOUND_ERROR:
+            return
+
+        for child_index in self.get_list_needing_precentile():
+            target_prototype = self.__prototypes[child_index]
+            known_words = filter(
+                lambda x: x['val'] == constants.EXPLICIT_TRUE,
+                target_prototype['words']
+            )
+            all_words = filter(
+                lambda x: x['val'] != constants.NO_DATA,
+                target_prototype['words']
+            )
+
+            known_words_count = len(known_words)
+            all_words_count = len(all_words)
+            percentile = math_util.find_percentile(
+                self.__percentile_table,
+                known_words_count,
+                target_prototype['age'],
+                all_words_count
+            )
+
+            target_prototype['percentile'] = percentile
+
     def handle_found_error(self, step_val, row_num):
         pass
 
@@ -325,11 +363,14 @@ class UploadParserAutomaton:
     def get_prototypes(self):
         return self.__prototypes
 
+    def get_list_needing_precentile(self):
+        return self.__needing_percentiles
+
     def set_prototypes(self, prototypes):
         self.__prototypes = prototypes
 
 
-def parse_csv_prototypes(contents, act_as_file=False):
+def parse_csv_prototypes(contents, percentile_table, act_as_file=False):
     if act_as_file:
         targetBuffer = contents
     else:
@@ -337,11 +378,14 @@ def parse_csv_prototypes(contents, act_as_file=False):
     
     reader = csv.reader(targetBuffer)
 
-    automaton = UploadParserAutomaton()
+    automaton = UploadParserAutomaton(percentile_table)
     row_num = 1
     for row in reader:
         automaton.step(row, row_num)
         row_num += 1
+
+    if automaton.get_state() != STATE_FOUND_ERROR:
+        automaton.finish()
 
     return {
         'error': automaton.get_error(),
@@ -381,11 +425,13 @@ def build_snapshot(prototype, mcdi_type, languages, hard_of_hearing, cursor):
     return metadata
 
 
-def parse_csv(contents, mcdi_type, languages, hard_of_hearing, act_as_file=False):
+def parse_csv(contents, mcdi_type, percentile_table, languages, hard_of_hearing,
+    act_as_file=False):
+    
     connection = db_util.get_db_connection()
     cursor = connection.cursor()
 
-    parse_info = parse_csv_prototypes(contents, act_as_file)
+    parse_info = parse_csv_prototypes(contents, percentile_table, act_as_file)
     if parse_info['error']:
         connection.commit()
         connection.close()
