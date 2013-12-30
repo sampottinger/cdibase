@@ -602,7 +602,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
             {'words': []}, {'words': []}, {'words': []}
         ])
 
-        self.__test_automaton.parse_words(['1', 'test', '1', '0', '1'], 1)
+        self.__test_automaton.parse_words(['1', 'test', '1', '0', 'na'], 1)
 
         self.assertEqual(
             self.__test_automaton.get_state(),
@@ -622,7 +622,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         
         self.assertEqual(prototypes[2]['words'][0]['word'], 'test')
         self.assertEqual(prototypes[2]['words'][0]['val'],
-            constants.EXPLICIT_TRUE)
+            constants.NO_DATA)
 
         self.__test_automaton.parse_words(['1', 'again', '0', '1', '0'], 2)
         self.assertEqual(prototypes[0]['words'][1]['word'], 'again')
@@ -636,6 +636,12 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(prototypes[2]['words'][1]['word'], 'again')
         self.assertEqual(prototypes[2]['words'][1]['val'],
             constants.EXPLICIT_FALSE)
+
+        self.__test_automaton.parse_words(['1', 'again', '0', '', '0'], 3)
+        self.assertEqual(
+            self.__test_automaton.get_state(),
+            csv_import_util.STATE_FOUND_ERROR
+        )
 
 
 if __name__ == '__main__':
