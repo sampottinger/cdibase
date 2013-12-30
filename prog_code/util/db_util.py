@@ -161,6 +161,7 @@ def load_mcdi_model(name):
 
     filename = metadata[2]
     filename = os.path.join(file_util.UPLOAD_FOLDER, filename)
+    print filename
     with open(filename) as f:
         content = f.read()
     spec = yaml.load(content)
