@@ -31,7 +31,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         )
         self.assertNotEqual(
             self.__test_automaton.get_error(),
-            'Expected test on row 1 but found \"test\".'
+            'Expected \"test\" on row 1 but found \"test\".'
         )
 
     def test_sanity_check_fail(self):
@@ -43,7 +43,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         )
         self.assertEqual(
             self.__test_automaton.get_error(),
-            'Expected other on row 1 but found \"test\".'
+            'Expected \"other\" on row 1 but found \"test\".'
         )
 
     def test_safe_parse_float_pass(self):
