@@ -17,7 +17,7 @@
             <label>CDI Type</label>
             <select name="cdi-type">
                 {% for format in formats %}
-                <option value="{{ format.safe_name }}">{{ format.human_name }}</option>
+                <option value="{{ format.safe_name }}" {% if format.safe_name == default_format %}selected{% endif %}>{{ format.human_name }}</option>
                 {% endfor %}
             </select>
         </div>
