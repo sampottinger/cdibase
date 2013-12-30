@@ -279,6 +279,7 @@ class SnapshotMetadata:
         same = self.num_languages == other.num_languages and same
         same = self.mcdi_type == other.mcdi_type and same
         same = self.hard_of_hearing == other.hard_of_hearing and same
+        same = self.deleted == other.deleted and same
         return same
 
 

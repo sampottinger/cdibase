@@ -19,12 +19,16 @@ TEST_USER = models.User(
     False,
     False,
     False,
+    False,
+    False,
     True
 )
 TARGET_USER = models.User(
     TARGET_DB_ID,
     TARGET_EMAIL,
     None,
+    False,
+    False,
     False,
     False,
     False,
@@ -98,6 +102,8 @@ class TestEditParentControllers(mox.MoxTestBase):
             True,
             False,
             True,
+            False,
+            True,
             False
         )
 
@@ -128,6 +134,7 @@ class TestEditParentControllers(mox.MoxTestBase):
             client.post(url, data={
                 'new_email': NEW_EMAIL,
                 'can_enter_data': constants.FORM_SELECTED_VALUE,
+                'can_import_data': constants.FORM_SELECTED_VALUE,
                 'can_access_data': constants.FORM_SELECTED_VALUE,
                 'can_use_api_key': constants.FORM_SELECTED_VALUE
             })
@@ -153,6 +160,8 @@ class TestEditParentControllers(mox.MoxTestBase):
             True,
             False,
             True,
+            False,
+            True,
             False
         )
 
@@ -166,6 +175,7 @@ class TestEditParentControllers(mox.MoxTestBase):
             client.post('/base/edit_users/_add', data={
                 'new_email': '',
                 'can_enter_data': constants.FORM_SELECTED_VALUE,
+                'can_import_data': constants.FORM_SELECTED_VALUE,
                 'can_access_data': constants.FORM_SELECTED_VALUE,
                 'can_use_api_key': constants.FORM_SELECTED_VALUE
             })
@@ -177,6 +187,7 @@ class TestEditParentControllers(mox.MoxTestBase):
             client.post('/base/edit_users/_add', data={
                 'new_email': TARGET_EMAIL,
                 'can_enter_data': constants.FORM_SELECTED_VALUE,
+                'can_import_data': constants.FORM_SELECTED_VALUE,
                 'can_access_data': constants.FORM_SELECTED_VALUE,
                 'can_use_api_key': constants.FORM_SELECTED_VALUE
             })
@@ -188,6 +199,7 @@ class TestEditParentControllers(mox.MoxTestBase):
             client.post('/base/edit_users/_add', data={
                 'new_email': NEW_EMAIL,
                 'can_enter_data': constants.FORM_SELECTED_VALUE,
+                'can_import_data': constants.FORM_SELECTED_VALUE,
                 'can_access_data': constants.FORM_SELECTED_VALUE,
                 'can_use_api_key': constants.FORM_SELECTED_VALUE
             })

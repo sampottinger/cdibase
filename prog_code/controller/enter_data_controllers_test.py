@@ -22,6 +22,8 @@ TEST_USER = models.User(
     False,
     False,
     False,
+    False,
+    False,
     False
 )
 MALE_TEST_PERCENTILE_NAME = 'male_test_percentiles'
@@ -119,6 +121,7 @@ TEST_EXPECTED_SNAPSHOT = models.SnapshotMetadata(
     TEST_LANGUAGES,
     TEST_NUM_LANGUAGES,
     'standard',
+    constants.EXPLICIT_FALSE,
     False
 )
 

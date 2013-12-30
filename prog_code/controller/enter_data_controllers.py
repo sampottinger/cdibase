@@ -191,6 +191,9 @@ def enter_data_form(format_name):
             flask.session[constants.ERROR_ATTR] = error
             return flask.redirect(request.path)
 
+        if hard_of_hearing: hard_of_hearing = constants.EXPLICIT_TRUE
+        else: hard_of_hearing = constants.EXPLICIT_FALSE
+
         revision = 0
 
         # Parse word entries
@@ -257,7 +260,8 @@ def enter_data_form(format_name):
             languages,
             len(languages),
             selected_format.details['meta']['mcdi_type'],
-            hard_of_hearing
+            hard_of_hearing,
+            False
         )
 
         db_util.insert_snapshot(new_snapshot, word_entries)

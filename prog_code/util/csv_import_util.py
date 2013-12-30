@@ -296,6 +296,8 @@ class UploadParserAutomaton:
                 converted_val = constants.EXPLICIT_FALSE
             elif val == '1':
                 converted_val = constants.EXPLICIT_TRUE
+            elif val.replace(' ', '') == '':
+                converted_val = constants.NO_DATA
             
             if converted_val == None:
                 self.enter_error_state(

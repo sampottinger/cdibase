@@ -14,7 +14,9 @@ TEST_USER = models.User(
     None,
     False,
     False,
+    False,
     True,
+    False,
     False,
     False,
     False

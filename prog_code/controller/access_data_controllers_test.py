@@ -20,6 +20,8 @@ TEST_USER = models.User(
     None,
     False,
     False,
+    False,
+    False,
     True,
     False,
     False,
@@ -57,17 +59,7 @@ class TestAccessDataControllers(mox.MoxTestBase):
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
-            resp = client.get('/base/access_data/download_mcdi_results')
-            self.assertIn('location', resp.headers)
-            self.assertNotEqual(
-                resp.headers['location'].find(expected_url_archive),
-                -1
-            )
-
-            self.assertEqual(
-                flask.session[access_data_controllers.FORMAT_SESSION_ATTR],
-                ''
-            )
+            resp = client.post('/base/access_data/download_mcdi_results')
 
             self.assertTrue(session_util.is_waiting_on_download())
 
@@ -87,12 +79,7 @@ class TestAccessDataControllers(mox.MoxTestBase):
             attr_value = access_data_controllers.HTML_CHECKBOX_SELECTED
             url = '/base/access_data/download_mcdi_results?%s=%s' % (
                 attr_name, attr_value)
-            resp = client.get(url)
-            self.assertIn('location', resp.headers)
-            self.assertNotEqual(
-                resp.headers['location'].find(expected_url_combined),
-                -1
-            )
+            resp = client.post(url)
 
             self.assertEqual(
                 flask.session[access_data_controllers.FORMAT_SESSION_ATTR],
@@ -117,14 +104,11 @@ class TestAccessDataControllers(mox.MoxTestBase):
             cons_value = access_data_controllers.HTML_CHECKBOX_SELECTED
             fmt_name = access_data_controllers.FORMAT_SESSION_ATTR
             fmt_value = 'testFormat'
-            url = '/base/access_data/download_mcdi_results?%s=%s&%s=%s' % (
-                cons_name, cons_value, fmt_name, fmt_value)
-            resp = client.get(url)
-            self.assertIn('location', resp.headers)
-            self.assertNotEqual(
-                resp.headers['location'].find(expected_url_combined),
-                -1
-            )
+            url = '/base/access_data/download_mcdi_results?'
+            resp = client.post(url, data={
+                cons_name: cons_value,
+                fmt_name: fmt_value
+            })
 
             self.assertEqual(
                 flask.session[access_data_controllers.FORMAT_SESSION_ATTR],
@@ -139,8 +123,6 @@ class TestAccessDataControllers(mox.MoxTestBase):
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         self.mox.ReplayAll()
-
-        expected_url_combined = '/access_data/download_mcdi_results.csv'
 
         with self.app.test_client() as client:
             
@@ -169,8 +151,6 @@ class TestAccessDataControllers(mox.MoxTestBase):
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         self.mox.ReplayAll()
-
-        expected_url_combined = '/access_data/download_mcdi_results.csv'
 
         with self.app.test_client() as client:
             
@@ -256,7 +236,6 @@ class TestAccessDataControllers(mox.MoxTestBase):
 
             with client.session_transaction() as sess:
                 self.assertFalse(ERROR_ATTR in sess)
-                self.assertNotEqual(sess[CONFIRMATION_ATTR], '')
 
                 filters = session_util.get_filters(sess)
                 self.assertEqual(len(filters), 1)
@@ -293,7 +272,6 @@ class TestAccessDataControllers(mox.MoxTestBase):
                 self.assertEqual(len(filters), 1)
                 self.assertEqual(filters[0].field, 'val4')
                 self.assertFalse(ERROR_ATTR in sess)
-                self.assertNotEqual(sess[CONFIRMATION_ATTR], '')
 
             resp = client.get('/base/access_data/delete_filter/0')
             self.assertEqual(resp.status_code, 302)
@@ -302,7 +280,6 @@ class TestAccessDataControllers(mox.MoxTestBase):
                 filters = session_util.get_filters(sess)
                 self.assertEqual(len(filters), 0)
                 self.assertFalse(ERROR_ATTR in sess)
-                self.assertNotEqual(sess[CONFIRMATION_ATTR], '')
 
             resp = client.get('/base/access_data/delete_filter/0')
             self.assertEqual(resp.status_code, 302)
@@ -332,7 +309,8 @@ class TestAccessDataControllers(mox.MoxTestBase):
             'languages',
             'num_languages',
             'mcdi_type',
-            'hard_of_hearing'
+            'hard_of_hearing',
+            False
         )]
         test_zip_file = TestZipFile()
         test_csv_file = TestCSVFile()
@@ -345,29 +323,29 @@ class TestAccessDataControllers(mox.MoxTestBase):
             'generate_consolidated_study_report')
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
-            query_results)
+        filter_util.run_search_query(mox.IsA(list), 'snapshots',
+            True).AndReturn(query_results)
         db_util.load_presentation_model('test_format').AndReturn(
             'test_format_spec')
         report_util.generate_study_report(query_results,
             'test_format_spec').AndReturn(test_zip_file)
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
-            query_results)
+        filter_util.run_search_query(mox.IsA(list), 'snapshots',
+            True).AndReturn(query_results)
         db_util.load_presentation_model('test_format_2').AndReturn(None)
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
-            query_results)
+        filter_util.run_search_query(mox.IsA(list), 'snapshots',
+            True).AndReturn(query_results)
         db_util.load_presentation_model('test_format').AndReturn(
             'test_format_spec')
         report_util.generate_consolidated_study_report(query_results,
             'test_format_spec').AndReturn(test_csv_file)
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
-            query_results)
+        filter_util.run_search_query(mox.IsA(list), 'snapshots',
+            True).AndReturn(query_results)
         db_util.load_presentation_model('test_format_2').AndReturn(None)
 
         self.mox.ReplayAll()

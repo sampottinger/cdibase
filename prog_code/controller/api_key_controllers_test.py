@@ -49,6 +49,8 @@ TEST_USER = models.User(
     TEST_EMAIL,
     None,
     False,
+    False,
+    False,
     True,
     False,
     False,
@@ -79,7 +81,8 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
     'english,spanish',
     TEST_NUM_LANGUAGES,
     'standard',
-    TEST_HARD_OF_HEARING
+    TEST_HARD_OF_HEARING,
+    False
 )
 TEST_FORMAT = models.MCDIFormat(
     'standard',
@@ -224,6 +227,8 @@ class TestAPIKeyControllers(mox.MoxTestBase):
             False,
             False,
             False,
+            False,
+            False,
             False
         ))
 
@@ -233,7 +238,9 @@ class TestAPIKeyControllers(mox.MoxTestBase):
             TEST_EMAIL,
             None,
             False,
+            False,
             True,
+            False,
             False,
             False,
             False,

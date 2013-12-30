@@ -48,10 +48,12 @@ TEST_USER = models.User(
     TEST_EMAIL,
     None,
     False,
-    True,
     False,
     False,
     True,
+    False,
+    True,
+    False,
     False
 )
 TEST_API_KEY = 'abc123'
@@ -78,7 +80,8 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
     'english,spanish',
     TEST_NUM_LANGUAGES,
     'standard',
-    TEST_HARD_OF_HEARING
+    TEST_HARD_OF_HEARING,
+    False
 )
 MALE_TEST_PERCENTILE_NAME = 'male_test_percentiles'
 FEMALE_TEST_PERCENTILE_NAME = 'female_test_percentiles'
@@ -196,7 +199,8 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
     'english,spanish',
     TEST_NUM_LANGUAGES,
     'standard',
-    TEST_HARD_OF_HEARING
+    TEST_HARD_OF_HEARING,
+    False
 )
 PARENT_MCDI_FORM_URL = '/base/parent_mcdi/%d' % TEST_PARENT_FORM_ID
 TEMPLATE_WORD_SPOKEN_VALUES = {
@@ -234,7 +238,8 @@ EXPECTED_SNAPSHOT = models.SnapshotMetadata(
     TEST_LANGUAGES.split('.'),
     TEST_NUM_LANGUAGES,
     'multilingual-test',
-    constants.EXPLICIT_FALSE
+    constants.EXPLICIT_FALSE,
+    False
 )
 EXPECTED_SNAPSHOT_MOD = models.SnapshotMetadata(
     None,
@@ -255,7 +260,8 @@ EXPECTED_SNAPSHOT_MOD = models.SnapshotMetadata(
     TEST_LANGUAGES.split('.'),
     TEST_NUM_LANGUAGES,
     'multilingual-test',
-    constants.EXPLICIT_FALSE
+    constants.EXPLICIT_FALSE,
+    False
 )
 TEMPLATE_WORD_SPOKEN_RECORD = dict(map(
     lambda (word, val): (word.replace('_report', ''), val),
