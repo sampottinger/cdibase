@@ -340,7 +340,7 @@ class UploadParserAutomaton:
             known_words_count = len(known_words)
             all_words_count = len(all_words)
             percentile = math_util.find_percentile(
-                self.__percentile_table.details[target_prototype['gender']],
+                self.__percentile_table[target_prototype['gender']].details,
                 known_words_count,
                 target_prototype['age'],
                 all_words_count
