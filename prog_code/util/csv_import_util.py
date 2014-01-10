@@ -22,7 +22,7 @@ INT_EXPECTED_ERR = 'Was expecting an integer but found \"%s\" on row %d.'
 FLOAT_EXPECTED_ERR = 'Was expecting a number but found \"%s\" on row %d.'
 EXTRA_CAT_INVALID_ERR = 'Expected Y or N but found \"%s\" on row %d.'
 DATE_EXPECTED_ERR = 'Was expecting a date but found \"%s\" on row %d.'
-DATE_MALFORMED_ERR = 'Found a date (%s) but was expecting form YYYY/MM/DD on '\
+DATE_MALFORMED_ERR = 'Found a date (%s) but was expecting form MM/DD/YYYY on '\
     'row %d.'
 INVALID_PERCENT_ERR = 'Invalid percent (%s) found on row %d.'
 INVALID_WORD_VAL_ERROR = 'Invalid word value (%s) found on row %d.'
@@ -98,9 +98,9 @@ class UploadParserAutomaton:
             return
 
         try:
-            year = int(parts[0])
-            month = int(parts[1])
-            day = int(parts[2])
+            month = int(parts[0])
+            day = int(parts[1])
+            year = int(parts[2])
         except ValueError:
             self.enter_error_state(DATE_MALFORMED_ERR % (target_val, row_num))
             return None

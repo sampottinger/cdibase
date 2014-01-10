@@ -82,11 +82,11 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
 
     def test_safe_parse_date_pass(self):
         self.assertEqual(
-            self.__test_automaton.safe_parse_date('2013/01/2', 1),
+            self.__test_automaton.safe_parse_date('01/2/2013', 1),
             '2013/1/2'
         )
         self.assertEqual(
-            self.__test_automaton.safe_parse_date('2013/10/2', 1),
+            self.__test_automaton.safe_parse_date('10/2/2013', 1),
             '2013/10/2'
         )
 
@@ -112,13 +112,13 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         )
         self.assertEqual(
             self.__test_automaton.get_error(),
-            'Found a date (a/11/2012) but was expecting form YYYY/MM/DD on '\
+            'Found a date (a/11/2012) but was expecting form MM/DD/YYYY on '\
             'row 1.'
         )
 
     def test_safe_parse_date_invalid(self):
         self.assertFalse(
-            self.__test_automaton.safe_parse_date('10/11/2012', 1),
+            self.__test_automaton.safe_parse_date('2012/11/10', 1),
             1
         )
         self.assertEqual(
@@ -127,7 +127,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         )
         self.assertEqual(
             self.__test_automaton.get_error(),
-            'Found a date (10/11/2012) but was expecting form YYYY/MM/DD on '\
+            'Found a date (2012/11/10) but was expecting form MM/DD/YYYY on '\
             'row 1.'
         )
 
@@ -347,7 +347,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
             csv_import_util.STATE_PARSE_DATE_OF_BIRTH
         )
         self.__test_automaton.parse_date_of_birth(
-            ['', 'Date of Birth', '2013/01/02', '2013/02/03', '2013/04/05'],
+            ['', 'Date of Birth', '01/02/2013', '02/03/2013', '04/05/2013'],
             1
         )
         
@@ -396,7 +396,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
             csv_import_util.STATE_PARSE_DATE_OF_SESSION
         )
         self.__test_automaton.parse_date_of_session(
-            ['', 'Date of Session', '2013/01/02', '2013/02/03', '2013/04/05'],
+            ['', 'Date of Session', '01/02/2013', '02/03/2013', '04/05/2013'],
             1
         )
         
