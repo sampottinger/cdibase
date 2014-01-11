@@ -68,3 +68,11 @@ class MathUtilTests(mox.MoxTestBase):
             667
         )
         self.assertTrue(percentile >= 99 and percentile <= 100)
+
+        percentile = math_util.find_percentile(
+            TEST_PERCENTILE_TABLE,
+            667,
+            24,
+            667
+        )
+        self.assertTrue(percentile >= 99 and percentile <= 100)

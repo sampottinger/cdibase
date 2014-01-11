@@ -50,7 +50,7 @@ def find_percentile(table_entries, target_num_words, age_months, max_words):
         cur_num_words = words_per_percentile[percentile_index]
 
     if percentile_index == 0:
-        return percentiles[percentile_index]
+        return 99
 
     upper_section_words = cur_num_words
     if len(words_per_percentile) > percentile_index+1:
