@@ -115,6 +115,8 @@ class UploadParserAutomaton:
         return '%d/%d/%d' % (year, month, day)
 
     def step(self, step_val, row_num):
+        for i in range(0, len(step_val)):
+            step_val[i] = step_val[i].strip(' ')
         self.__state_matrix[self.__state](step_val, row_num)
 
     def parse_child_db_id(self, step_val, row_num):

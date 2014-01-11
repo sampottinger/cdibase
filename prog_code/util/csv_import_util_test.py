@@ -7,14 +7,20 @@ import csv_import_util
 import math_util
 
 
+class FakePercentileTable:
+
+    def __init__(self, details):
+        self.details = details
+
+
 class UploadParserAutomatonTests(mox.MoxTestBase):
 
     def setUp(self):
         mox.MoxTestBase.setUp(self)
         self.__test_automaton = csv_import_util.UploadParserAutomaton({
-            constants.MALE: [-1],
-            constants.FEMALE: [-2],
-            constants.OTHER_GENDER: [-3]
+            constants.MALE: FakePercentileTable([-1]),
+            constants.FEMALE: FakePercentileTable([-2]),
+            constants.OTHER_GENDER: FakePercentileTable([-3])
         })
     
     def test_enter_error_state(self):
