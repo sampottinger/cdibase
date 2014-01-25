@@ -38,7 +38,7 @@ GLOBAL_ID_MUST_BE_INT_MSG = 'The global database ID for a child must be an ' \
 GENDER_INVALID_MSG = 'The provided gender for this child was not recognized.'
 DATE_OUT_STR = '%Y/%m/%d'
 DATE_INVALID_MSG = '%s is not a valid date.'
-INVALID_ITEMS_EXCLUDED_MSG = 'Invalid items count invalid.'
+INVALID_ITEMS_EXCLUDED_MSG = 'Invalid items count.'
 INVALID_EXTRA_CATEGORIES_MSG = 'Extra categories invalid.'
 LANGUAGES_NOT_PROVIDED_MSG = 'Languages list not provided.'
 COULD_NOT_FIND_PERCENTILES_MSG = 'Could not find percentile information.'
@@ -46,8 +46,8 @@ SUBMITTED_MSG = 'Form submitted to the lab.'
 PARENT_ACCOUNT_CONTROLS_URL = '/base/parent_accounts'
 WORD_RESPONSE_ID_TEMPL = '%s_report'
 BIRTHDAY_INVALID_MSG = 'Birthday invalid: %s'
-WORD_VALUE_MISSING_MSG = '%s word value missing'
-WORD_VALUE_INVALID_MSG = '%s word value invalid'
+WORD_VALUE_MISSING_MSG = 'Whoops! You seemed to have forgotten to provide a value for %s.'
+WORD_VALUE_INVALID_MSG = 'Whoops! You seemed to have forgotten to provide a value for %s.'
 NO_GLOBAL_ID_MSG = 'No global ID specified.'
 THANK_YOU_MSG_URL = '/base/parent_mcdi/_thanks'
 
@@ -78,7 +78,7 @@ def send_mcdi_form():
         study = request.form.get('study')
         birthday = request.form.get('birthday')
         languages = request.form.get('languages')
-        hard_of_hearing = request.form.get('hard_of_hearing')
+        hard_of_hearing = request.form.get('hard_of_hearing', False)
         hard_of_hearing = hard_of_hearing == constants.FORM_SELECTED_VALUE
         child_name = request.form.get('child_name')
         parent_email = request.form.get('parent_email')
@@ -275,6 +275,35 @@ def handle_parent_mcdi_form(form_id):
         ), 404
 
     if request.method == 'POST':
+
+        # Parse word entries
+        count_as_spoken_vals = selected_format.details['count_as_spoken']
+        word_entries = {}
+        known_words = []
+        words_spoken = 0
+        successful = True
+        total_possible_words = 0
+        for category in selected_format.details['categories']:
+            for word in category['words']:
+                word_val = request.form.get(WORD_RESPONSE_ID_TEMPL % word, None)
+                if word_val == None:
+                    msg = WORD_VALUE_MISSING_MSG % word
+                    flask.session[constants.ERROR_ATTR] = msg
+                    successful = False
+                word_val = interp_util.safe_int_interpret(word_val)
+                if word_val == None:
+                    msg = WORD_VALUE_INVALID_MSG % word
+                    flask.session[constants.ERROR_ATTR] = msg
+                    successful = False
+                word_entries[word] = word_val
+                if word_val in count_as_spoken_vals:
+                    known_words.append(word)
+                    words_spoken += 1
+                total_possible_words += 1
+
+        if not successful:
+            flask.session['SAVED_WORDS'] = known_words
+            return flask.redirect(request.path)
         
         # Load the study from the parent form or, if the parent form does not
         # have it, load it form the user's response.
@@ -312,6 +341,7 @@ def handle_parent_mcdi_form(form_id):
             if not parent_account_util.is_birthday_valid(birthday):
                 msg = BIRTHDAY_INVALID_MSG % birthday
                 flask.session[constants.ERROR_ATTR] = msg
+                flask.session['SAVED_WORDS'] = known_words
                 return flask.redirect(request.path)
         
         # Ensure that the parent form has gender information or load it from
@@ -324,6 +354,7 @@ def handle_parent_mcdi_form(form_id):
             )
             if not gender in VALID_GENDER_VALUES:
                 flask.session[constants.ERROR_ATTR] = GENDER_INVALID_MSG
+                flask.session['SAVED_WORDS'] = known_words
                 return flask.redirect(request.path)
         
         # Ensure that the parent form has items excluded information or load it
@@ -334,8 +365,7 @@ def handle_parent_mcdi_form(form_id):
             items_excluded = interp_util.safe_int_interpret(
                 request.form.get('items_excluded', None))
             if items_excluded == None or items_excluded < 0:
-                flask.session[constants.ERROR_ATTR] = INVALID_ITEMS_EXCLUDED_MSG
-                return flask.redirect(request.path)
+                items_excluded = 0
         
         # Ensure that the parent form has extra categories information or load
         # it from the user response, ensuring the extra categories information
@@ -345,9 +375,7 @@ def handle_parent_mcdi_form(form_id):
             extra_categories = interp_util.safe_int_interpret(
                 request.form.get('extra_categories', None))
             if extra_categories == None or extra_categories < 0:
-                msg = INVALID_EXTRA_CATEGORIES_MSG
-                flask.session[constants.ERROR_ATTR] = msg
-                return flask.redirect(request.path)
+                extra_categories = 0
         
         # Ensure that the parent form has languages information or load it from
         # the user response.
@@ -358,6 +386,7 @@ def handle_parent_mcdi_form(form_id):
         # Ensure that languages information is valid.
         if languages == None or languages == '':
             flask.session[constants.ERROR_ATTR] = LANGUAGES_NOT_PROVIDED_MSG
+            flask.session['SAVED_WORDS'] = known_words
             return flask.redirect(request.path)
         else:
             languages = languages.split(',')
@@ -389,29 +418,6 @@ def handle_parent_mcdi_form(form_id):
             except:
                 age = None
 
-
-        # Parse word entries
-        count_as_spoken_vals = selected_format.details['count_as_spoken']
-        word_entries = {}
-        words_spoken = 0
-        total_possible_words = 0
-        for category in selected_format.details['categories']:
-            for word in category['words']:
-                word_val = request.form.get(WORD_RESPONSE_ID_TEMPL % word, None)
-                if word_val == None:
-                    msg = WORD_VALUE_MISSING_MSG % word
-                    flask.session[constants.ERROR_ATTR] = msg
-                    return flask.redirect(request.path)
-                word_val = interp_util.safe_int_interpret(word_val)
-                if word_val == None:
-                    msg = WORD_VALUE_INVALID_MSG % word
-                    flask.session[constants.ERROR_ATTR] = msg
-                    return flask.redirect(request.path)
-                word_entries[word] = int(word_val)
-                if word_val in count_as_spoken_vals:
-                    words_spoken += 1
-                total_possible_words += 1
-
         # Determine approach percentiles
         if age:
             percentiles = selected_format.details['percentiles']
@@ -429,6 +435,7 @@ def handle_parent_mcdi_form(form_id):
             if percentile_model == None:
                 msg = COULD_NOT_FIND_PERCENTILES_MSG
                 flask.session[constants.ERROR_ATTR] = msg
+                flask.session['SAVED_WORDS'] = known_words
                 return flask.redirect(request.path)
             
             percentile = math_util.find_percentile(
@@ -475,6 +482,7 @@ def handle_parent_mcdi_form(form_id):
         db_util.remove_parent_form(form_id)
 
         flask.session[constants.CONFIRMATION_ATTR] = SUBMITTED_MSG
+        flask.session['SAVED_WORDS'] = None
         return flask.redirect(THANK_YOU_MSG_URL)
 
     else:
@@ -482,22 +490,27 @@ def handle_parent_mcdi_form(form_id):
         results = parent_account_util.get_snapshot_chronology_for_db_id(
             parent_form.database_id)
 
-        # Find the words known from the last snapshot if that last snapshot is
-        # available for reference.
-        if len(results) == 0:
-            known_words = []
+        saved_known_words = flask.session.get('SAVED_WORDS', None)
+        known_words = None
+        if saved_known_words:
+            known_words = saved_known_words
         else:
-            latest_snapshot = results[0]
-            contents = db_util.load_snapshot_contents(latest_snapshot)
-            known_words_dec = filter(
-                lambda x: x.value in constants.TRUE_VALS,
-                contents
-            )
-            known_words = map(
-                lambda x: x.word,
-                known_words_dec
-            )
-            known_words = map(lambda x: x.lower(), known_words)
+            # Find the words known from the last snapshot if that last snapshot
+            # is available for reference.
+            if len(results) == 0:
+                known_words = []
+            else:
+                latest_snapshot = results[-1]
+                contents = db_util.load_snapshot_contents(latest_snapshot)
+                known_words_dec = filter(
+                    lambda x: x.value in constants.TRUE_VALS,
+                    contents
+                )
+                known_words = map(
+                    lambda x: x.word,
+                    known_words_dec
+                )
+                known_words = map(lambda x: x.lower(), known_words)
 
         return flask.render_template(
             'end_parent_form.html',

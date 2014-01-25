@@ -17,7 +17,7 @@
             </div>
             <div class="tiling-form-input">
                 <div>Child Name</div>
-                <div class="fake-input">{{ child_name }}</div>
+                <div class="fake-input" id="child_name_input">{{ child_name }}</div>
             </div>
             {% if study == None or study == '' %}
             <div class="tiling-form-input">
@@ -53,18 +53,6 @@
                 </select>
             </div>
             {% endif %}
-            {% if items_excluded == None or items_excluded == '' %}
-            <div class="tiling-form-input">
-                <label>Items excluded</label>
-                <input type="text" name="items_excluded" placeholder="ex 0">
-            </div>
-            {% endif %}
-            {% if extra_categories == None or extra_categories == '' %}
-            <div class="tiling-form-input">
-                <label>Extra categories</label>
-                <input type="text" name="extra_categories" placeholder="ex 0">
-            </div>
-            {% endif %}
             {% if languages == None or languages == '' %}
             <div class="tiling-form-input">
                 <label>Languages spoken (separated by commas)</label>
@@ -88,7 +76,7 @@
             </div>
             {% for category in selected_format.details.categories %}
                 <div class="form-category">
-                    <h4>{{ category.name }} ({{ category.language }})</h4>
+                    <h4>{{ category.name }}</h4>
                     {% for word in category.words %}
                         <div class="word-entry tiling-form-input">
                             {{ word }}:

@@ -39,6 +39,14 @@ class MathUtilTests(mox.MoxTestBase):
     def test_find_percentile(self):
         percentile = math_util.find_percentile(
             TEST_PERCENTILE_TABLE,
+            0,
+            30,
+            667
+        )
+        self.assertTrue(percentile >= 0 and percentile <= 5)
+
+        percentile = math_util.find_percentile(
+            TEST_PERCENTILE_TABLE,
             155,
             30,
             667
