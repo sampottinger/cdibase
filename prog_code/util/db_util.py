@@ -338,6 +338,17 @@ def load_percentile_model(name):
     return models.PercentileTable(metadata[0], metadata[1], metadata[2], spec)
 
 
+def list_stuides():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        'SELECT UNIQUE study FROM snapshot_content',
+    )
+    ret_val = map(lambda x: x[0], cursor.fetchall())
+    connection.close()
+    return ret_val
+
+
 def load_snapshot_contents(snapshot):
     """Load reports of individual statuses for words.
 
