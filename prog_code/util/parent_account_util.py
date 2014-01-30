@@ -13,15 +13,25 @@ MCDI_EMAIL_SUBJECT = 'CU Language Project'
 
 MCDI_EMAIL_TEMPLATE = '''Hello!
 
-Thank you for helping the CU Language Project. Please complete an MCDI for
+Thank you for helping the CU Language Project. Please complete a vocabulary checklist for
 %s by going to the URL below.
 
 Form URL: %s
 
-Thanks,
-Sam
-daxlab.colorado.edu
-Application Curator
+We greatly appreciate your time.
+
+Thank you so much again,
+The CU Language Project Team
+
+---
+CU Language Project
+University of Colorado at Boulder
+Department of Psychology
+(303) 735-0952
+Language.Project@colorado.edu
+
+For directions and more information please visit our website:
+http://psych.colorado.edu/~colungalab/CULanguage/CU-LANGUAGE_parents.html
 '''
 
 URL_TEMPLATE = 'https://daxlab.colorado.edu/base/parent_mcdi/%s'

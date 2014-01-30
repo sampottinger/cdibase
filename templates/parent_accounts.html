@@ -19,67 +19,67 @@
     <div>
         <div class="tiling-form-input">
             <label>Child Name *</label>
-            <input id="child-name-input" type="text" name="child_name" placeholder="ex John Doe">
+            <input id="child-name-input" type="text" name="child_name" placeholder="ex John Doe" value="{{ last_entry_info.child_name }}">
         </div>
         <div class="tiling-form-input">
             <label>Parent E-Mail *</label>
-            <input type="text" name="parent_email" placeholder="ex samp@gleap.org">
+            <input type="text" name="parent_email" placeholder="ex samp@gleap.org" value="{{ last_entry_info.parent_email }}">
         </div>
         <div class="tiling-form-input">
             <label>CDI type *</label>
             <select name="mcdi_type">
                 <option value=""></option>
             {% for format in mcdi_formats %}
-                <option value="{{ format.safe_name }}">{{ format.human_name }}</option>
+                <option value="{{ format.safe_name }}" {% if loop.last %}selected{% endif %}>{{ format.human_name }}</option>
             {% endfor %}
             </select>
         </div>
         <div class="tiling-form-input">
             <label>Study **</label>
-            <input id="study-input" type="text" name="study" placeholder="ex Traj-Wave2">
+            <input id="study-input" type="text" name="study" placeholder="ex Traj-Wave2" value="{{ last_entry_info.study }}">
         </div>
         <div class="tiling-form-input">
             <label>Participant study ID **</label>
-            <input id="study-id-input" type="text" name="study_id" placeholder="ex TR27-5">
+            <input id="study-id-input" type="text" name="study_id" placeholder="ex TR27-5" value="{{ last_entry_info.study_id }}">
         </div>
         <div class="tiling-form-input">
             <label id="global-id-label">Participant global ID **</label>
-            <input type="text" id="global-id-input" name="global_id" placeholder="ex 4810">
+            <input type="text" id="global-id-input" name="global_id" placeholder="ex 4810" value="{{ last_entry_info.global_id }}">
         </div>
         <div class="tiling-form-input">
             <label>Participant birthday (MM/DD/YYYY)</label>
-            <input type="text" name="birthday" placeholder="ex 12/30/1992">
+            <input type="text" name="birthday" placeholder="ex 12/30/1992" value="{{ last_entry_info.birthday }}">
         </div>
         <div class="tiling-form-input">
             <label>Participant gender</label>
             <select name="gender">
                 <option value=""></option>
-                <option value="{{ gender_male_constant }}">male</option>
-                <option value="{{ gender_female_constant }}">female</option>
-                <option value="{{ gender_other_constant }}">other</option>
+                <option value="{{ gender_male_constant }}">male</option {% if last_entry_info.gender == gender_male_constant %}selected{% endif %}>
+                <option value="{{ gender_female_constant }}" {% if last_entry_info.gender == gender_female_constant %}selected{% endif %}>female</option>
+                <option value="{{ gender_other_constant }}" {% if last_entry_info.gender == gender_other_constant %}selected{% endif %}>other</option>
             </select>
         </div>
         <div class="tiling-form-input">
             <label>Items excluded</label>
-            <input type="text" name="items_excluded" placeholder="ex 0">
+            <input type="text" name="items_excluded" placeholder="ex 0" value="{% if last_entry_info.items_excluded != None %}{{ last_entry_info.items_excluded }}{% else %}0{% endif %}">
         </div>
         <div class="tiling-form-input">
             <label>Extra categories</label>
-            <input type="text" name="extra_categories" placeholder="ex 0">
+            <input type="text" name="extra_categories" placeholder="ex 0" value="{% if last_entry_info.extra_categories != None %}{{ last_entry_info.extra_categories }}{% else %}0{% endif %}">
         </div>
         <div class="tiling-form-input">
             <label>Languages (comma sep. no spaces)</label>
-            <input type="text" name="languages" placeholder="ex english,spanish">
+            <input type="text" name="languages" placeholder="ex english,spanish" value="{{ last_entry_info.languages }}">
         </div>
         <div class="tiling-form-input">
             <label>Hard of hearing</label>
             <label class="checkbox">
-                <input name="hard_of_hearing" type="checkbox">
+                <input name="hard_of_hearing" type="checkbox" {% if last_entry_info.hard_of_hearing %}checked{% endif %}>
                 Hard of hearing
             </label>
         </div>
     </div>
-    <div class="padded-form-controls">
+    <div class="padded-form-controls-left">
         <input class="btn btn-primary" type="submit" value="Send CDI by email">
     </div>
 </form>

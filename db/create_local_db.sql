@@ -151,7 +151,8 @@ CREATE TABLE snapshots
     languages TEXT,
     num_languages INTEGER,
     mcdi_type TEXT,
-    hard_of_hearing INTEGER
+    hard_of_hearing INTEGER,
+    deleted INTEGER
 );
 
 CREATE TABLE "users"

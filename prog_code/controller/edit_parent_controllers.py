@@ -84,6 +84,22 @@ def send_mcdi_form():
         parent_email = request.form.get('parent_email')
         mcdi_type = request.form.get('mcdi_type')
 
+        # Save for future send
+        flask.session['LAST_PARENT_PARAMS'] = {
+            'global_id': global_id,
+            'gender': gender,
+            'items_excluded': items_excluded,
+            'extra_categories': extra_categories,
+            'study_id': study_id,
+            'study': study,
+            'birthday': birthday,
+            'languages': languages,
+            'hard_of_hearing': hard_of_hearing,
+            'child_name': child_name,
+            'parent_email': parent_email,
+            'mcdi_type': mcdi_type
+        }
+
         # Check that the MCDI type provided has been defined and can be found
         # in the application database.
         mcdi_model = db_util.load_mcdi_model(mcdi_type)
@@ -201,10 +217,35 @@ def send_mcdi_form():
         db_util.insert_parent_form(new_form)
         parent_account_util.send_mcdi_email(new_form)
 
+        last_parms_dict = flask.session['LAST_PARENT_PARAMS']
+        last_parms_dict['global_id'] = ''
+        last_parms_dict['study_id'] = ''
+        last_parms_dict['child_name'] = ''
+        last_parms_dict['parent_email'] = ''
+        last_parms_dict['birthday'] = ''
+
         flask.session[constants.CONFIRMATION_ATTR] = PARENT_FORM_SENT_MSG
         return flask.redirect(PARENT_ACCOUNT_CONTROLS_URL)
 
     else:
+        if 'LAST_PARENT_PARAMS' in flask.session:
+            last_entry_info = flask.session.get('LAST_PARENT_PARAMS')
+        else:
+            last_entry_info = {
+                'global_id': '',
+                'gender': '',
+                'items_excluded': 0,
+                'extra_categories': 0,
+                'study_id': '',
+                'study': '',
+                'birthday': '',
+                'languages': '',
+                'hard_of_hearing': '',
+                'child_name': '',
+                'parent_email': '',
+                'mcdi_type': ''
+            }
+
         return flask.render_template(
             'parent_accounts.html',
             cur_page='edit_parents',
@@ -213,6 +254,7 @@ def send_mcdi_form():
             gender_male_constant=constants.MALE,
             gender_female_constant=constants.FEMALE,
             gender_other_constant=constants.OTHER_GENDER,
+            last_entry_info=last_entry_info,
             **session_util.get_standard_template_values()
         )
 
@@ -306,7 +348,7 @@ def handle_parent_mcdi_form(form_id):
                 total_possible_words += 1
 
         if not successful:
-            flask.session['SAVED_WORDS'] = known_words
+            flask.session['SAVED_WORDS'] = word_entries
             return flask.redirect(request.path)
         
         # Load the study from the parent form or, if the parent form does not
@@ -345,7 +387,7 @@ def handle_parent_mcdi_form(form_id):
             if not parent_account_util.is_birthday_valid(birthday):
                 msg = BIRTHDAY_INVALID_MSG % birthday
                 flask.session[constants.ERROR_ATTR] = msg
-                flask.session['SAVED_WORDS'] = known_words
+                flask.session['SAVED_WORDS'] = word_entries
                 return flask.redirect(request.path)
             else:
                 birthday_parts = birthday.split('/')
@@ -368,7 +410,7 @@ def handle_parent_mcdi_form(form_id):
             )
             if not gender in VALID_GENDER_VALUES:
                 flask.session[constants.ERROR_ATTR] = GENDER_INVALID_MSG
-                flask.session['SAVED_WORDS'] = known_words
+                flask.session['SAVED_WORDS'] = word_entries
                 return flask.redirect(request.path)
         
         # Ensure that the parent form has items excluded information or load it
@@ -400,7 +442,7 @@ def handle_parent_mcdi_form(form_id):
         # Ensure that languages information is valid.
         if languages == None or languages == '':
             flask.session[constants.ERROR_ATTR] = LANGUAGES_NOT_PROVIDED_MSG
-            flask.session['SAVED_WORDS'] = known_words
+            flask.session['SAVED_WORDS'] = word_entries
             return flask.redirect(request.path)
         else:
             languages = languages.split(',')
@@ -449,7 +491,7 @@ def handle_parent_mcdi_form(form_id):
             if percentile_model == None:
                 msg = COULD_NOT_FIND_PERCENTILES_MSG
                 flask.session[constants.ERROR_ATTR] = msg
-                flask.session['SAVED_WORDS'] = known_words
+                flask.session['SAVED_WORDS'] = word_entries
                 return flask.redirect(request.path)
             
             percentile = math_util.find_percentile(
@@ -505,26 +547,22 @@ def handle_parent_mcdi_form(form_id):
             parent_form.database_id)
 
         saved_known_words = flask.session.get('SAVED_WORDS', None)
-        known_words = None
+        word_entries = None
         if saved_known_words:
-            known_words = saved_known_words
+            word_entries = saved_known_words
         else:
             # Find the words known from the last snapshot if that last snapshot
             # is available for reference.
             if len(results) == 0:
-                known_words = []
+                word_entries = []
             else:
                 latest_snapshot = results[-1]
                 contents = db_util.load_snapshot_contents(latest_snapshot)
-                known_words_dec = filter(
-                    lambda x: x.value in constants.TRUE_VALS,
+                known_words_tuples = filter(
+                    lambda x: (x.word, x.value),
                     contents
                 )
-                known_words = map(
-                    lambda x: x.word,
-                    known_words_dec
-                )
-                known_words = map(lambda x: x.lower(), known_words)
+                word_entries = dict(known_words_tuples)
 
         return flask.render_template(
             'end_parent_form.html',
@@ -538,10 +576,11 @@ def handle_parent_mcdi_form(form_id):
             items_excluded=parent_form.items_excluded,
             extra_categories=parent_form.extra_categories,
             languages=parent_form.languages,
-            known_words=known_words,
+            word_entries=word_entries,
             known_val=constants.EXPLICIT_TRUE,
             male_value=constants.MALE,
             female_value=constants.FEMALE,
             other_gender_value=constants.OTHER_GENDER,
+            num_categories = len(selected_format.details['categories']),
             **session_util.get_standard_template_values()
         )

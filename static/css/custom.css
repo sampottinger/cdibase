@@ -13,6 +13,11 @@
     margin-bottom: 50px;
 }
 
+.parent-form-category
+{
+    display: none;
+}
+
 .form-entry
 {
     margin-bottom: 20px;
@@ -113,6 +118,11 @@
     padding: 50px;
 }
 
+.padded-form-controls-left
+{
+    padding: 20px 10px;
+}
+
 .star-legend
 {
     font-size: 12px;
@@ -159,6 +169,16 @@
     margin: 20px auto;
 }
 
+.inline-check
+{
+    float: left;
+    margin-right: 20px;
+}
+
+.hero-unit p {
+    margin: 20px 0;
+}
+
 #login-form-container .wide-input
 {
     width: 100%;
@@ -185,4 +205,14 @@
 {
     font-weight: bold;
     font-size: 15px;
+}
+
+#parent-submit-button
+{
+    display: none;
+}
+
+#pagination-controls a
+{
+    margin: 0px 20px;
 }

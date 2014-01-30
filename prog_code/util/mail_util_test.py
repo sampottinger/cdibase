@@ -42,4 +42,4 @@ class MailUtilTests(mox.MoxTestBase):
         self.assertEqual(last_message.subject, 'test subject')
         self.assertEqual(last_message.sender, 'from addr')
         self.assertEqual(last_message.body, 'test message')
-        self.assertEqual(last_message.recipients, ['test address'])
+        self.assertEqual(last_message.recipients, ['testaddress'])

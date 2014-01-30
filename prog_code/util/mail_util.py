@@ -96,7 +96,7 @@ def send_msg(email, subject, message):
             flask_message = flask_mail.Message(
                 subject,
                 sender=mail_keeper.get_from_addr(),
-                recipients=[email],
+                recipients=[email.replace(' ', '')],
                 body=message
             )
             mail_keeper.get_mail_instance().send(flask_message)
