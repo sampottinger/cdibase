@@ -39,7 +39,7 @@ TARGET_USER = models.User(
 NEW_EMAIL = 'new_email@example.com'
 
 
-class TestEditParentControllers(mox.MoxTestBase):
+class TestEditUserControllers(mox.MoxTestBase):
 
     def setUp(self):
         mox.MoxTestBase.setUp(self)

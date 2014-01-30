@@ -71,6 +71,10 @@ def init_mail(app):
     MailKeeper.init_mail(app)
 
 
+def disable_mail():
+    MailKeeper.instance = None
+
+
 def get_mail_keeper():
     return MailKeeper.get_instance()
 

@@ -43,3 +43,8 @@ def main():
         cur_page="home",
         **session_util.get_standard_template_values()
     )
+
+
+def disable_email():
+    mail_util.DEBUG_PRINT_EMAIL = False
+    mail_util.disable_mail()

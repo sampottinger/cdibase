@@ -124,7 +124,11 @@ def send_mcdi_form():
                 msg = DATE_INVALID_MSG % birthday
                 flask.session[constants.ERROR_ATTR] = msg,
                 return flask.redirect(PARENT_ACCOUNT_CONTROLS_URL)
-            birthday = dateutil_parser.parse(birthday)
+            birthday = dateutil_parser.parse(
+                birthday,
+                dayfirst=False,
+                yearfirst=False
+            )
             birthday = birthday.strftime(DATE_OUT_STR)
 
         # Use the specified interpretation / presentation formation to parse the
@@ -343,6 +347,16 @@ def handle_parent_mcdi_form(form_id):
                 flask.session[constants.ERROR_ATTR] = msg
                 flask.session['SAVED_WORDS'] = known_words
                 return flask.redirect(request.path)
+            else:
+                birthday_parts = birthday.split('/')
+                # Put year last
+                birthday_parts = [
+                    birthday_parts[2],
+                    birthday_parts[0],
+                    birthday_parts[1]
+                ]
+        else:
+            birthday_parts = birthday.split('/')
         
         # Ensure that the parent form has gender information or load it from
         # the user response, ensuring the gender provided is of an appropriate
@@ -402,7 +416,6 @@ def handle_parent_mcdi_form(form_id):
         # Ensure that the parent form has hard of hearing information or load
         # it from the user response, ensuring the hard of hearing information
         # provided is a valid value.
-        birthday_parts = birthday.split('/')
         birthday_date = None
         if len(birthday_parts) != 3:
             age = None
@@ -415,6 +428,7 @@ def handle_parent_mcdi_form(form_id):
                 )
                 today = datetime.date.today()
                 age = interp_util.monthdelta(birthday_date, today)
+                birthday = birthday_date.strftime(DATE_OUT_STR)
             except:
                 age = None
 

@@ -160,10 +160,12 @@ CREATE TABLE "users"
     "email" TEXT,
     "password_hash" TEXT,
     "can_enter_data" INTEGER,
+    "can_import_data" INTEGER,
     "can_edit_parents" INTEGER,
     "can_access_data" INTEGER,
     "can_change_formats" INTEGER,
     "can_use_api_key" INTEGER,
+    "can_delete_data" INTEGER,
     "can_admin" INTEGER
 );
 

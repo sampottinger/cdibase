@@ -22,4 +22,5 @@ from prog_code.util.parent_account_util_test import *
 
 
 if __name__ == '__main__':
+    daxlabbase.disable_email()
     unittest.main()

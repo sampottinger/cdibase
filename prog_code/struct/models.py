@@ -478,7 +478,7 @@ class ParentForm:
         same = same and self.extra_categories == other.extra_categories
         same = same and self.languages == other.languages
         same = same and self.num_languages == other.num_languages
-        same = same and self.hard_of_hearing == other.hard_of_hearing
+        same = same and int(self.hard_of_hearing) == int(other.hard_of_hearing)
         return same
 
 

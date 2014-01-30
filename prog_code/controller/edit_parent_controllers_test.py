@@ -30,7 +30,8 @@ TEST_LANGUAGES = 'english.spanish'
 TEST_NUM_LANGUAGES = 2
 TEST_HARD_OF_HEARING = False
 TEST_STUDY = 'test study'
-TEST_BIRTHDAY = '2011/09/12'
+TEST_BIRTHDAY = '09/12/2011'
+TEST_BIRTHDAY_ISO = '2011/09/12'
 TEST_BIRTHDAY_DATE = date(2011, 9, 12)
 TEST_PARENT_FORM_ID_MOD = 30
 TEST_CHILD_NAME_MOD = 'Test Child2'
@@ -38,7 +39,8 @@ TEST_PARENT_EMAIL_MOD = 'parent2@example.com'
 TEST_DB_ID_MOD = 321
 TEST_STUDY_ID_MOD = 654
 TEST_STUDY_MOD = 'test study 2'
-TEST_BIRTHDAY_MOD = '2011/09/13'
+TEST_BIRTHDAY_MOD = '09/13/2011'
+TEST_BIRTHDAY_ISO_MOD = '2011/09/13'
 TEST_BIRTHDAY_DATE_MOD = date(2011, 9, 13)
 TEST_ITEMS_EXCLUDED_MOD = 7
 TEST_EXTRA_CATEGORIES_MOD = 8
@@ -60,28 +62,6 @@ TEST_API_KEY = 'abc123'
 TEST_API_KEY_ENTRY = models.APIKey(
     TEST_EMAIL,
     TEST_API_KEY
-)
-TEST_SNAPSHOT = models.SnapshotMetadata(
-    TEST_SNAPSHOT_ID,
-    TEST_DB_ID,
-    TEST_STUDY_ID,
-    TEST_STUDY,
-    constants.MALE,
-    24,
-    TEST_BIRTHDAY,
-    '2013/10/12',
-    20,
-    25,
-    100,
-    TEST_ITEMS_EXCLUDED,
-    50,
-    TEST_EXTRA_CATEGORIES,
-    0,
-    'english,spanish',
-    TEST_NUM_LANGUAGES,
-    'standard',
-    TEST_HARD_OF_HEARING,
-    False
 )
 MALE_TEST_PERCENTILE_NAME = 'male_test_percentiles'
 FEMALE_TEST_PERCENTILE_NAME = 'female_test_percentiles'
@@ -129,7 +109,7 @@ EXPECTED_PARENT_FORM = models.ParentForm(
     TEST_STUDY_ID,
     TEST_STUDY,
     constants.MALE,
-    TEST_BIRTHDAY,
+    TEST_BIRTHDAY_ISO,
     TEST_ITEMS_EXCLUDED,
     TEST_EXTRA_CATEGORIES,
     'english,spanish',
@@ -145,7 +125,7 @@ EXPECTED_MODIFIED_PARENT_FORM = models.ParentForm(
     TEST_STUDY_ID_MOD,
     TEST_STUDY_MOD,
     constants.FEMALE,
-    TEST_BIRTHDAY_MOD,
+    TEST_BIRTHDAY_ISO_MOD,
     TEST_ITEMS_EXCLUDED_MOD,
     TEST_EXTRA_CATEGORIES_MOD,
     TEST_MOD_LANGUAGES,
@@ -187,7 +167,7 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
     TEST_STUDY,
     constants.MALE,
     24,
-    TEST_BIRTHDAY,
+    TEST_BIRTHDAY_ISO,
     '2013/10/12',
     20,
     25,
@@ -226,7 +206,7 @@ EXPECTED_SNAPSHOT = models.SnapshotMetadata(
     TEST_STUDY,
     constants.MALE,
     TEST_AGE,
-    TEST_BIRTHDAY,
+    TEST_BIRTHDAY_ISO,
     TODAY.strftime('%Y/%m/%d'),
     TEST_SESSION_NUM,
     TEST_SESSION_NUM,
@@ -248,7 +228,7 @@ EXPECTED_SNAPSHOT_MOD = models.SnapshotMetadata(
     TEST_STUDY,
     constants.MALE,
     TEST_AGE,
-    TEST_BIRTHDAY_MOD,
+    TEST_BIRTHDAY_ISO_MOD,
     TODAY.strftime('%Y/%m/%d'),
     TEST_SESSION_NUM,
     TEST_SESSION_NUM,
@@ -535,8 +515,6 @@ class TestEditParentControllers(mox.MoxTestBase):
         db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
         db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             parent_form_no_db_id)
-        parent_account_util.get_snapshot_chronology_for_db_id(
-            TEST_DB_ID).AndReturn([])
 
         parent_form_no_study_id = copy.copy(EXPECTED_PARENT_FORM)
         parent_form_no_study_id.study_id = None
@@ -544,8 +522,6 @@ class TestEditParentControllers(mox.MoxTestBase):
         db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
         db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             parent_form_no_study_id)
-        parent_account_util.get_snapshot_chronology_for_study_id(
-            TEST_STUDY, TEST_STUDY_ID).AndReturn([])
 
         parent_form_no_ids = copy.copy(EXPECTED_PARENT_FORM)
         parent_form_no_ids.study_id = None
@@ -591,58 +567,42 @@ class TestEditParentControllers(mox.MoxTestBase):
         db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             no_birthday_form)
         db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        parent_account_util.get_snapshot_chronology_for_db_id(
-            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
 
         no_gender_form = copy.copy(EXPECTED_PARENT_FORM)
         no_gender_form.gender = None
         db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             no_gender_form)
         db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        parent_account_util.get_snapshot_chronology_for_db_id(
-            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
 
         missing_items_excluded_form = copy.copy(EXPECTED_PARENT_FORM)
         missing_items_excluded_form.items_excluded = None
         db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             missing_items_excluded_form)
         db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        parent_account_util.get_snapshot_chronology_for_db_id(
-            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
 
         db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             missing_items_excluded_form)
         db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        parent_account_util.get_snapshot_chronology_for_db_id(
-            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
 
         missing_extra_categories_form = copy.copy(EXPECTED_PARENT_FORM)
         missing_extra_categories_form.extra_categories = None
         db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             missing_extra_categories_form)
         db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        parent_account_util.get_snapshot_chronology_for_db_id(
-            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
 
         db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             missing_extra_categories_form)
         db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        parent_account_util.get_snapshot_chronology_for_db_id(
-            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
 
         no_languages_form = copy.copy(EXPECTED_PARENT_FORM)
         no_languages_form.languages = None
         db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             no_languages_form)
         db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        parent_account_util.get_snapshot_chronology_for_db_id(
-            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
 
         db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             no_languages_form)
         db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        parent_account_util.get_snapshot_chronology_for_db_id(
-            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
 
         self.mox.ReplayAll()
 
@@ -737,14 +697,10 @@ class TestEditParentControllers(mox.MoxTestBase):
 
         db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             EXPECTED_PARENT_FORM)
-        parent_account_util.get_snapshot_chronology_for_db_id(
-            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
         db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
 
         db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             EXPECTED_PARENT_FORM)
-        parent_account_util.get_snapshot_chronology_for_db_id(
-            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
         db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
 
         self.mox.ReplayAll()
@@ -781,8 +737,6 @@ class TestEditParentControllers(mox.MoxTestBase):
 
         db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             EXPECTED_PARENT_FORM)
-        parent_account_util.get_snapshot_chronology_for_db_id(
-            TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
         db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
 
         self.mox.ReplayAll()
@@ -985,7 +939,6 @@ class TestEditParentControllers(mox.MoxTestBase):
         data['child_name'] = TEST_CHILD_NAME
         data['parent_email'] = TEST_PARENT_EMAIL
         data['birthday'] = TEST_BIRTHDAY_MOD
-        TEMPLATE_WORD_SPOKEN_VALUES
         
         with self.app.test_client() as client:
             client.post(PARENT_MCDI_FORM_URL, data=data)
@@ -1011,7 +964,7 @@ class TestEditParentControllers(mox.MoxTestBase):
         user_util.get_user(None).AndReturn(None)
         parent_account_util.get_snapshot_chronology_for_db_id(
             TEST_DB_ID).AndReturn(chronology)
-        db_util.load_snapshot_contents(chronology[0]).AndReturn(
+        db_util.load_snapshot_contents(chronology[1]).AndReturn(
             TWO_WORD_KNOWN_SNAPSHOT_CONTENTS)
 
         self.mox.ReplayAll()

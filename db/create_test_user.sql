@@ -1,1 +1,1 @@
-INSERT INTO "users" ("email","can_enter_data","can_edit_parents","can_access_data","can_change_formats","can_use_api_key","can_admin") VALUES ("test@example.com",1,1,1,1,1,1);
+INSERT INTO "users" ("email","can_enter_data","can_edit_parents","can_access_data","can_change_formats","can_use_api_key","can_admin","can_delete_data","can_import_data") VALUES ("test@example.com",1,1,1,1,1,1,1,1);

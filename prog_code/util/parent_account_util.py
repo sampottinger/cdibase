@@ -281,7 +281,7 @@ def is_birthday_valid(birthday):
     if birthday == None:
         return False
     try:
-        dateutil_parser.parse(birthday)
+        dateutil_parser.parse(birthday, dayfirst=False, yearfirst=False)
         return True
     except ValueError:
         return False
