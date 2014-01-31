@@ -17,4 +17,15 @@ $(window).load(function () {
         return false;
     });
 
+    $('.study-id-link').click(function (event) {
+        var study = $(event.target).html();
+        var operand =  $('#operand-input').val();
+        if (operand === '')
+            operand = study;
+        else
+            operand += ',' + study;
+        $('#operand-input').val(operand);
+        return false;
+    });
+
 });

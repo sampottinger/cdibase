@@ -63,7 +63,15 @@
                 </div>
                 <div class="form-entry">
                     <label>Value to Compare</label>
-                    <input type="text" name="operand">
+                    <input type="text" name="operand" id="operand-input">
+                </div>
+                <div class="form-entry" id="studies-list">
+                    Studies:
+                    <ul>
+                        {% for study in studies %}
+                        <li><a href="#" class="study-id-link">{{ study }}</a></li>
+                        {% endfor %}
+                    </ul>
                 </div>
                 <input class="btn btn-primary" type="submit" value="Add Filter">
             </div>

@@ -64,6 +64,7 @@ def access_data():
         cur_page='access_data',
         formats=db_util.load_presentation_model_listing(),
         filters=map(interp_util.filter_to_str, session_util.get_filters()),
+        studies=db_util.list_stuides(),
         **session_util.get_standard_template_values()
     )
 

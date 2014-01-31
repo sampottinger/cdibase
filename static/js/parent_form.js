@@ -33,6 +33,9 @@ $(window).on('hashchange',function() {
     var hash = location.hash.substring(1);
     currentPage = parseInt(hash);
 
+    if (isNaN(currentPage))
+        currentPage = 1;
+
     $('#cur-page-display').html(currentPage);
     $('.parent-form-category').hide();
     $('#category-' + currentPage.toString()).show();
@@ -50,7 +53,6 @@ $(window).on('hashchange',function() {
         $('#next-link').show();
         $('#parent-submit-button').hide();
     }
-    $('#parent-submit-button').hide();
 });
 
 
