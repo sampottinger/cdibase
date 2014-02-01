@@ -30,7 +30,7 @@
             <div class="form-category">
                 <div class="form-entry">
                     <label>Field</label>
-                    <select name="field">
+                    <select id="field-select" name="field">
                         <option value="child_id">child global id</option>
                         <option value="study_id">child study id</option>
                         <option value="study">study</option>
@@ -64,6 +64,7 @@
                 <div class="form-entry">
                     <label>Value to Compare</label>
                     <input type="text" name="operand" id="operand-input">
+                    <div class="hint">Use CSV without spaces to search for a list. Example: study1,study2 will find entries for study1 and study2.</div>
                 </div>
                 <div class="form-entry" id="studies-list">
                     Studies:

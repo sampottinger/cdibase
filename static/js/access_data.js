@@ -1,6 +1,7 @@
 $(window).load(function () {
     $('#status-display').hide();
     $('#coming-msg').hide();
+    $('#studies-list').hide();
 
     $('#download-button').click(function() {
         $('#coming-msg').hide();
@@ -26,6 +27,15 @@ $(window).load(function () {
             operand += ',' + study;
         $('#operand-input').val(operand);
         return false;
+    });
+
+    $('#field-select').change(function (event) {
+        var val = $(event.target).val();
+        if (val === 'study') {
+            $('#studies-list').slideDown();
+        } else {
+            $('#studies-list').slideUp();
+        }
     });
 
 });

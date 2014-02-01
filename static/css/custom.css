@@ -179,6 +179,11 @@
     margin: 20px 0;
 }
 
+.hint {
+    color: #707070;
+    font-size: 12px;
+}
+
 #login-form-container .wide-input
 {
     width: 100%;
