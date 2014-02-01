@@ -59,8 +59,11 @@ class QueryInfo:
         self.query_str = query_str
 
 
-def build_query_component(field, operator):
-    operands = field.operand.split(',')
+def build_query_component(field, operator, operand):
+    if isinstance(operand, basestring):
+        operands = operand.split(',')
+    else:
+        operands = [operand]
     query_subcomponents = []
     for operand in operands:
         template_vals = (field.get_field_name(), operator)
@@ -83,11 +86,17 @@ def build_query(filters, table, statement_template):
     operators = filter(lambda x: x in OPERATOR_MAP, operators)
     operators = map(lambda x: OPERATOR_MAP[x], operators)
 
-    fields_and_operators = zip(filter_fields, operators)
+    operands = map(lambda x: x.operand, filters)
+
+    fields_and_extraneous = zip(filter_fields, operators, operands)
 
     filter_fields_str = map(
-        lambda (field, op): build_query_component(field, op), 
-        fields_and_operators
+        lambda (field, operator, operands): build_query_component(
+            field,
+            operator,
+            operands
+        ),
+        fields_and_extraneous
     )
     clause = ' AND '.join(filter_fields_str)
 
@@ -140,9 +149,12 @@ def run_search_query(filters, table, exclude_deleted=True):
         lambda (field, operand): field.interpret_value(operand),
         filter_fields_and_operands
     )
-    print operands
-    print query_info.query_str
-    db_cursor.execute(query_info.query_str, operands)
+
+    operands_flat = []
+    for operand in operands:
+        operands_flat.extend(operand)
+
+    db_cursor.execute(query_info.query_str, operands_flat)
 
     ret_val = map(lambda x: models.SnapshotMetadata(*x), db_cursor.fetchall())
     db_connection.close()
@@ -170,6 +182,11 @@ def run_delete_query(filters, table, restore):
         lambda (field, operand): field.interpret_value(operand),
         filter_fields_and_operands
     )
-    db_cursor.execute(query_info.query_str, operands)
+    
+    operands_flat = []
+    for operand in operands:
+        operands_flat.extend(operand)
+
+    db_cursor.execute(query_info.query_str, operands_flat)
     db_connection.commit()
     db_connection.close()

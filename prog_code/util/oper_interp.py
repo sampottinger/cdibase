@@ -32,6 +32,12 @@ class FieldInfo(object):
         """
         return self.__field_name
 
+    def interpret_value(self, val):
+        if isinstance(val, basestring):
+            return val.split(',')
+        else:
+            return [val]
+
 
 class RawInterpretField(FieldInfo):
     """A value interpreter for filter operands that returns original input.
@@ -51,7 +57,8 @@ class RawInterpretField(FieldInfo):
         @return: Originally provided value.
         @rtype: str
         """
-        return val
+        vals = FieldInfo.interpret_value(self, val)
+        return vals
 
 
 class GenderField(FieldInfo):
@@ -76,18 +83,24 @@ class GenderField(FieldInfo):
             could not be interepreted.
         @rtype: int
         """
-        if not isinstance(val, basestring):
-            return val
+        vals = FieldInfo.interpret_value(self, val)
 
-        val = val.lower()
-        if val in self.MALE_VALUES:
-            return constants.MALE
-        elif val in self.FEMALE_VALUES:
-            return constants.FEMALE
-        elif val in self.OTHER_VALUES:
-            return constants.OTHER_GENDER
-        else:
-            return val
+        ret_vals = []
+        for val in vals:
+            if not isinstance(val, basestring):
+                ret_vals.append(val)
+            else:
+                val = val.lower()
+                if val in self.MALE_VALUES:
+                    ret_vals.append(constants.MALE)
+                elif val in self.FEMALE_VALUES:
+                    ret_vals.append(constants.FEMALE)
+                elif val in self.OTHER_VALUES:
+                    ret_vals.append(constants.OTHER_GENDER)
+                else:
+                    self.append(val)
+
+        return ret_vals
 
 
 class BooleanField(FieldInfo):
@@ -112,16 +125,22 @@ class BooleanField(FieldInfo):
             could not be interpreted.
         @rtype: bool
         """
-        if not isinstance(val, str):
-            return val
+        vals = FieldInfo.interpret_value(self, val)
 
-        val = val.lower()
-        if val in self.TRUE_VALUES:
-            return True
-        elif val in self.FALSE_VALUES:
-            return False
-        else:
-            return val
+        ret_vals = []
+        for val in vals:
+            if not isinstance(val, str):
+                ret_vals.append(val)
+            else:
+                val = val.lower()
+                if val in self.TRUE_VALUES:
+                    ret_vals.append(True)
+                elif val in self.FALSE_VALUES:
+                    ret_vals.append(False)
+                else:
+                    ret_vals.append(val)
+
+        return ret_vals
 
 
 class NumericalField(FieldInfo):
@@ -143,7 +162,12 @@ class NumericalField(FieldInfo):
             it could not be interpreted.
         @rtype: float
         """
-        try:
-            return float(val)
-        except ValueError:
-            return val
+        vals = FieldInfo.interpret_value(self, val)
+
+        ret_vals = []
+        for val in vals:
+            try:
+                ret_vals.append(float(val))
+            except ValueError:
+                ret_vals.append(val)
+        return ret_vals
