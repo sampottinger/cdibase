@@ -564,6 +564,11 @@ def handle_parent_mcdi_form(form_id):
                 )
                 word_entries = dict(known_words_tuples)
 
+        option_values = map(
+            lambda x: x['value'],
+            selected_format.details['options']
+        )
+
         return flask.render_template(
             'end_parent_form.html',
             selected_format=selected_format,
@@ -581,6 +586,7 @@ def handle_parent_mcdi_form(form_id):
             male_value=constants.MALE,
             female_value=constants.FEMALE,
             other_gender_value=constants.OTHER_GENDER,
+            option_values=option_values,
             num_categories = len(selected_format.details['categories']),
             **session_util.get_standard_template_values()
         )

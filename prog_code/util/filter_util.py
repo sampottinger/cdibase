@@ -59,6 +59,19 @@ class QueryInfo:
         self.query_str = query_str
 
 
+def build_query_component(field, operator):
+    operands = field.operand.split(',')
+    query_subcomponents = []
+    for operand in operands:
+        template_vals = (field.get_field_name(), operator)
+        query_subcomponents.append('%s %s ?' % template_vals)
+
+    if len(operands) > 0:
+        return '(' + ' OR '.join(query_subcomponents) + ')'
+    else:
+        return query_subcomponents[0]
+
+
 def build_query(filters, table, statement_template):
     filter_fields = map(lambda x: x.field, filters)
     # TODO: might want to catch this as a security exception
@@ -73,7 +86,7 @@ def build_query(filters, table, statement_template):
     fields_and_operators = zip(filter_fields, operators)
 
     filter_fields_str = map(
-        lambda (field, op): '%s %s ?' % (field.get_field_name(), op), 
+        lambda (field, op): build_query_component(field, op), 
         fields_and_operators
     )
     clause = ' AND '.join(filter_fields_str)
