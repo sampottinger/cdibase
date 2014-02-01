@@ -66,15 +66,17 @@
                     <input type="text" name="operand" id="operand-input">
                     <div class="hint">Use CSV without spaces to search for a list. Example: study1,study2 will find entries for study1 and study2.</div>
                 </div>
+                <input class="btn btn-primary" type="submit" value="Add Filter">
                 <div class="form-entry" id="studies-list">
                     Studies:
                     <ul>
                         {% for study in studies %}
+                        {% if study != '' %}
                         <li><a href="#" class="study-id-link">{{ study }}</a></li>
+                        {% endif %}
                         {% endfor %}
                     </ul>
                 </div>
-                <input class="btn btn-primary" type="submit" value="Add Filter">
             </div>
         </form>
     </div>
