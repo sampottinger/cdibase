@@ -99,6 +99,7 @@
                         <tr>
                             <td>{{ word }}</td>
                             <td>
+                            {{ word.replace('*', '') }} - {{ word_entries.get(word.replace('*', ''), 'None') }}
                             {% for option in selected_format.details.options %}
                                 <label class="checkbox inline-check">
                                     <input type="radio" name="{{ word }}_report" value="{{ option.value }}" {% if option.value == word_entries.get(word.replace('*', ''), None) or ((word_entries.get(word, None) not in option_values) and loop.last) %}checked{% endif %}> {{ option.name }}
