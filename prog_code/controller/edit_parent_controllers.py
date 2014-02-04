@@ -591,5 +591,6 @@ def handle_parent_mcdi_form(form_id):
             other_gender_value=constants.OTHER_GENDER,
             option_values=option_values,
             num_categories = len(selected_format.details['categories']),
+            raw_contents=contents,
             **session_util.get_standard_template_values()
         )
