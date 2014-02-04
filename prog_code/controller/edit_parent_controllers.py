@@ -559,7 +559,7 @@ def handle_parent_mcdi_form(form_id):
             if len(results) == 0:
                 word_entries = {}
             else:
-                latest_snapshot = results[0]
+                latest_snapshot = results[-1]
                 contents = db_util.load_snapshot_contents(latest_snapshot)
                 known_words_tuples = map(
                     lambda x: (x.word, x.value),
