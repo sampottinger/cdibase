@@ -18,7 +18,7 @@
     You are always welcome to email us with any questions you have at language.project@colorado.edu or call us at (303)-735-0952. 
     </p>
 
-    <p>Thank you for your time! {{ raw_contents }}</p>
+    <p>Thank you for your time!</p>
 
 </div>
 <div>
@@ -99,7 +99,6 @@
                         <tr>
                             <td>{{ word }}</td>
                             <td>
-                            {{ word.replace('*', '') }} - {{ word_entries.get(word.replace('*', ''), 'None') }}
                             {% for option in selected_format.details.options %}
                                 <label class="checkbox inline-check">
                                     <input type="radio" name="{{ word }}_report" value="{{ option.value }}" {% if option.value == word_entries.get(word.replace('*', ''), None) or ((word_entries.get(word.replace('*', ''), None) not in option_values) and loop.last) %}checked{% endif %}> {{ option.name }}
