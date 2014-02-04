@@ -547,6 +547,9 @@ def handle_parent_mcdi_form(form_id):
             parent_form.database_id)
 
         saved_known_words = flask.session.get('SAVED_WORDS', None)
+        if saved_known_words == {}:
+            saved_known_words = None
+
         word_entries = None
         if saved_known_words:
             word_entries = saved_known_words
