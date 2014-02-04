@@ -44,7 +44,6 @@
                 <input id="study-id-input" type="text" name="study_id" placeholder="ex TR27-5">
             </div>
             {% endif %}
-            {{ results }}
             {% if database_id == None or database_id == '' %}
             <div class="tiling-form-input">
                 <label id="global-id-label">Participant global ID</label>
@@ -101,7 +100,6 @@
                             <td>{{ word }}</td>
                             <td>
                             {% for option in selected_format.details.options %}
-                                {{ word_entries.get(word, "not found") }}
                                 <label class="checkbox inline-check">
                                     <input type="radio" name="{{ word }}_report" value="{{ option.value }}" {% if option.value == word_entries.get(word, None) or ((word_entries.get(word, None) not in option_values) and loop.last) %}checked{% endif %}> {{ option.name }}
                                 </label>
