@@ -89,11 +89,11 @@ def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
         snapshot_contents_dict = {}
 
         for entry in snapshot_contents:
-            snapshot_contents_dict[entry.word.lower()] = entry
+            snapshot_contents_dict[entry.word.lower().replace('*', '')] = entry
 
         not_found_entry = NotFoundSnapshotContent()
         snapshot_contents_sorted = map(
-            lambda x: snapshot_contents_dict.get(x.lower(), not_found_entry),
+            lambda x: snapshot_contents_dict.get(x.lower().replace('*', ''), not_found_entry),
             word_listing
         )
 
