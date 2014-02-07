@@ -341,7 +341,7 @@ def handle_parent_mcdi_form(form_id):
                     msg = WORD_VALUE_INVALID_MSG % word
                     flask.session[constants.ERROR_ATTR] = msg
                     successful = False
-                word_entries[word] = word_val
+                word_entries[word.lower()] = word_val
                 if word_val in count_as_spoken_vals:
                     known_words.append(word)
                     words_spoken += 1
