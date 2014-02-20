@@ -168,7 +168,7 @@ class AttributeResolutionResolver:
             'extra_categories'
         )
 
-        parent_form.extra_categories = self.fill_field(
+        parent_form.total_num_sessions = self.fill_field(
             parent_form.total_num_sessions,
             'total_num_sessions'
         )

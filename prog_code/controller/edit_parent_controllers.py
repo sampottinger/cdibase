@@ -524,8 +524,9 @@ def handle_parent_mcdi_form(form_id):
         study_id_filter = models.Filter('study_id', 'eq', study_id)
         results = filter_util.run_search_query([study_filter, study_id_filter],
             'snapshots')
+        session_number = len(results) + 1
         if not total_num_sessions:
-            total_num_sessions = len(results) + 1
+            total_num_sessions = session_number
 
         # Put in snapshot metadata
         new_snapshot = models.SnapshotMetadata(
@@ -537,7 +538,7 @@ def handle_parent_mcdi_form(form_id):
             age,
             birthday,
             datetime.date.today().strftime(DATE_OUT_STR),
-            total_num_sessions,
+            session_number,
             total_num_sessions,
             words_spoken,
             items_excluded,

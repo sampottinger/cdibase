@@ -318,7 +318,7 @@ def send_parent_form():
     extra_categories = interp_util.safe_int_interpret(
         request.args.get('extra_categories', ''))
     total_num_sessions = interp_util.safe_int_interpret(
-        request.args.get('extra_categories', ''))
+        request.args.get('total_num_sessions', ''))
     languages = request.args.get('languages', '')
     languages = languages.split('.')
     hard_of_hearing = request.args.get('hard_of_hearing')
