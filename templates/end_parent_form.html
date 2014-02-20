@@ -89,6 +89,7 @@
             {% endif %}
         </div>
         <div class="form-section">
+            {{ word_entries.keys() }}
             <div class="instructions">
                 <div class="header">Words</div>
                 <div class="body">Children understand many more words than they say.  We are particularly interested in the words that your child SAYS.  Please go through the list and mark the words you have heard your child use.  If you child uses a different pronunciation of a word (for example, "raffe" instead of "giraffe" or "sketti" for "spaghetti"), mark the word anyway.  Remember that this is a "catalogue" of all the words that are used by many different children.  Don’t worry if you child knows only a few of these right now.</div>
@@ -107,7 +108,6 @@
                             <td>
                             {% for option in selected_format.details.options %}
                                 <label class="checkbox inline-check">
-                                    {{word_entries.get(word.replace('*', '').lower(), None)}}
                                     <input type="radio" name="{{ word }}_report" value="{{ option.value }}" {% if option.value == word_entries.get(word.replace('*', '').lower(), None) or ((word_entries.get(word.replace('*', '').lower(), None) not in option_values) and loop.last) %}checked{% endif %}> {{ option.name }}
                                 </label>
                             {% endfor %}
