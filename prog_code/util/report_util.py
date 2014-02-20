@@ -60,7 +60,7 @@ def interpret_word_value(value, presentation_format):
     except ValueError:
         pass
 
-    name = str(PRESENTATION_VALUE_NAME_MAP.get(value, value))
+    name = PRESENTATION_VALUE_NAME_MAP.get(value, value)
 
     if presentation_format == None or not name in presentation_format.details:
         return value
