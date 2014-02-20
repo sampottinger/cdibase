@@ -39,6 +39,7 @@ GENDER_INVALID_MSG = 'The provided gender for this child was not recognized.'
 DATE_OUT_STR = '%Y/%m/%d'
 DATE_INVALID_MSG = '%s is not a valid date.'
 INVALID_ITEMS_EXCLUDED_MSG = 'Invalid items count.'
+INVALID_TOTAL_SESS_MSG = 'Invalid total sessions count.'
 INVALID_EXTRA_CATEGORIES_MSG = 'Extra categories invalid.'
 LANGUAGES_NOT_PROVIDED_MSG = 'Languages list not provided.'
 COULD_NOT_FIND_PERCENTILES_MSG = 'Could not find percentile information.'
@@ -73,6 +74,7 @@ def send_mcdi_form():
         global_id = request.form.get('global_id')
         gender = request.form.get('gender')
         items_excluded = request.form.get('items_excluded')
+        total_num_sessions = request.form.get('total_num_sessions')
         extra_categories = request.form.get('extra_categories')
         study_id = request.form.get('study_id')
         study = request.form.get('study')
@@ -89,6 +91,7 @@ def send_mcdi_form():
             'global_id': global_id,
             'gender': gender,
             'items_excluded': items_excluded,
+            'total_num_sessions': total_num_sessions,
             'extra_categories': extra_categories,
             'study_id': study_id,
             'study': study,
@@ -160,6 +163,7 @@ def send_mcdi_form():
         gender = interp_util.safe_int_interpret(gender)
         items_excluded = interp_util.safe_int_interpret(items_excluded)
         extra_categories = interp_util.safe_int_interpret(extra_categories)
+        total_num_sessions = interp_util.safe_int_interpret(total_num_sessions)
 
         # Ensure languages are provided and, if not, reject the request
         if languages != None and languages != '':
@@ -193,7 +197,8 @@ def send_mcdi_form():
             extra_categories,
             languages_str,
             num_languages,
-            hard_of_hearing
+            hard_of_hearing,
+            total_num_sessions
         )
 
         # If a parent form model is missing information about a child, load the
@@ -243,7 +248,8 @@ def send_mcdi_form():
                 'hard_of_hearing': '',
                 'child_name': '',
                 'parent_email': '',
-                'mcdi_type': ''
+                'mcdi_type': '',
+                'total_num_sessions': ''
             }
 
         return flask.render_template(
@@ -432,6 +438,16 @@ def handle_parent_mcdi_form(form_id):
                 request.form.get('extra_categories', None))
             if extra_categories == None or extra_categories < 0:
                 extra_categories = 0
+
+        # Ensure that the parent form has total num sessions info or load
+        # it from the user response, ensuring the total number of sessions
+        # provided is a valid value.
+        total_num_sessions = parent_form.total_num_sessions
+        if total_num_sessions == None or total_num_sessions == '':
+            total_num_sessions = interp_util.safe_int_interpret(
+                request.form.get('total_num_sessions', None))
+            if total_num_sessions == None or total_num_sessions < 0:
+                total_num_sessions = 0
         
         # Ensure that the parent form has languages information or load it from
         # the user response.
@@ -508,7 +524,8 @@ def handle_parent_mcdi_form(form_id):
         study_id_filter = models.Filter('study_id', 'eq', study_id)
         results = filter_util.run_search_query([study_filter, study_id_filter],
             'snapshots')
-        session_num = len(results) + 1
+        if not total_num_sessions:
+            total_num_sessions = len(results) + 1
 
         # Put in snapshot metadata
         new_snapshot = models.SnapshotMetadata(
@@ -520,8 +537,8 @@ def handle_parent_mcdi_form(form_id):
             age,
             birthday,
             datetime.date.today().strftime(DATE_OUT_STR),
-            session_num,
-            session_num,
+            total_num_sessions,
+            total_num_sessions,
             words_spoken,
             items_excluded,
             percentile,
@@ -581,6 +598,7 @@ def handle_parent_mcdi_form(form_id):
             birthday=parent_form.birthday,
             gender=parent_form.gender,
             items_excluded=parent_form.items_excluded,
+            total_num_sessions=parent_form.total_num_sessions,
             extra_categories=parent_form.extra_categories,
             languages=parent_form.languages,
             word_entries=word_entries,

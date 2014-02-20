@@ -72,6 +72,12 @@
                 <input type="text" name="languages" placeholder="ex english,spanish">
             </div>
             {% endif %}
+            {% if total_num_sessions == None or total_num_sessions == '' %}
+            <div class="tiling-form-input">
+                <label>Total number of expected sessions</label>
+                <input type="text" name="total_num_sessions" placeholder="ex 12">
+            </div>
+            {% endif %}
             {% if selected_format.details.meta.has_hard_of_hearing %}
             <div class="tiling-form-input">
                 <label>Hard of hearing</label>

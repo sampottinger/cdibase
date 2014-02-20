@@ -68,6 +68,10 @@
             <input type="text" name="extra_categories" placeholder="ex 0" value="{% if last_entry_info.extra_categories != None %}{{ last_entry_info.extra_categories }}{% else %}0{% endif %}">
         </div>
         <div class="tiling-form-input">
+            <label>Total number of expected sessions</label>
+            <input type="text" name="total_num_sessions" placeholder="ex 0" value="{% if last_entry_info.total_num_sessions != None %}{{ last_entry_info.total_num_sessions }}{% else %}0{% endif %}">
+        </div>
+        <div class="tiling-form-input">
             <label>Languages (comma sep. no spaces)</label>
             <input type="text" name="languages" placeholder="ex english,spanish" value="{{ last_entry_info.languages }}">
         </div>

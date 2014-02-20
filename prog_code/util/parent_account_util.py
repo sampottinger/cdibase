@@ -168,6 +168,11 @@ class AttributeResolutionResolver:
             'extra_categories'
         )
 
+        parent_form.extra_categories = self.fill_field(
+            parent_form.total_num_sessions,
+            'total_num_sessions'
+        )
+
         languages_valid = self.is_valid_value(parent_form.languages)
         if not languages_valid and self.__target_user != None:
             parent_form.languages = self.__target_user.languages

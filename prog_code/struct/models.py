@@ -387,7 +387,8 @@ class ParentForm:
 
     def __init__(self, form_id, child_name, parent_email, mcdi_type,
         database_id, study_id, study, gender, birthday, items_excluded,
-        extra_categories, languages, num_languages, hard_of_hearing):
+        extra_categories, languages, num_languages, hard_of_hearing,
+        total_num_sessions):
         """Create a new parent form record.
 
         Create a new parent form record. Note that this constructor does not
@@ -452,6 +453,7 @@ class ParentForm:
         self.languages = languages
         self.num_languages = num_languages
         self.hard_of_hearing = hard_of_hearing
+        self.total_num_sessions = total_num_sessions
 
     def __eq__(self, other):
         """Test to see if this form has the same attribute values as other.

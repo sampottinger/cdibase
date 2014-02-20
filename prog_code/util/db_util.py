@@ -736,7 +736,7 @@ def insert_parent_form(form_metadata):
     connection = get_db_connection()
     cursor = connection.cursor()
 
-    cmd = 'INSERT INTO parent_forms VALUES (%s)' % (', '.join('?' * 14))
+    cmd = 'INSERT INTO parent_forms VALUES (%s)' % (', '.join('?' * 15))
     cursor.execute(
         cmd,
         (
@@ -753,7 +753,8 @@ def insert_parent_form(form_metadata):
             form_metadata.extra_categories,
             form_metadata.languages,
             form_metadata.num_languages,
-            form_metadata.hard_of_hearing
+            form_metadata.hard_of_hearing,
+            form_metadata.total_num_sessions
         )
     )
 

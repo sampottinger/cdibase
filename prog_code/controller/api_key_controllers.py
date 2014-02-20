@@ -317,6 +317,8 @@ def send_parent_form():
         request.args.get('items_excluded', ''))
     extra_categories = interp_util.safe_int_interpret(
         request.args.get('extra_categories', ''))
+    total_num_sessions = interp_util.safe_int_interpret(
+        request.args.get('extra_categories', ''))
     languages = request.args.get('languages', '')
     languages = languages.split('.')
     hard_of_hearing = request.args.get('hard_of_hearing')
@@ -406,7 +408,8 @@ def send_parent_form():
         extra_categories,
         ','.join(languages),
         len(languages),
-        hard_of_hearing
+        hard_of_hearing,
+        total_num_sessions
     )
 
     # If a parent form model is missing information about a child, load the rest
@@ -498,6 +501,7 @@ def send_parent_forms():
     gender_str = request.args.get('gender', '')
     birthday_str = request.args.get('birthday', '')
     items_excluded_str = request.args.get('items_excluded', '')
+    total_num_sessions_str = request.args.get('total_num_sessions', '')
     extra_categories_str = request.args.get('extra_categories', '')
     languages_str = request.args.get('languages', '')
     hard_of_hearing_str = request.args.get('hard_of_hearing', '')
@@ -528,6 +532,7 @@ def send_parent_forms():
     gender_vals = api_key_util.interp_csv_field(gender_str)
     birthday_vals = api_key_util.interp_csv_field(birthday_str)
     items_excluded_vals = api_key_util.interp_csv_field(items_excluded_str)
+    total_num_sessions_vals = api_key_util.interp_csv_field(total_num_sessions_str)
     extra_categories_vals = api_key_util.interp_csv_field(extra_categories_str)
     languages_vals = api_key_util.interp_csv_field(languages_str)
     hard_of_hearing_vals = api_key_util.interp_csv_field(hard_of_hearing_str)
@@ -549,7 +554,8 @@ def send_parent_forms():
         len(hard_of_hearing_vals),
         len(child_name_vals),
         len(parent_email_vals),
-        len(mcdi_type_vals)
+        len(mcdi_type_vals),
+        len(total_num_sessions_vals)
     ]
 
     length_set = set(lengths)
@@ -577,6 +583,8 @@ def send_parent_forms():
         birthday = api_key_util.get_if_avail(birthday_vals, i)
         items_excluded = interp_util.safe_int_interpret(
             api_key_util.get_if_avail(items_excluded_vals, i))
+        total_num_sessions = interp_util.safe_int_interpret(
+            api_key_util.get_if_avail(total_num_sessions_vals, i))
         extra_categories = interp_util.safe_int_interpret(
             api_key_util.get_if_avail(extra_categories_vals, i))
         languages = api_key_util.get_if_avail(languages_vals, i)
@@ -676,7 +684,8 @@ def send_parent_forms():
             extra_categories,
             ','.join(languages),
             len(languages),
-            hard_of_hearing
+            hard_of_hearing,
+            total_num_sessions
         )
 
         # If a parent form model is missing information about a child, load the
