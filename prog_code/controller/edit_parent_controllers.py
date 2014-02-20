@@ -500,7 +500,6 @@ def handle_parent_mcdi_form(form_id):
                 age,
                 total_possible_words
             )
-            percentile = int(round(percentile))
         else:
             percentile = -1
 

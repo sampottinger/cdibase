@@ -964,7 +964,7 @@ class TestEditParentControllers(mox.MoxTestBase):
         user_util.get_user(None).AndReturn(None)
         parent_account_util.get_snapshot_chronology_for_db_id(
             TEST_DB_ID).AndReturn(chronology)
-        db_util.load_snapshot_contents(chronology[1]).AndReturn(
+        db_util.load_snapshot_contents(chronology[0]).AndReturn(
             TWO_WORD_KNOWN_SNAPSHOT_CONTENTS)
 
         self.mox.ReplayAll()

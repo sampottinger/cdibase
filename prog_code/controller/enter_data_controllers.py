@@ -238,7 +238,6 @@ def enter_data_form(format_name):
             age,
             total_possible_words
         )
-        percentile = int(round(percentile))
 
         # Put in snapshot metadata
         new_snapshot = models.SnapshotMetadata(

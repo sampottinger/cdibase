@@ -632,6 +632,27 @@ def create_new_api_key(user_id, api_key):
     return models.APIKey(user_id, api_key)
 
 
+def clean_up_date(target_val):
+    parts = target_val.split('/')
+    if len(parts) != 3:
+        return None
+
+    try:
+        year = int(parts[0])
+        month = int(parts[1])
+        day = int(parts[2])
+    except ValueError:
+        return None
+
+    invalid_date = year < 1000
+    invalid_date = invalid_date or month < 0 or month > 12
+    invalid_date = invalid_date or day > 31 or day < 0
+    if invalid_date:
+        return None
+
+    return '%d/%02d/%02d' % (year, month, day)
+
+
 # TODO: Combined for transaction
 def insert_snapshot(snapshot_metadata, word_entries, cursor=None):
     """Insert a new MCDI snapshot.
@@ -654,6 +675,11 @@ def insert_snapshot(snapshot_metadata, word_entries, cursor=None):
         child_id = cursor.fetchone()[0] + 1
     else:
         child_id = snapshot_metadata.child_id
+
+    # Standardize date
+    snapshot_metadata.birthday = clean_up_date(snapshot_metadata.birthday)
+    snapshot_metadata.session_date = clean_up_date(
+        snapshot_metadata.session_date)
 
     cmd = 'INSERT INTO snapshots VALUES (%s)' % (', '.join('?' * 20))
     cursor.execute(
