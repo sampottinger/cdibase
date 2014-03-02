@@ -114,7 +114,8 @@ EXPECTED_PARENT_FORM = models.ParentForm(
     TEST_EXTRA_CATEGORIES,
     'english,spanish',
     TEST_NUM_LANGUAGES,
-    constants.EXPLICIT_FALSE
+    constants.EXPLICIT_FALSE,
+    0
 )
 EXPECTED_MODIFIED_PARENT_FORM = models.ParentForm(
     TEST_PARENT_FORM_ID_MOD,
@@ -130,7 +131,8 @@ EXPECTED_MODIFIED_PARENT_FORM = models.ParentForm(
     TEST_EXTRA_CATEGORIES_MOD,
     TEST_MOD_LANGUAGES,
     TEST_MOD_NUM_LANGUAGES,
-    constants.EXPLICIT_TRUE
+    constants.EXPLICIT_TRUE,
+    0
 )
 SEND_FORM_DATA_TEMPLATE = {
     'global_id': TEST_DB_ID,

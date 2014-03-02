@@ -13,7 +13,7 @@ class InterpUtilTests(mox.MoxTestBase):
         d1 = datetime.date(2011, 1, 2)
         d2 = datetime.date(2012, 2, 3)
         
-        self.assertEqual(interp_util.monthdelta(d1, d2), 13)
+        self.assertTrue(abs(interp_util.monthdelta(d1, d2) - 13.04) < 0.01)
         self.assertEqual(interp_util.monthdelta(d1, d1), 0)
         self.assertEqual(interp_util.monthdelta(d2, d1), 0)
 

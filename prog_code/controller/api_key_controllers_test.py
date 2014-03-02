@@ -122,7 +122,8 @@ EXPECTED_PARENT_FORM = models.ParentForm(
     TEST_EXTRA_CATEGORIES,
     'english,spanish',
     TEST_NUM_LANGUAGES,
-    constants.EXPLICIT_FALSE
+    constants.EXPLICIT_FALSE,
+    12
 )
 EXPECTED_MODIFIED_PARENT_FORM = models.ParentForm(
     TEST_PARENT_FORM_ID_MOD,
@@ -138,7 +139,8 @@ EXPECTED_MODIFIED_PARENT_FORM = models.ParentForm(
     TEST_EXTRA_CATEGORIES_MOD,
     'english',
     TEST_NUM_LANGUAGES_MOD,
-    constants.EXPLICIT_TRUE
+    constants.EXPLICIT_TRUE,
+    12
 )
 
 

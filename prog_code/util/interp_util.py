@@ -8,6 +8,9 @@ from datetime import datetime, timedelta
 
 
 def monthdelta(d1, d2):
+    if d1 >= d2:
+        return 0
+
     delta = 0
     while True:
         mdays = monthrange(d1.year, d1.month)[1]
@@ -16,6 +19,8 @@ def monthdelta(d1, d2):
             delta += 1
         else:
             break
+    d1 -= timedelta(days=mdays)
+    delta += float((d2 - d1).days) / monthrange(d2.year, d2.month)[1]
     return delta
 
 
