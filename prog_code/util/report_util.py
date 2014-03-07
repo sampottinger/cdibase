@@ -245,11 +245,14 @@ def sort_by_study_order(rows, mcdi_format):
     i = 0
     for category in categories:
         for word in category['words']:
-            word_index[word] = i
+            word_index[word.lower()] = i
             i+=1
 
     rows_header = rows[:20]
-    rows_content_indexed = map(lambda x: (word_index[x[0]], x), rows[20:])
+    rows_content_indexed = map(
+        lambda x: (word_index[x[0].lower()], x),
+        rows[20:]
+    )
     rows_content_sorted = sorted(rows_content_indexed, key=lambda x: x[0])
     rows_content_sorted = map(lambda x: x[1], rows_content_sorted)
     return rows_header + rows_content_sorted
