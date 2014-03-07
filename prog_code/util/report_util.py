@@ -250,7 +250,7 @@ def sort_by_study_order(rows, mcdi_format):
 
     rows_header = rows[:20]
     rows_content_indexed = map(
-        lambda x: (word_index[x[0].lower()], x),
+        lambda x: (word_index.get(x[0].lower(), -1), x),
         rows[20:]
     )
     rows_content_sorted = sorted(rows_content_indexed, key=lambda x: x[0])
