@@ -3,7 +3,7 @@ import mox
 import report_util
 
 
-class TestPresentationFormat:
+class TestMCDIFormat:
 
     def __init__(self, details):
         self.details = details
@@ -13,7 +13,7 @@ class ReportUtilTest(mox.MoxTestBase):
 
     def test_sort_by_study_order(self):
         test_rows = [[0]]* 20 + [['word1'], ['word3'], ['word2'], ['word4']]
-        test_format = TestPresentationFormat(
+        test_format = TestMCDIFormat(
             {'categories': [
                 {'words': ['word1', 'word2']},
                 {'words': ['word3', 'word4']}

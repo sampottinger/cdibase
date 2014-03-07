@@ -221,7 +221,7 @@ def generate_study_report_rows(snapshots_from_study, presentation_format):
     return zip(*cols)
 
 
-def sort_by_study_order(rows, presentation_format):
+def sort_by_study_order(rows, mcdi_format):
     """Sort report output rows such that they are in the same order as the MCDI.
 
     Sort the reourt output rows such that the header rows come first followed
@@ -231,13 +231,13 @@ def sort_by_study_order(rows, presentation_format):
     @param rows: The rows to sort including both the 20 header rows and the 
         word value rows.
     @type rows: iterable over iterable over primitive
-    @param presentation_format: Information about the presentation format whose
+    @param mcdi_format: Information about the presentation format whose
         MCDI format should be sorted against.
-    @type presentation_format: models.PresentationFormat
+    @type mcdi_format: models.MCDIFormat
     @return: Rows sorted acording to the presentation format.
     @rtype: iterable over iterable over primitive
     """
-    categories = presentation_format.details['categories']
+    categories = mcdi_format.details['categories']
     word_index = {}
     i = 0
     for category in categories:
@@ -265,7 +265,8 @@ def generate_study_report_csv(snapshots_from_study, presentation_format):
     """
     faux_file = string_io.StringIO()
     csv_writer = csv.writer(faux_file)
-    rows = generate_study_report_rows(snapshots_from_study, presentation_format)
+    mcdi_format = db_util.load_mcdi_model(snapshots_from_study[0].mcdi_type)
+    rows = generate_study_report_rows(snapshots_from_study, mcdi_format)
     rows = sort_by_study_order(rows, presentation_format)
     csv_writer.writerows(rows)
     return faux_file
