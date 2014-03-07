@@ -31,6 +31,8 @@ PRESENTATION_VALUE_NAME_MAP = {
     constants.ELEVEN_PRESUMED_TRUE: 'eleven_presumed_true'
 }
 
+DEFAULT_MCDI = 'fullenglishmcdi'
+
 
 class NotFoundSnapshotContent:
     """A stand-in word snapshot content model.
@@ -268,8 +270,10 @@ def generate_study_report_csv(snapshots_from_study, presentation_format):
     csv_writer = csv.writer(faux_file)
     mcdi_type_name = snapshots_from_study[0].mcdi_type
     safe_mcdi_name = mcdi_type_name.replace(' ', '')
-    safe_mcdi_name = urllib.quote_plus(safe_mcdi_name)
+    safe_mcdi_name = urllib.quote_plus(safe_mcdi_name).lower()
     mcdi_format = db_util.load_mcdi_model(safe_mcdi_name)
+    if mcdi_format == None:
+        mcdi_format = db_util.load_mcdi_model(DEFAULT_MCDI)
     rows = generate_study_report_rows(snapshots_from_study, presentation_format)
     rows = sort_by_study_order(rows, mcdi_format)
     csv_writer.writerows(rows)
