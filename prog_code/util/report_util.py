@@ -266,8 +266,8 @@ def generate_study_report_csv(snapshots_from_study, presentation_format):
     faux_file = string_io.StringIO()
     csv_writer = csv.writer(faux_file)
     mcdi_format = db_util.load_mcdi_model(snapshots_from_study[0].mcdi_type)
-    rows = generate_study_report_rows(snapshots_from_study, mcdi_format)
-    rows = sort_by_study_order(rows, presentation_format)
+    rows = generate_study_report_rows(snapshots_from_study, presentation_format)
+    rows = sort_by_study_order(rows, mcdi_format)
     csv_writer.writerows(rows)
     return faux_file
 
