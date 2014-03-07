@@ -19,6 +19,7 @@ from prog_code.util.mail_util_test import *
 from prog_code.util.math_util_test import *
 from prog_code.util.oper_interp_test import *
 from prog_code.util.parent_account_util_test import *
+from prog_code.util.report_util_test import *
 
 
 if __name__ == '__main__':

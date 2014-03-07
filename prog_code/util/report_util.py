@@ -221,6 +221,37 @@ def generate_study_report_rows(snapshots_from_study, presentation_format):
     return zip(*cols)
 
 
+def sort_by_study_order(rows, presentation_format):
+    """Sort report output rows such that they are in the same order as the MCDI.
+
+    Sort the reourt output rows such that the header rows come first followed
+    by the word value rows in the same order as they appear in the original
+    MCDI.
+
+    @param rows: The rows to sort including both the 20 header rows and the 
+        word value rows.
+    @type rows: iterable over iterable over primitive
+    @param presentation_format: Information about the presentation format whose
+        MCDI format should be sorted against.
+    @type presentation_format: models.PresentationFormat
+    @return: Rows sorted acording to the presentation format.
+    @rtype: iterable over iterable over primitive
+    """
+    categories = presentation_format.details['categories']
+    word_index = {}
+    i = 0
+    for category in categories:
+        for word in category['words']:
+            word_index[word] = i
+            i+=1
+
+    rows_header = rows[:20]
+    rows_content_indexed = map(lambda x: (word_index[x[0]], x), rows[20:])
+    rows_content_sorted = sorted(rows_content_indexed, key=lambda x: x[0])
+    rows_content_sorted = map(lambda x: x[1], rows_content_sorted)
+    return rows_header + rows_content_sorted
+
+
 def generate_study_report_csv(snapshots_from_study, presentation_format):
     """Generate a CSV file for a set of snapshots with the same MCDI format.
 
@@ -234,8 +265,9 @@ def generate_study_report_csv(snapshots_from_study, presentation_format):
     """
     faux_file = string_io.StringIO()
     csv_writer = csv.writer(faux_file)
-    csv_writer.writerows(
-        generate_study_report_rows(snapshots_from_study, presentation_format))
+    rows = generate_study_report_rows(snapshots_from_study, presentation_format)
+    rows = sort_by_study_order(rows, presentation_format)
+    csv_writer.writerows(rows)
     return faux_file
 
 
