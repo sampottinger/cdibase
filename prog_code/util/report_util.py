@@ -6,6 +6,7 @@
 
 import csv
 import StringIO as string_io
+import urllib
 import zipfile
 
 import constants
@@ -265,7 +266,10 @@ def generate_study_report_csv(snapshots_from_study, presentation_format):
     """
     faux_file = string_io.StringIO()
     csv_writer = csv.writer(faux_file)
-    mcdi_format = db_util.load_mcdi_model(snapshots_from_study[0].mcdi_type)
+    mcdi_type_name = snapshots_from_study[0].mcdi_type
+    safe_mcdi_name = mcdi_type_name.replace(' ', '')
+    safe_mcdi_name = urllib.quote_plus(safe_mcdi_name)
+    mcdi_format = db_util.load_mcdi_model(safe_mcdi_name)
     rows = generate_study_report_rows(snapshots_from_study, presentation_format)
     rows = sort_by_study_order(rows, mcdi_format)
     csv_writer.writerows(rows)
