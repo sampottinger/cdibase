@@ -4,22 +4,22 @@ Central application for managing [CU Language Project](http://psych.colorado.edu
 
 
 ### Authors and License
-* (c) 2013 [Sam Pottinger](http://gleap.org).
-* (c) 2013 [CU Language Project](http://psych.colorado.edu/~colungalab/CULanguage/CU-LANGUAGE.html) at the [University of Colorado Boulder](http://colorado.edu/).
+* (c) 2014 [Sam Pottinger](http://gleap.org).
+* (c) 2014 [CU Language Project](http://psych.colorado.edu/~colungalab/CULanguage/CU-LANGUAGE.html) at the [University of Colorado Boulder](http://colorado.edu/).
 
 Released under the [MIT License](http://opensource.org/licenses/MIT).
 
 
 ### Background and Motivation
 
-Daxlabbase affords the CU Language Project a standardized dataset for all child language inventory data regardless of study and the format of the MCDI or equivalent questionnaire used.
+Daxlabbase affords language development labs a standardized dataset for all child language inventory data regardless of study and the format of the CDI or equivalent questionnaire used.
 
 This allows lab members to:
 
-* Remotely enter MCDI data directly into Daxlabbase's centralized database.
-* Send MCDI forms to parents over email and automatically collect responses securely over the Internet.
-* Download existing MCDI data in CSV files using different "presentation formats" that, to support lab members' various custom and commercial software solutions, specifies how standard values like true, false, male, and female are reported in the resulting download.
-* Download MCDI data from multiple studies even if different MCDI forms were used, allowing the user to specify if the application should combine all results in a single CSV or if Daxlabbase should render a ZIP archive.
+* Remotely enter CDI data directly into a centralized database.
+* Send forms to parents over email and automatically collect responses to CDIs securely over the Internet.
+* Download existing CDI data in CSV files using different "presentation formats" that, to support lab members' various custom and commercial software solutions, specifies how standard values like true, false, male, and female are reported in the resulting download.
+* Download CDI data from multiple studies even if different MCDI forms were used, allowing the user to specify if the application should combine all results in a single CSV or if Daxlabbase should render a ZIP archive.
 * Fine tune user access control, specifying which lab members should have access to what functionality of the web application.
 * Send parent forms through external applications using Daxlabbase's API.
 
