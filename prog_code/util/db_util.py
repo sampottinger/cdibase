@@ -15,6 +15,29 @@ from ..struct import models
 
 import file_util
 
+SNAPSHOT_METADATA_COLS = [
+    'id',
+    'child_id',
+    'study_id',
+    'study',
+    'gender',
+    'age',
+    'birthday',
+    'session_date',
+    'session_num',
+    'total_num_sessions',
+    'words_spoken',
+    'items_excluded',
+    'percentile',
+    'extra_categories',
+    'revision',
+    'languages',
+    'num_languages',
+    'mcdi_type',
+    'hard_of_hearing',
+    'deleted'
+]
+
 
 class SharedConnection:
     """Singleton wrapper around a database connection.
@@ -651,6 +674,62 @@ def clean_up_date(target_val):
         return None
 
     return '%d/%02d/%02d' % (year, month, day)
+
+
+def update_snapshot(snapshot_metadata, cursor=None):
+    cursor_provided = cursor != None
+    if not cursor_provided:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+    if snapshot_metadata.child_id == None:
+        cursor.execute('SELECT MAX(child_id) FROM snapshots')
+        child_id = cursor.fetchone()[0] + 1
+    else:
+        child_id = snapshot_metadata.child_id
+
+    # Standardize date
+    snapshot_metadata.birthday = clean_up_date(snapshot_metadata.birthday)
+    snapshot_metadata.session_date = clean_up_date(
+        snapshot_metadata.session_date)
+
+    if isinstance(snapshot_metadata.languages, basestring):
+        languages_val = snapshot_metadata.languages
+    else:
+        languages_val = ','.join(snapshot_metadata.languages)
+
+    non_db_id_cols = SNAPSHOT_METADATA_COLS[1:]
+    col_statements = map(lambda x: x + '=?', non_db_id_cols)
+    cmd = 'UPDATE snapshots SET %s WHERE id=?' % ','.join(col_statements)
+    cursor.execute(
+        cmd,
+        (
+            child_id,
+            snapshot_metadata.study_id,
+            snapshot_metadata.study,
+            snapshot_metadata.gender,
+            snapshot_metadata.age,
+            snapshot_metadata.birthday,
+            snapshot_metadata.session_date,
+            snapshot_metadata.session_num,
+            snapshot_metadata.total_num_sessions,
+            snapshot_metadata.words_spoken,
+            snapshot_metadata.items_excluded,
+            snapshot_metadata.percentile,
+            snapshot_metadata.extra_categories,
+            snapshot_metadata.revision,
+            languages_val,
+            snapshot_metadata.num_languages,
+            snapshot_metadata.mcdi_type,
+            snapshot_metadata.hard_of_hearing,
+            snapshot_metadata.deleted,
+            snapshot_metadata.database_id
+        )
+    )
+
+    if not cursor_provided:
+        connection.commit()
+        connection.close()
 
 
 # TODO: Combined for transaction

@@ -4,9 +4,14 @@
 @license: GNU GPL v2
 """
 from calendar import monthrange
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 DAYS_PER_MONTH = 30.42
+
+
+def interpret_date(target_val):
+    parts = map(lambda x: int(x), target_val.split('/'))
+    return date(parts[0], parts[1], parts[2])
 
 
 def monthdelta(d1, d2):

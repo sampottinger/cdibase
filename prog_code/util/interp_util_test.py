@@ -9,6 +9,11 @@ import interp_util
 
 class InterpUtilTests(mox.MoxTestBase):
 
+    def test_interpret_date(self):
+        expected_date = datetime.date(2010, 3, 20)
+        generated_date = interp_util.interpret_date('2010/03/20')
+        self.assertEqual(expected_date, generated_date)
+
     def test_monthdelta(self):
         d1 = datetime.date(2010, 3, 20)
         d2 = datetime.date(2012, 3, 10)
