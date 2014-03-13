@@ -288,4 +288,5 @@ def uploaded_file(filename):
 def recalculate_ages_and_percentiles():
     snapshots = filter_util.run_search_query([], 'snapshots', True)
     recalc_util.recalculate_ages_and_percentiles(snapshots)
+    flask.session[constants.CONFIRMATION_ATTR] = 'Percentiles and ages updated!'
     return flask.redirect(EDIT_FORMATS_URL)
