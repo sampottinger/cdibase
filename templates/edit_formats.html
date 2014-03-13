@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block jsinclude %}
+<script type="text/javascript" src="/static/js/edit_formats.js"></script>
+{% endblock %}
+
 {% block contents %}
 <div class="hero-unit">
     <h3>Configure the presentation and formatting of CDIs.</h3>
@@ -35,6 +39,8 @@
 </div>
 <div class="format-control">
     <h3>CDI Percentile Tables</h3>
+    <div id="recalc-start" class="long-detail">Note that existing percentile calculations will not be updated. Want to do that? <a id="recalc-link" href="/base/edit_formats/recalc">Recalculate all ages and percentiles >></a></div>
+    <div id="recalc-end" class="long-running-op-display"><img src="/static/img/ajax-loader.gif"> Recalculating...</div>
     <table class="table table-striped"><tbody>
     {% for table in percentile_tables %}
         <tr>

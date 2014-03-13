@@ -17,6 +17,7 @@ import flask
 from ..util import constants
 from ..util import db_util
 from ..util import file_util
+from ..util import filter_util
 from ..util import recalc_util
 from ..util import session_util
 
@@ -283,8 +284,8 @@ def uploaded_file(filename):
 
 
 @app.route('/base/edit_formats/recalc')
-@session_util.require_login(change_formats=True):
-def recalculate_ages_and_percentiles:
+@session_util.require_login(change_formats=True)
+def recalculate_ages_and_percentiles():
     snapshots = filter_util.run_search_query([], 'snapshots', True)
     recalc_util.recalculate_ages_and_percentiles(snapshots)
     return flask.redirect(EDIT_FORMATS_URL)

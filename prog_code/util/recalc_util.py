@@ -33,6 +33,9 @@ class CachedMCDIAdapter:
 
         words = 0
         mcdi_model = self.load_mcdi_model(type_name)
+        if mcdi_model == None:
+            mcdi_model = self.load_mcdi_model('fullenglishmcdi')
+
         categories = mcdi_model.details['categories']
         category_num_words = map(lambda x: len(x['words']), categories)
         total_words = sum(category_num_words)
@@ -54,6 +57,9 @@ def recalculate_percentile(snapshot, cached_adapter):
     @type snapshot: SnapshotMetadata
     """
     mcdi_model = cached_adapter.load_mcdi_model(snapshot.mcdi_type)
+    if mcdi_model == None:
+        mcdi_model = cached_adapter.load_mcdi_model('fullenglishmcdi')
+
     meta_percentile_info = mcdi_model.details['percentiles']
     gender = snapshot.gender
 
