@@ -5,7 +5,7 @@ formats, CSV file / archive rendering options, and tables for calculating
 participant percentiles.
 
 @author: Sam Pottinger
-@license: GNU GPL v2
+@license: GNU GPL v3
 """
 
 import os

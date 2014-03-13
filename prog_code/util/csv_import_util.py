@@ -1,3 +1,9 @@
+"""Utility to import a CSV file into the lab database.
+
+@author: Sam Pottinger
+@license: GNU GPL v3
+"""
+
 STATE_PARSE_CHILD_DB_ID = 0
 STATE_PARSE_CHILD_STUDY_ID = 1
 STATE_PARSE_STUDY_AND_SOURCE = 2
@@ -39,8 +45,15 @@ import math_util
 
 
 class UploadParserAutomaton:
+    """Automaton which processes CSV files to import into the lab database."""
 
     def __init__(self, percentile_table=None, state=STATE_PARSE_CHILD_DB_ID):
+        """Create a new upload parser automaton.
+
+        @keyword percentile_table: The raw percentile tables to use
+            while calculating children percentiles.
+        @type percentile_table: 2D float array
+        """
         self.__percentile_table = percentile_table
         self.__needing_percentiles = []
         self.__state_matrix = {

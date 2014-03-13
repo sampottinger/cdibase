@@ -10,10 +10,19 @@ import interp_util
 class InterpUtilTests(mox.MoxTestBase):
 
     def test_monthdelta(self):
-        d1 = datetime.date(2011, 1, 2)
-        d2 = datetime.date(2012, 2, 3)
-        
-        self.assertTrue(abs(interp_util.monthdelta(d1, d2) - 13.04) < 0.01)
+        d1 = datetime.date(2010, 3, 20)
+        d2 = datetime.date(2012, 3, 10)
+        d3 = datetime.date(2015, 3, 10)
+
+        self.assertTrue(abs(interp_util.monthdelta(d1, d2) - 23.7) < 0.01)
+        self.assertTrue(abs(interp_util.monthdelta(d1, d3) - 59.7) < 0.01)
+        self.assertEqual(interp_util.monthdelta(d1, d1), 0)
+        self.assertEqual(interp_util.monthdelta(d2, d1), 0)
+
+    def test_monthdelta_invalid_time(self):
+        d1 = datetime.date(2010, 3, 20)
+        d2 = datetime.date(2012, 3, 10)
+
         self.assertEqual(interp_util.monthdelta(d1, d1), 0)
         self.assertEqual(interp_util.monthdelta(d2, d1), 0)
 

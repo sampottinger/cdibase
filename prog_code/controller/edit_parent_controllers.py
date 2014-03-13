@@ -4,7 +4,7 @@ Loginc for managing parent accounts, sending parent MCDI forms, and processing
 MCDI parent form responses.
 
 @author: Sam Pottinger
-@license: GNU GPL v2
+@license: GNU GPL v3
 """
 
 import datetime
@@ -47,8 +47,10 @@ SUBMITTED_MSG = 'Form submitted to the lab.'
 PARENT_ACCOUNT_CONTROLS_URL = '/base/parent_accounts'
 WORD_RESPONSE_ID_TEMPL = '%s_report'
 BIRTHDAY_INVALID_MSG = 'Birthday invalid: %s'
-WORD_VALUE_MISSING_MSG = 'Whoops! You seemed to have forgotten to provide a value for %s.'
-WORD_VALUE_INVALID_MSG = 'Whoops! You seemed to have forgotten to provide a value for %s.'
+WORD_VALUE_MISSING_MSG = 'Whoops! You seemed to have forgotten to provide a '\
+    'value for %s.'
+WORD_VALUE_INVALID_MSG = 'Whoops! You seemed to have forgotten to provide a '\
+    'value for %s.'
 NO_GLOBAL_ID_MSG = 'No global ID specified.'
 THANK_YOU_MSG_URL = '/base/parent_mcdi/_thanks'
 

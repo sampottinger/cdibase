@@ -4,7 +4,7 @@ Logic for rendering rendering views and responding to requests related to
 querying the database and producing CSV files and zip archives.
 
 @author: Sam Pottinger
-@license: GNU GPL v2
+@license: GNU GPL v3
 """
 import json
 

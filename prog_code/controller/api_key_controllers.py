@@ -1,7 +1,7 @@
 """Logic for authorizing and responding to API requests.
 
 @author: Sam Pottinger
-@license: GNU GPL v2
+@license: GNU GPL v3
 """
 
 import datetime
@@ -106,10 +106,36 @@ def generate_error(msg, code):
 
 
 def generate_unauthorized_error(msg):
+    """Generate an error indicating that the user attempted unauthorized action.
+
+    Generate a JSON serialized error message that the API can return indicating
+    that there was an unauthorized attempt to execute a sensitive or possibly
+    destructive opreation.
+
+    @param msg: The error message to provide to the API client.
+    @type msg: str
+    @return: A tuple containing the string serialized JSON object with the error
+        message as well as the HTTP status code. This can be returned to Flask
+        from a Flask request handler.
+    @rtype: tuple
+    """
     return generate_error(msg, UNAUTHORIZED_STATUS)
 
 
 def generate_invalid_request_error(msg):
+    """Return an error showing a user attempted an invalid / incomplete action.
+
+    Generate a JSON serialized error message that the API can return. This error
+    will indicate that the user attempted an action with an invalid or
+    incomplete request.
+
+    @param msg: The error message to provide to the API client.
+    @type msg: str
+    @return: A tuple containing the string serialized JSON object with the error
+        message as well as the HTTP status code. This can be returned to Flask
+        from a Flask request handler.
+    @rtype: tuple
+    """
     return generate_error(msg, INVALID_REQUEST_STATUS)
 
 

@@ -4,7 +4,7 @@ Logic for rendering rendering views and responding to requests related to
 querying the database and producing CSV files and zip archives.
 
 @author: Sam Pottinger
-@license: GNU GPL v2
+@license: GNU GPL v3
 """
 import json
 
@@ -14,9 +14,9 @@ from ..util import constants
 from ..util import db_util
 from ..util import filter_util
 from ..util import interp_util
+from ..util import user_util
 from ..util import report_util
 from ..util import session_util
-from ..util import user_util
 
 from ..struct import models
 

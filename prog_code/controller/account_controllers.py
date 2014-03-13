@@ -1,7 +1,7 @@
 """Logic for letting a user manage their own account / authentication status.
 
 @author: Sam Pottinger
-@license: GNU GPL v2
+@license: GNU GPL v3
 """
 
 import flask

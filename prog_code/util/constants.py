@@ -28,3 +28,5 @@ CONFIRMATION_ATTR = 'confirmation'
 FORMAT_SESSION_ATTR = 'format'
 SNAPSHOTS_DB_TABLE = 'snapshots'
 FORM_SELECTED_VALUE = 'on'
+
+BASE_URL = '/base'

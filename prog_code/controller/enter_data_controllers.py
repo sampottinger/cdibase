@@ -1,7 +1,7 @@
 """Logic for rendering views and responding to requests related to data entry.
 
 @author: Sam Pottinger
-@license: GNU GPL v2
+@license: GNU GPL v3
 """
 
 import re
@@ -277,6 +277,21 @@ def enter_data_form(format_name):
 @app.route('/base/enter_data/lookup_global_id/<study_name>/<participant_study_id>')
 @session_util.require_login(enter_data=True)
 def lookup_global_id(study_name, participant_study_id):
+    """Load find the global ID for a participant given his / her study info.
+
+    Application accessible HTTP handler to find the the global ID for a
+    participant given his / her study name and participant study ID.
+
+    @param study_name: The name of the study to find the target participant
+        in.
+    @type study_name: str
+    @param participant_study_id: The ID of the target research participant
+        within the provided study.
+    @type participant_study_id: str
+    @return: Flask repsonse with the participant global ID as a string body (not
+        in JSON document).
+    @rtype: flask.Response
+    """
     global_id = db_util.lookup_global_participant_id(study_name,
         participant_study_id)
     if global_id == None:

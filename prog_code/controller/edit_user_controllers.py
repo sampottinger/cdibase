@@ -3,7 +3,7 @@
 Logic for managing user and user access controlls for the application.
 
 @author: Sam Pottinger
-@license: GNU GPL v2
+@license: GNU GPL v3
 """
 
 import flask
