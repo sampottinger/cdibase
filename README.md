@@ -4,10 +4,9 @@ Data management application for early language labs that allowing the reading, s
 
 <br>
 ### Authors and License
-Released under the [GNU GPL v3 License](https://www.gnu.org/licenses/gpl-3.0.txt), this open source project exists apart from its original creators. Still, it was started by:
+Released under the [GNU GPL v3 License](https://www.gnu.org/licenses/gpl-3.0.txt), this open source project was started by [Sam Pottinger of Gleap LLC](http://gleap.org) and has enjoyed gracious contributions from [Professor Eliana Colunga's](http://psych.colorado.edu/~colunga/) [CU Language Project](http://psych.colorado.edu/~colungalab/CULanguage/CU-LANGUAGE.html) at the [University of Colorado Boulder](http://colorado.edu/) (though the project is not officially affiliated or owned by the university).
 
-* (c) 2014 [Sam Pottinger of Gleap LLC](http://gleap.org) (active maintainer).
-* (c) 2014 [Professor Eliana Colunga](http://psych.colorado.edu/~colunga/) of the [CU Language Project](http://psych.colorado.edu/~colungalab/CULanguage/CU-LANGUAGE.html) at the [University of Colorado Boulder](http://colorado.edu/).
+[Sam Pottinger](http://gleap.org) continues to be the active maintainer / project lead.
 
 <br>
 ### Background and Motivation
@@ -41,21 +40,21 @@ Want support for other types of databases? Speak up in the issue tracker and, of
 
 * Checkout the repository:
 ```
-$ git clone git@github.com:Samnsparky/daxlabbase.git
+$ git clone git@github.com:Samnsparky/cdibase.git
 ```
 
-* Development requires Python's [virtualenv](http://www.virtualenv.org/en/latest/). If you do not already have that installed, use [pip](http://www.pip-installer.org/en/latest/):
+* [Optional] The development team suggests using Python's [virtualenv](http://www.virtualenv.org/en/latest/). If you do not already have that installed, use [pip](http://www.pip-installer.org/en/latest/):
 ```
 $ pip install virtualenv
 ```
 
-* Create a new virtual environment:
+* [Optional] Create a new virtual environment:
 ```
 $ cd daxlabbase
 $ virtualenv venv
 ```
 
-* Enter into the virtual environment:
+* [Optional] Enter into the virtual environment:
 ```
 $ source venv/bin/activate
 ```
@@ -97,6 +96,7 @@ $ sqlite3 daxlab.db < create_local_db.sql
 
 * Create an uploads directory
 ```
+$ cd ..
 $ mkdir uploads
 ```
 
