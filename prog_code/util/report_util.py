@@ -18,6 +18,7 @@ PRESENTATION_VALUE_NAME_MAP = {
     constants.POSSIBLY_WRONGLY_REC: 'possibly_wrongly_recorded',
     constants.EMERGENCY_REC: 'emergency',
     constants.IMPLIED_FALSE: 'implied_false',
+    constants.IMPLIED_TRUE: 'implied_true',
     constants.EXPLICIT_TRUE: 'explicit_true',
     constants.EXPLICIT_FALSE: 'explicit_false',
     constants.EXPLICIT_NONE: 'explicit_none',
@@ -28,7 +29,7 @@ PRESENTATION_VALUE_NAME_MAP = {
     constants.MALE: 'male',
     constants.FEMALE: 'female',
     constants.OTHER_GENDER: 'other_gender',
-    constants.ELEVEN_PRESUMED_TRUE: 'eleven_presumed_true'
+    constants.ELEVEN_PRESUMED_TRUE: 'explicit_true'
 }
 
 DEFAULT_MCDI = 'fullenglishmcdi'

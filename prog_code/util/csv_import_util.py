@@ -319,12 +319,17 @@ class UploadParserAutomaton:
         for (val, prototype) in zip(step_val[2:], self.__prototypes):
             
             converted_val = None
-            if val == '0':
-                converted_val = constants.EXPLICIT_FALSE
-            elif val == '1':
-                converted_val = constants.EXPLICIT_TRUE
-            elif val == 'na':
+            if val == 'na':
                 converted_val = constants.NO_DATA
+            elif val == 'y':
+                converted_val = constants.EXPLICIT_TRUE
+            elif val == 'n':
+                converted_val = constants.EXPLICIT_FALSE
+            else:
+                try:
+                    converted_val = int(val)
+                except ValueError:
+                    converted_val = None
             
             if converted_val == None:
                 self.enter_error_state(
