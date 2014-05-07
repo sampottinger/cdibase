@@ -17,7 +17,8 @@ CREATE TABLE parent_forms
     extra_categories INTEGER,
     languages TEXT,
     num_languages INTEGER,
-    hard_of_hearing INTEGER
+    hard_of_hearing INTEGER,
+    total_num_sessions INTEGER
 );
 
 CREATE TABLE percentile_tables
