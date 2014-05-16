@@ -281,7 +281,7 @@ def generate_study_report_csv(snapshots_from_study, presentation_format):
     rows = generate_study_report_rows(snapshots_from_study, presentation_format)
     rows = sort_by_study_order(rows, mcdi_format)
     csv_writer.writerows(
-        [[val.encode('ascii', 'replace') for unicode(val) in row] for row in rows]
+        [[unicode(val).encode('ascii', 'replace') for val in row] for row in rows]
     )
     return faux_file
 
