@@ -280,7 +280,9 @@ def generate_study_report_csv(snapshots_from_study, presentation_format):
         mcdi_format = db_util.load_mcdi_model(DEFAULT_MCDI)
     rows = generate_study_report_rows(snapshots_from_study, presentation_format)
     rows = sort_by_study_order(rows, mcdi_format)
-    csv_writer.writerows(rows)
+    csv_writer.writerows(
+        [[val.encode('ascii', 'replace') for val in row] for row in rows]
+    )
     return faux_file
 
 
