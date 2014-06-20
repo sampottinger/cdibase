@@ -39,7 +39,7 @@ class FieldInfo(object):
             return [val]
 
 
-class RawInterpretField(FieldInfo):
+class DateInterpretField(FieldInfo):
     """A value interpreter for filter operands that returns original input.
 
     User input interpreter for filter operand values that returns original user
@@ -49,12 +49,35 @@ class RawInterpretField(FieldInfo):
     def __init__(self, field_name):
         super(RawInterpretField, self).__init__(field_name)
 
+    def interpret_single(self, val):
+        parts = val.split('/')
+        return parts[2] + '/' + parts[0] + parts[1]
+
     def interpret_value(self, val):
         """Return user provided operand value without interpretation.
 
         @param val: The original user provided operand value.
         @type val: str
         @return: Originally provided value.
+        @rtype: str
+        """
+        vals = FieldInfo.interpret_value(self, val)
+        vals = map(lambda x: self.interpret_single(x), vals)
+        return vals
+
+
+class RawInterpretField(FieldInfo):
+    """A value interpreter for filter operands with date info."""
+
+    def __init__(self, field_name):
+        super(RawInterpretField, self).__init__(field_name)
+
+    def interpret_value(self, val):
+        """Return user provided operand interpreted as a date.
+
+        @param val: The original user provided operand value.
+        @type val: str
+        @return: Date transformed string.
         @rtype: str
         """
         vals = FieldInfo.interpret_value(self, val)
