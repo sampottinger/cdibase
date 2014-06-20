@@ -47,7 +47,7 @@ class DateInterpretField(FieldInfo):
     """
 
     def __init__(self, field_name):
-        super(RawInterpretField, self).__init__(field_name)
+        super(DateInterpretField, self).__init__(field_name)
 
     def interpret_single(self, val):
         parts = val.split('/')
