@@ -365,7 +365,7 @@ def list_stuides():
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        'SELECT DISTINCT study FROM snapshots',
+        'SELECT DISTINCT study FROM snapshots WHERE deleted = 0',
     )
     ret_val = map(lambda x: x[0], cursor.fetchall())
     connection.close()

@@ -59,10 +59,12 @@ def access_data():
     @return: Listing of available CSV rendering "formats" 
     @rtype: flask.Response
     """
+    formats = list(db_util.load_presentation_model_listing())
+    formats.reverse()
     return flask.render_template(
         'access_data.html',
         cur_page='access_data',
-        formats=db_util.load_presentation_model_listing(),
+        formats=formats,
         filters=map(interp_util.filter_to_str, session_util.get_filters()),
         studies=db_util.list_stuides(),
         **session_util.get_standard_template_values()
