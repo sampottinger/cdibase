@@ -51,7 +51,7 @@ class DateInterpretField(FieldInfo):
 
     def interpret_single(self, val):
         parts = val.split('/')
-        return parts[2] + '/' + parts[0] + parts[1]
+        return parts[2] + '/' + parts[0] + '/' + parts[1]
 
     def interpret_value(self, val):
         """Return user provided operand value without interpretation.
