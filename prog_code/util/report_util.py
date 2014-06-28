@@ -183,11 +183,16 @@ def generate_study_report_rows(snapshots_from_study, presentation_format):
         header information.
     @rtype: List of list of str.
     """
-    snapshot_contents = db_util.load_snapshot_contents(snapshots_from_study[0])
-    word_listing = map(
-        lambda x: x.word.encode('utf-8','ignore'),
-        snapshot_contents
-    )
+    word_listing_set = set()
+    for snapshot in snapshots_from_study:
+        snapshot_contents = db_util.load_snapshot_contents(snapshot)
+        candidate_word_listing = set(map(
+            lambda x: x.word.encode('utf-8','ignore'),
+            snapshot_contents
+        ))
+        word_listing_set = word_listing_set.union(candidate_word_listing)
+
+    word_listing = list(word_listing_set)
     word_listing.sort()
 
     serialized_snapshots = map(
