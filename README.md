@@ -4,9 +4,11 @@ Data management application for early language labs that allowing the reading, s
 
 <br>
 ### Authors and License
-Released under the [GNU GPL v3 License](https://www.gnu.org/licenses/gpl-3.0.txt), this open source project was started by [Sam Pottinger of Gleap LLC](http://gleap.org) and has enjoyed gracious contributions from [Professor Eliana Colunga's](http://psych.colorado.edu/~colunga/) [CU Language Project](http://psych.colorado.edu/~colungalab/CULanguage/CU-LANGUAGE.html) at the [University of Colorado Boulder](http://colorado.edu/) (though the project is not officially affiliated or owned by the university).
+Released under the [GNU GPL v3 License](https://www.gnu.org/licenses/gpl-3.0.txt), this open source project was started by [Sam Pottinger of Gleap LLC](http://gleap.org) and has enjoyed gracious guidance from [Professor Eliana Colunga's](http://psych.colorado.edu/~colunga/) [CU Language Project](http://psych.colorado.edu/~colungalab/CULanguage/CU-LANGUAGE.html) at the [University of Colorado Boulder](http://colorado.edu/) (though the project is not officially affiliated or owned by the university).
 
 [Sam Pottinger](http://gleap.org) continues to be the active maintainer / project lead.
+
+(c) 2014 [Sam Pottinger](http://gleap.org)
 
 <br>
 ### Background and Motivation
