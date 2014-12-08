@@ -52,7 +52,8 @@ TEST_MCDI_MODEL = models.MCDIFormat(
             {
                 'words': ['word3', 'word4', 'word5']
             }
-        ]
+        ],
+        'count_as_spoken': [1, 2]
     }
 )
 
@@ -143,8 +144,20 @@ class RecalcPercentilesTest(mox.MoxTestBase):
         test_snapshot = copy.deepcopy(TEST_SNAPSHOT)
 
         self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'load_snapshot_contents')
+
+        test_word_1 = models.SnapshotContent(0, '', 1, 0)
+        test_word_2 = models.SnapshotContent(0, '', 2, 0)
+        test_word_3 = models.SnapshotContent(0, '', 3, 0)
+        words_spoken = [test_word_1] * 31
+        words_spoken.extend([test_word_2] * 22)
+        words_spoken.extend([test_word_3] * 13)
+        db_util.load_snapshot_contents(test_snapshot).AndReturn(words_spoken)
+
         self.mox.ReplayAll()
 
         recalc_util.recalculate_age(test_snapshot)
         recalc_util.recalculate_percentile(test_snapshot, adapter)
         self.assertTrue(abs(test_snapshot.age - 17.71) < 0.01)
+        self.assertEqual(test_snapshot.words_spoken, 53)
+        self.assertEqual(test_snapshot.percentile, 14)

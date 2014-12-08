@@ -91,6 +91,15 @@ def recalculate_percentile(snapshot, cached_adapter):
         percentiles_name = meta_percentile_info['female']
 
     percentiles = cached_adapter.load_percentile_model(percentiles_name)
+
+    count_as_spoken_vals = mcdi_model.details['count_as_spoken']
+    individual_words = db_util.load_snapshot_contents(snapshot)
+    words_spoken = 0
+    for word in individual_words:
+        if word.value in count_as_spoken_vals:
+            words_spoken += 1
+
+    snapshot.words_spoken = words_spoken
     
     new_percentile = math_util.find_percentile(
         percentiles.details,
