@@ -19,16 +19,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @license: GNU GPL v3
 """
 
+import json
 import re
 
 import flask
 
 from ..util import constants
 from ..util import db_util
+from ..util import filter_util
 from ..util import interp_util
 from ..util import math_util
-from ..struct import models
+from ..util import recalc_util
 from ..util import session_util
+from ..struct import models
 
 from daxlabbase import app
 
@@ -313,3 +316,121 @@ def lookup_global_id(study_name, participant_study_id):
         return flask.Response(PARTICIPANT_NOT_FOUND_MSG)
     else:
         return flask.Response(str(global_id))
+
+
+@app.route('/base/edit_data/lookup_user', methods=['POST'])
+@session_util.require_login(enter_data=True)
+def lookup_studies():
+    """Lookup the studies, global DB ID, and metadata for a participant.
+
+    Lookup the global DB ID for a participant along with their studies and
+    study IDs as well as their current metadata (birthday, hard of hearing,
+    etc). This aids in helping users correct or update participant metadata.
+
+    @return: Flask reponse with JSON document containing a global ID (integer)
+        and studies (list) that itself contains objects with a study (string)
+        and study_id (integer).
+    @rtype: flask.Response or compatible
+    """
+    request = flask.request
+    lookup_method = request.form['method']
+
+    # Get the global ID
+    if lookup_method == 'by_study_id':
+        study_id = request.form['study_id']
+        study = request.form['study']
+        global_id = db_util.lookup_global_participant_id(study, study_id)
+    elif lookup_method == 'by_global_id':
+        global_id = int(request.form['global_id'])
+    else:
+        return ('Invalid lookup method', 400)
+
+    # Look up studies
+    filters = [models.Filter('child_id', 'eq', global_id)]
+    results = filter_util.run_search_query(
+        filters,
+        constants.SNAPSHOTS_DB_TABLE
+    )
+
+    # Extract metadata
+    example_snapshot = results[0]
+    metadata = {
+        'gender': example_snapshot.gender,
+        'birthday': example_snapshot.birthday,
+        'hard_of_hearing': example_snapshot.hard_of_hearing,
+        'languages': ','.join(example_snapshot.languages)
+    }
+
+    # Find unique set of study and study IDs
+    ret_set = set()
+    for result in results:
+        new_study_id_pair = (result.study, result.study_id)
+        ret_set.add(new_study_id_pair)
+
+    # Serialize and return to user as JSON
+    ret_dict = {
+        'global_id': global_id,
+        'studies': [],
+        'metadata': metadata
+    }
+
+    for (study, study_id) in ret_set:
+        ret_dict['studies'].append({
+            'study': study,
+            'study_id': study_id
+        })
+
+    return json.dumps(ret_dict)
+
+
+@app.route('/base/edit_data', methods=['POST'])
+@session_util.require_login(enter_data=True)
+def edit_metadata():
+    """Edit the metadata for a participant.
+
+    @return: Response with error or confirming operation.
+    @rtype: flask.Response or equivalent
+    """
+    request = flask.request
+    error = None
+
+    # Parse incoming new metadata
+    global_id = int(request.form['global_id'])
+    gender = int(request.form['gender'])
+    birthday_raw = request.form.get('birthday', '')
+    hard_of_hearing_selected = request.form.get('hard_of_hearing', 'off')
+    hard_of_hearing_selected == constants.FORM_SELECTED_VALUE
+    languages = request.form['languages']
+
+    # Check an interpret new metadata values
+    if hard_of_hearing_selected:
+        hard_of_hearing = constants.EXPLICIT_TRUE
+    else:
+        hard_of_hearing = constants.EXPLICIT_FALSE
+
+    if birthday_raw == '':
+        error = BIRTHDAY_NOT_PROVIDED_MSG
+    if not DATE_REGEX.match(birthday_raw):
+        error = BIRTHDAY_INVALID_FORMAT_MSG
+
+    if error:
+        return error, 400
+
+    # Update the snapshots
+    db_util.update_participant_metadata(
+        global_id,
+        gender,
+        birthday_raw,
+        hard_of_hearing,
+        languages
+    )
+
+    # Recalculate percentiles
+    filters = [models.Filter('child_id', 'eq', global_id)]
+    snapshots = filter_util.run_search_query(
+        filters,
+        constants.SNAPSHOTS_DB_TABLE
+    )
+    recalc_util.recalculate_ages_and_percentiles(snapshots)
+
+    return 'updated'

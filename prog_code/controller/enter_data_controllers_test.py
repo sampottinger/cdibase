@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import collections
 import copy
 import datetime
+import json
 
 import mox
 
@@ -26,7 +27,9 @@ import daxlabbase
 from ..struct import models
 from ..util import constants
 from ..util import db_util
+from ..util import filter_util
 from ..util import math_util
+from ..util import recalc_util
 from ..util import user_util
 
 TEST_EMAIL = 'test.email@example.com'
@@ -78,6 +81,7 @@ TEST_FORMAT = models.MCDIFormat(
 )
 
 TEST_STUDY_ID = '456'
+TEST_STUDY_ID_2 = '789'
 TEST_SNAPSHOT_ID = 789
 TEST_ITEMS_EXCLUDED = 3
 TEST_EXTRA_CATEGORIES = 4
@@ -86,6 +90,7 @@ TEST_LANGUAGES = set(['english'])
 TEST_NUM_LANGUAGES = 1
 TEST_HARD_OF_HEARING = False
 TEST_STUDY = 'test study'
+TEST_STUDY_2 = 'test study 2'
 TEST_BIRTHDAY = '2011/09/12'
 TEST_BIRTHDAY_DATE = datetime.date(2011, 9, 12)
 TEST_SESSION = '2013/09/12'
@@ -143,6 +148,29 @@ TEST_EXPECTED_SNAPSHOT = models.SnapshotMetadata(
     False
 )
 
+TEST_EXPECTED_SNAPSHOT_2 = models.SnapshotMetadata(
+    None,
+    TEST_DB_ID,
+    TEST_STUDY_ID_2,
+    TEST_STUDY_2,
+    constants.MALE,
+    TEST_AGE,
+    TEST_BIRTHDAY,
+    TEST_SESSION,
+    TEST_SESSION_NUM,
+    TEST_TOTAL_NUM_SESSIONS,
+    3,
+    TEST_ITEMS_EXCLUDED,
+    TEST_PERCENTILE,
+    TEST_EXTRA_CATEGORIES,
+    0,
+    TEST_LANGUAGES,
+    TEST_NUM_LANGUAGES,
+    'standard',
+    constants.EXPLICIT_FALSE,
+    False
+)
+
 TEST_EXPECTED_WORD_ENTRIES = {
     'cat_1_word_1': 1,
     'cat_1_word_2': 0,
@@ -159,6 +187,32 @@ class EnterDataControllersTests(mox.MoxTestBase):
         mox.MoxTestBase.setUp(self)
         self.app = daxlabbase.app
         self.app.debug = True
+
+    def check_lookup_studies_metadata(self, returned_metadata):
+        """Run assertions that the provided metadata matches the test snapshot.
+
+        @param returned_metadata: The metadata to check.
+        @type returned_metadata: dict
+        """
+        self.assertEqual(
+            returned_metadata['gender'],
+            TEST_EXPECTED_SNAPSHOT.gender
+        )
+
+        self.assertEqual(
+            returned_metadata['birthday'],
+            TEST_EXPECTED_SNAPSHOT.birthday
+        )
+
+        self.assertEqual(
+            returned_metadata['hard_of_hearing'],
+            TEST_EXPECTED_SNAPSHOT.hard_of_hearing
+        )
+
+        self.assertEqual(
+            returned_metadata['languages'],
+            ','.join(TEST_EXPECTED_SNAPSHOT.languages)
+        )
 
     def test_format_for_enter_data(self):
         self.mox.StubOutWithMock(user_util, 'get_user')
@@ -448,3 +502,165 @@ class EnterDataControllersTests(mox.MoxTestBase):
                 confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
                 self.assertEqual(error_attr, None)
                 self.assertNotEqual(confirmation_attr, None)
+
+    def test_lookup_studies_by_global_id(self):
+        ret_list = [
+            TEST_EXPECTED_SNAPSHOT,
+            TEST_EXPECTED_SNAPSHOT_2,
+            TEST_EXPECTED_SNAPSHOT,
+            TEST_EXPECTED_SNAPSHOT_2
+        ]
+
+        self.mox.StubOutWithMock(filter_util, 'run_search_query')
+        self.mox.StubOutWithMock(user_util, 'get_user')
+
+        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+        filter_util.run_search_query(
+            [models.Filter('child_id', 'eq', TEST_DB_ID)],
+            constants.SNAPSHOTS_DB_TABLE
+        ).AndReturn(ret_list)
+
+        self.mox.ReplayAll()
+
+        with self.app.test_client() as client:
+
+            with client.session_transaction() as sess:
+                sess['email'] = TEST_EMAIL
+
+            lookup_user_data = {
+                'method': 'by_global_id',
+                'global_id': TEST_DB_ID
+            }
+            result_info = client.post(
+                '/base/edit_data/lookup_user',
+                data=lookup_user_data
+            )
+
+        result = json.loads(result_info.data)
+        returned_global_id = result['global_id']
+        returned_studies = result['studies']
+        
+        self.assertEqual(returned_global_id, TEST_DB_ID)
+
+        self.assertEqual(len(returned_studies), 2)
+
+        if returned_studies[0]['study'] == TEST_STUDY:
+            self.assertEqual(returned_studies[0]['study'], TEST_STUDY)
+            self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID)
+            self.assertEqual(returned_studies[1]['study'], TEST_STUDY_2)
+            self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID_2)
+        else:
+            self.assertEqual(returned_studies[0]['study'], TEST_STUDY_2)
+            self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID_2)
+            self.assertEqual(returned_studies[1]['study'], TEST_STUDY)
+            self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID)
+
+        self.check_lookup_studies_metadata(result['metadata'])
+
+    def test_lookup_studies_by_study_id(self):
+        ret_list = [
+            TEST_EXPECTED_SNAPSHOT,
+            TEST_EXPECTED_SNAPSHOT_2,
+            TEST_EXPECTED_SNAPSHOT,
+            TEST_EXPECTED_SNAPSHOT_2
+        ]
+
+        self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(filter_util, 'run_search_query')
+        self.mox.StubOutWithMock(db_util, 'lookup_global_participant_id')
+
+        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+        db_util.lookup_global_participant_id(TEST_STUDY, TEST_STUDY_ID
+            ).AndReturn(TEST_DB_ID)
+        filter_util.run_search_query(
+            [models.Filter('child_id', 'eq', TEST_DB_ID)],
+            constants.SNAPSHOTS_DB_TABLE
+        ).AndReturn(ret_list)
+
+        self.mox.ReplayAll()
+
+        with self.app.test_client() as client:
+
+            with client.session_transaction() as sess:
+                sess['email'] = TEST_EMAIL
+
+            lookup_user_data = {
+                'method': 'by_study_id',
+                'study': TEST_STUDY,
+                'study_id': TEST_STUDY_ID
+            }
+            result_info = client.post(
+                '/base/edit_data/lookup_user',
+                data=lookup_user_data
+            )
+
+        result = json.loads(result_info.data)
+        returned_global_id = result['global_id']
+        returned_studies = result['studies']
+        
+        self.assertEqual(returned_global_id, TEST_DB_ID)
+
+        self.assertEqual(len(returned_studies), 2)
+
+        if returned_studies[0]['study'] == TEST_STUDY:
+            self.assertEqual(returned_studies[0]['study'], TEST_STUDY)
+            self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID)
+            self.assertEqual(returned_studies[1]['study'], TEST_STUDY_2)
+            self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID_2)
+        else:
+            self.assertEqual(returned_studies[0]['study'], TEST_STUDY_2)
+            self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID_2)
+            self.assertEqual(returned_studies[1]['study'], TEST_STUDY)
+            self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID)
+
+        self.check_lookup_studies_metadata(result['metadata'])
+
+    def test_edit_metadata(self):
+        new_birthday = '2014/12/28'
+        new_languages = 'english,spanish'
+        ret_list = [
+            TEST_EXPECTED_SNAPSHOT,
+            TEST_EXPECTED_SNAPSHOT_2,
+        ]
+
+        self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(db_util, 'update_participant_metadata')
+        self.mox.StubOutWithMock(filter_util, 'run_search_query')
+        self.mox.StubOutWithMock(
+            recalc_util,
+            'recalculate_ages_and_percentiles'
+        )
+        
+        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+        db_util.update_participant_metadata(
+            TEST_DB_ID,
+            constants.FEMALE,
+            new_birthday,
+            constants.EXPLICIT_TRUE,
+            new_languages
+        )
+        filter_util.run_search_query(
+            [models.Filter('child_id', 'eq', TEST_DB_ID)],
+            constants.SNAPSHOTS_DB_TABLE
+        ).AndReturn(ret_list)
+        recalc_util.recalculate_ages_and_percentiles(ret_list)
+
+        self.mox.ReplayAll()
+
+        with self.app.test_client() as client:
+
+            with client.session_transaction() as sess:
+                sess['email'] = TEST_EMAIL
+
+            new_metadata = {
+                'global_id': TEST_DB_ID,
+                'gender': constants.FEMALE,
+                'birthday': new_birthday,
+                'hard_of_hearing': constants.FORM_SELECTED_VALUE,
+                'languages': new_languages
+            }
+
+            client.post(
+                '/base/edit_data',
+                data=new_metadata
+            )

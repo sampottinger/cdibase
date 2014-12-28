@@ -348,6 +348,20 @@ class Filter:
         except TypeError:
             self.operand_float = None
 
+    def __eq__(self, other):
+        """Checks if this filter will cause the same query as another filter.
+
+        @param other: The other field to check equality against.
+        @type other: models.Filter
+        @return: True if self and other would produce the same query component.
+                False otherwise.
+        @rtype: bool
+        """
+        fields_equal = self.field == other.field
+        operators_equal = self.operator == other.operator
+        operands_equal = self.operand == other.operand
+        return fields_equal and operators_equal and operands_equal
+
 
 class User:
     """Record of a user account providing someone access to DaxlabBase."""

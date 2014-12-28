@@ -691,6 +691,54 @@ def clean_up_date(target_val):
     return '%d/%02d/%02d' % (year, month, day)
 
 
+def update_participant_metadata(child_id, gender, birthday_str,
+    hard_of_hearing, languages, cursor=None):
+    """Update the participant metadata for all his / her snapshots.
+
+    Update the "transient" metadata (metadata more likely needed to be changed
+    due to clerical error or new information based on user interviews) for a
+    participant across all of his or her snapshots.
+
+    @param child_id: The global database ID of the participant whose snapshots
+        should be updated.
+    @type child_id: int
+    @param gender: Constant indicating the gender of the participant (male,
+        female, or other) that corresponds to variables in the constants module.
+    @type gender: int
+    @param birthday_str: The string indicating the birthday of the participant
+        as an ISO 8601 string without the time components.
+    @type birthday_str: str
+    @param hard_of_hearing: Constant indicating the hard of hearing status for a
+        participant. Should correspond to a constant in the constants module.
+    @type hard_of_hearing: int
+    @param languages: Comma separated list of languages the participant speaks.
+    @type languages: str
+    """
+
+    cursor_provided = cursor != None
+    if not cursor_provided:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+    cols = ['gender', 'birthday', 'hard_of_hearing', 'languages']
+    col_statements = map(lambda x: x + '=?', cols)
+    cmd = 'UPDATE snapshots SET %s WHERE child_id=?' % ','.join(col_statements)
+    cursor.execute(
+        cmd,
+        (
+            gender,
+            birthday_str,
+            hard_of_hearing,
+            languages,
+            child_id
+        )
+    )
+
+    if not cursor_provided:
+        connection.commit()
+        connection.close()
+
+
 def update_snapshot(snapshot_metadata, cursor=None):
     cursor_provided = cursor != None
     if not cursor_provided:
