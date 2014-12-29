@@ -49,7 +49,11 @@
                         {% endif %}
 
                         {% if user.can_import_data %}
-                        <li {% if cur_page == "import_data" %}class="active"{% endif %}><a href="/base/import_data">Import Data</a></li>
+                        <li {% if cur_page == "import_data" %}class="active"{% endif %}><a href="/base/import_data">Import</a></li>
+                        {% endif %}
+
+                        {% if user.can_enter_data %}
+                        <li {% if cur_page == "edit_data" %}class="active"{% endif %}><a href="/base/edit_data">Update Participants</a></li>
                         {% endif %}
 
                         {% if user.can_edit_parents %}

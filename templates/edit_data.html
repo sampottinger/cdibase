@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block contents %}
-<!-- Interface allowing users to import completed CDIs as CSV file uploads.
+<!-- Interface allowing users to edit participant metadata.
 
 Copyright (C) 2014 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
 
@@ -128,6 +128,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                         <p id="update-success-msg"><i class="icon-thumbs-up icon-white"></i> Participant information updated.</p>
                         <p id="update-fail-msg"><i class="icon-ban-circle icon-white"></i> Participant information update failed. <span id="update-fail-msg-details"></span></p>
                     </div>
+                    <p id="update-notice">Note that that the application will automatically recalculate a participant's previous CDI percentiles upon updating his / her information.</p>
                 </div>
             </div>
         </div>

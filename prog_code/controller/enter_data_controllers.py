@@ -390,6 +390,29 @@ def lookup_studies():
     return json.dumps(ret_dict)
 
 
+@app.route('/base/edit_data')
+@session_util.require_login(enter_data=True)
+def render_edit_metadata_ui():
+    """Display UI that allows the user to update participant metadata.
+
+    Display UI that allows the user to update participant demographic and other
+    personal information such as birthdate, hard of hearing status, gender,
+    etc.
+
+    @return: Rendered edit participant UI
+    @rtype: flask.Response or equivalent
+    """
+    return flask.render_template(
+        'edit_data.html',
+        cur_page='edit_data',
+        male_val=constants.MALE,
+        female_val=constants.FEMALE,
+        other_gender_val=constants.OTHER_GENDER,
+        true_val=constants.EXPLICIT_TRUE,
+        false_val=constants.EXPLICIT_FALSE,
+        **session_util.get_standard_template_values()
+    )
+
 @app.route('/base/edit_data', methods=['POST'])
 @session_util.require_login(enter_data=True)
 def edit_metadata():

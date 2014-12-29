@@ -1,8 +1,33 @@
+/**
+ * Client-side logic for updating participant metadata.
+ *
+ * Copyright (C) 2014 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**/
+
 var ENTER_KEY = 13;
 
 var selectedGlobalID = null;
 
 
+/**
+ * Callback function when the user changes the participant lookup method.
+ *
+ * Callback function that changes the UI depending on which lookup method the
+ * user selected (by database global ID or by study + study ID).
+**/
 $('#method-dropdown').change(function() {
     var selectedMethod = $('#method-dropdown').find(':selected').val();
 
@@ -15,6 +40,15 @@ $('#method-dropdown').change(function() {
     }
 });
 
+
+/**
+ * Hide all of the UI for looking up ("loading") a participant to edit.
+ *
+ * Convenience function that hides all of the user interface elements used to
+ * look up a participant whose metadata needs updating. Some of the UI elements
+ * are shown or hidden depending on the step the user is on within the edit
+ * participant metadata proceedure.
+**/
 function hideAllForLoading() {
     $('#inner-lookup-instructions-panel').hide();
     $('#expected-lookup-error').hide();
@@ -23,12 +57,25 @@ function hideAllForLoading() {
     $('#edit-pane').hide();
 }
 
+
+/**
+ * Hide all of the UI for editing ("updating") a participant's metadata.
+ *
+ * Convenience function that hides all of the user interface elements used to
+ * edit a participant's metadata. Some of the UI elements are shown or hidden
+ * depending on the step the user is on within the edit participant metadata
+ * proceedure.
+**/
 function hideAllForUpdate() {
     $('#update-success-msg').hide();
     $('#update-fail-msg').hide();
     $('#loading-update-panel').hide();
 }
 
+
+/**
+ * Respond to the user having successfully retrieved a participant.
+**/
 function onLookupSuccess(data) {
     hideAllForLoading();
     hideAllForUpdate();
@@ -67,24 +114,46 @@ function onLookupSuccess(data) {
     $('#edit-pane').fadeIn();
 }
 
+
+/**
+ * Respond to an unexpected error in a user looking up a participant.
+**/
 function onLookupUnexpectedFailure() {
     hideAllForLoading();
     $('#unexpected-lookup-error').fadeIn();
     return false;
 }
 
+
+/**
+ * Respond to a user asking for a participant not in the lab database.
+**/
 function onLookupNotFound() {
     hideAllForLoading();
     $('#expected-lookup-error').fadeIn();
     return false;
 }
 
+
+/**
+ * Respond to a user having successfully updated a participant's metadata.
+ *
+ * Show a confirmation / success message in response to a user having
+ * successfully updated a participant's metadata.
+**/
 function onUpdateSuccess() {
     hideAllForUpdate();
     $('#update-success-msg').slideDown();
     return false;
 }
 
+
+/**
+ * Respond to a user having tried but failed to update a participant's metadata.
+ *
+ * Show an error message with a description for why a user's attempt to update
+ * a participant's metadata failed.
+**/
 function onUpdateFailure(jqXHR) {
     hideAllForUpdate();
     $('#update-fail-msg-details').html(jqXHR.responseText);
@@ -92,6 +161,10 @@ function onUpdateFailure(jqXHR) {
     return false;
 }
 
+
+/**
+ * Lookup a participant based on user input. 
+**/
 function executeLookup() {
     var selectedMethod = $('#method-dropdown').find(':selected').val();
     var data;
@@ -130,6 +203,10 @@ function executeLookup() {
     return false;
 }
 
+
+/**
+ * Update a participant's metadata given updated user input.
+**/
 function executeUpdate() {
     if(selectedGlobalID === null) {
         return;
@@ -181,6 +258,8 @@ function executeUpdate() {
     return false;
 }
 
+
+// Attach listeners to textboxes and buttons
 $('.lookup-end-input').keyup(function(e){
     if (e.keyCode == ENTER_KEY) { executeLookup(); }
 });
