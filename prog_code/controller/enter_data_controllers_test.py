@@ -86,7 +86,7 @@ TEST_SNAPSHOT_ID = 789
 TEST_ITEMS_EXCLUDED = 3
 TEST_EXTRA_CATEGORIES = 4
 TEST_SESSION_NUM = 4
-TEST_LANGUAGES = set(['english'])
+TEST_LANGUAGES = 'english'
 TEST_NUM_LANGUAGES = 1
 TEST_HARD_OF_HEARING = False
 TEST_STUDY = 'test study'
@@ -211,7 +211,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
 
         self.assertEqual(
             returned_metadata['languages'],
-            ','.join(TEST_EXPECTED_SNAPSHOT.languages)
+            TEST_EXPECTED_SNAPSHOT.languages
         )
 
     def test_format_for_enter_data(self):
@@ -570,7 +570,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         self.mox.StubOutWithMock(db_util, 'lookup_global_participant_id')
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        db_util.lookup_global_participant_id(TEST_STUDY, TEST_STUDY_ID
+        db_util.lookup_global_participant_id(TEST_STUDY, int(TEST_STUDY_ID)
             ).AndReturn(TEST_DB_ID)
         filter_util.run_search_query(
             [models.Filter('child_id', 'eq', TEST_DB_ID)],
@@ -617,7 +617,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
 
     def test_edit_metadata(self):
         new_birthday = '2014/12/28'
-        new_languages = 'english,spanish'
+        new_languages = ['english', 'spanish']
         ret_list = [
             TEST_EXPECTED_SNAPSHOT,
             TEST_EXPECTED_SNAPSHOT_2,
@@ -656,8 +656,8 @@ class EnterDataControllersTests(mox.MoxTestBase):
                 'global_id': TEST_DB_ID,
                 'gender': constants.FEMALE,
                 'birthday': new_birthday,
-                'hard_of_hearing': constants.FORM_SELECTED_VALUE,
-                'languages': new_languages
+                'hard_of_hearing': constants.EXPLICIT_TRUE,
+                'languages': ','.join(new_languages)
             }
 
             client.post(

@@ -712,7 +712,7 @@ def update_participant_metadata(child_id, gender, birthday_str,
         participant. Should correspond to a constant in the constants module.
     @type hard_of_hearing: int
     @param languages: Comma separated list of languages the participant speaks.
-    @type languages: str
+    @type languages: list of str
     """
 
     cursor_provided = cursor != None
@@ -729,7 +729,7 @@ def update_participant_metadata(child_id, gender, birthday_str,
             gender,
             birthday_str,
             hard_of_hearing,
-            languages,
+            ','.join(languages),
             child_id
         )
     )

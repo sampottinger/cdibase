@@ -109,7 +109,7 @@ class DBUtilTests(mox.MoxTestBase):
             TEST_SNAPSHOT.gender,
             TEST_SNAPSHOT.birthday,
             TEST_SNAPSHOT.hard_of_hearing,
-            TEST_SNAPSHOT.languages,
+            TEST_SNAPSHOT.languages.split(','),
             cursor=fake_cursor
         )
 

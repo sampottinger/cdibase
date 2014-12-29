@@ -56,6 +56,7 @@ EXTRA_CATEGORIES_INVALID_MSG = 'Extra categories should be a whole number.'
 TOTAL_NUM_SESSION_NOT_PROVIDED_MSG = 'Total number sessions was empty.'
 NUM_SESSION_INVALID_MSG = 'Total number sessions should be a whole number.'
 BIRTHDAY_INVALID_FORMAT_MSG = 'Birthday must be of form YYYY/MM/DD.'
+BIRTHDAY_INVALID_FORMAT_REARRANGE_MSG = 'Birthday entered in incorrect format.'
 SESSION_DATE_INVALID_FORMAT_MSG = 'Session date must be of form YYYY/MM/DD.'
 WORD_VALUE_MISSING_MSG = '%s value missing.'
 WORD_VALUE_INVALID_MSG = '%s value invalid'
@@ -274,7 +275,7 @@ def enter_data_form(format_name):
             percentile,
             extra_categories,
             revision,
-            languages,
+            ','.join(languages),
             len(languages),
             selected_format.details['meta']['mcdi_type'],
             hard_of_hearing,
@@ -337,11 +338,13 @@ def lookup_studies():
 
     # Get the global ID
     if lookup_method == 'by_study_id':
-        study_id = request.form['study_id']
+        study_id = interp_util.safe_int_interpret(request.form['study_id'])
+        if study_id == None: return ('Study ID not provided', 404)
         study = request.form['study']
         global_id = db_util.lookup_global_participant_id(study, study_id)
     elif lookup_method == 'by_global_id':
-        global_id = int(request.form['global_id'])
+        global_id = interp_util.safe_int_interpret(request.form['global_id'])
+        if global_id == None: return ('Global ID not provided', 404)
     else:
         return ('Invalid lookup method', 400)
 
@@ -352,13 +355,17 @@ def lookup_studies():
         constants.SNAPSHOTS_DB_TABLE
     )
 
+    # Check if results available
+    if len(results) == 0:
+        return ('No participant found.', 404)
+
     # Extract metadata
     example_snapshot = results[0]
     metadata = {
         'gender': example_snapshot.gender,
         'birthday': example_snapshot.birthday,
         'hard_of_hearing': example_snapshot.hard_of_hearing,
-        'languages': ','.join(example_snapshot.languages)
+        'languages': example_snapshot.languages
     }
 
     # Find unique set of study and study IDs
@@ -395,26 +402,28 @@ def edit_metadata():
     error = None
 
     # Parse incoming new metadata
-    global_id = int(request.form['global_id'])
-    gender = int(request.form['gender'])
-    birthday_raw = request.form.get('birthday', '')
-    hard_of_hearing_selected = request.form.get('hard_of_hearing', 'off')
-    hard_of_hearing_selected == constants.FORM_SELECTED_VALUE
-    languages = request.form['languages']
+    global_id = interp_util.safe_int_interpret(request.form['global_id'])
+    gender = interp_util.safe_int_interpret(request.form['gender'])
+    birthday_raw = request.form['birthday']
+    languages = request.form['languages'].split(',')
+    hard_of_hearing = interp_util.safe_int_interpret(
+        request.form['hard_of_hearing']
+    )
 
     # Check an interpret new metadata values
-    if hard_of_hearing_selected:
-        hard_of_hearing = constants.EXPLICIT_TRUE
-    else:
-        hard_of_hearing = constants.EXPLICIT_FALSE
+    if global_id == None:
+        error = GLOBAL_ID_NOT_PROVIDED_MSG
+
+    if gender == None:
+        error = GENDER_NOT_PROVIDED_MSG
 
     if birthday_raw == '':
         error = BIRTHDAY_NOT_PROVIDED_MSG
     if not DATE_REGEX.match(birthday_raw):
-        error = BIRTHDAY_INVALID_FORMAT_MSG
+        error = BIRTHDAY_INVALID_FORMAT_REARRANGE_MSG
 
     if error:
-        return error, 400
+        return (error, 400)
 
     # Update the snapshots
     db_util.update_participant_metadata(
@@ -433,4 +442,4 @@ def edit_metadata():
     )
     recalc_util.recalculate_ages_and_percentiles(snapshots)
 
-    return 'updated'
+    return json.dumps({'result': 'updated'})
