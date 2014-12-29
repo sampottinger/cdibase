@@ -338,8 +338,9 @@ def lookup_studies():
 
     # Get the global ID
     if lookup_method == 'by_study_id':
-        study_id = interp_util.safe_int_interpret(request.form['study_id'])
-        if study_id == None: return ('Study ID not provided', 404)
+        study_id = request.form['study_id']
+        if study_id == None or study_id == '':
+            return ('Study ID not provided', 404)
         study = request.form['study']
         global_id = db_util.lookup_global_participant_id(study, study_id)
     elif lookup_method == 'by_global_id':

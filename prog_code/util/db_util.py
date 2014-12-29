@@ -558,8 +558,9 @@ def lookup_global_participant_id(study, participant_study_id):
         (study, participant_study_id)
     )
     ret_values = cursor.fetchone()
+    connection.close()
+    
     if ret_values == None:
-        connection.close()
         return None
 
     ret_val = ret_values[0]

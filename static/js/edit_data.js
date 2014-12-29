@@ -178,8 +178,8 @@ function executeLookup() {
         } else if(selectedMethod === 'by_study_id') {
             data = {
                 method: 'by_study_id',
-                study_id: $('#study-input').val(),
-                study: $('#study-id-input').val()
+                study_id: $('#study-id-input').val(),
+                study: $('#study-input').val()
             };
         }
 
