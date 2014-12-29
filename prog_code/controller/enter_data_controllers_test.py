@@ -570,7 +570,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         self.mox.StubOutWithMock(db_util, 'lookup_global_participant_id')
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        db_util.lookup_global_participant_id(TEST_STUDY, int(TEST_STUDY_ID)
+        db_util.lookup_global_participant_id(TEST_STUDY, TEST_STUDY_ID
             ).AndReturn(TEST_DB_ID)
         filter_util.run_search_query(
             [models.Filter('child_id', 'eq', TEST_DB_ID)],
