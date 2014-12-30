@@ -42,6 +42,11 @@
     margin-bottom: 20px;
 }
 
+.form-entry-long
+{
+    margin-bottom: 30px;
+}
+
 .error
 {
     background-color: #C00000;
