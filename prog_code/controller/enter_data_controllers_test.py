@@ -506,8 +506,6 @@ class EnterDataControllersTests(mox.MoxTestBase):
     def test_lookup_studies_by_global_id(self):
         ret_list = [
             TEST_EXPECTED_SNAPSHOT,
-            TEST_EXPECTED_SNAPSHOT_2,
-            TEST_EXPECTED_SNAPSHOT,
             TEST_EXPECTED_SNAPSHOT_2
         ]
 
@@ -538,7 +536,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
 
         result = json.loads(result_info.data)
         returned_global_id = result['global_id']
-        returned_studies = result['studies']
+        returned_studies = result['cdis']
         
         self.assertEqual(returned_global_id, TEST_DB_ID)
 
@@ -559,8 +557,6 @@ class EnterDataControllersTests(mox.MoxTestBase):
 
     def test_lookup_studies_by_study_id(self):
         ret_list = [
-            TEST_EXPECTED_SNAPSHOT,
-            TEST_EXPECTED_SNAPSHOT_2,
             TEST_EXPECTED_SNAPSHOT,
             TEST_EXPECTED_SNAPSHOT_2
         ]
@@ -596,7 +592,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
 
         result = json.loads(result_info.data)
         returned_global_id = result['global_id']
-        returned_studies = result['studies']
+        returned_studies = result['cdis']
         
         self.assertEqual(returned_global_id, TEST_DB_ID)
 
@@ -637,7 +633,11 @@ class EnterDataControllersTests(mox.MoxTestBase):
             constants.FEMALE,
             new_birthday,
             constants.EXPLICIT_TRUE,
-            new_languages
+            new_languages,
+            snapshot_ids=[
+                {'study': TEST_STUDY, 'id': 1},
+                {'study': TEST_STUDY_2, 'id': 2}
+            ]
         )
         filter_util.run_search_query(
             [models.Filter('child_id', 'eq', TEST_DB_ID)],
@@ -657,7 +657,11 @@ class EnterDataControllersTests(mox.MoxTestBase):
                 'gender': constants.FEMALE,
                 'birthday': new_birthday,
                 'hard_of_hearing': constants.EXPLICIT_TRUE,
-                'languages': ','.join(new_languages)
+                'languages': ','.join(new_languages),
+                'snapshot_ids': json.dumps([
+                    {'study': TEST_STUDY, 'id': 1},
+                    {'study': TEST_STUDY_2, 'id': 2}
+                ])
             }
 
             client.post(

@@ -360,33 +360,33 @@ def lookup_studies():
     if len(results) == 0:
         return ('No participant found.', 404)
 
-    # Extract metadata
-    example_snapshot = results[0]
+    # Extract metadata from most recent snapshot
+    most_recent_cdi = results[-1]
     metadata = {
-        'gender': example_snapshot.gender,
-        'birthday': example_snapshot.birthday,
-        'hard_of_hearing': example_snapshot.hard_of_hearing,
-        'languages': example_snapshot.languages
+        'gender': most_recent_cdi.gender,
+        'birthday': most_recent_cdi.birthday,
+        'hard_of_hearing': most_recent_cdi.hard_of_hearing,
+        'languages': most_recent_cdi.languages
     }
 
     # Find unique set of study and study IDs
-    ret_set = set()
+    ret_cdi_list = []
     for result in results:
-        new_study_id_pair = (result.study, result.study_id)
-        ret_set.add(new_study_id_pair)
+        cdi = {
+            'study': result.study,
+            'study_id': result.study_id,
+            'date': result.session_date,
+            'id': result.session_num
+        }
+        ret_cdi_list.append(cdi)
+    ret_cdi_list.sort(key=lambda x: x['date'])
 
     # Serialize and return to user as JSON
     ret_dict = {
         'global_id': global_id,
-        'studies': [],
+        'cdis': ret_cdi_list,
         'metadata': metadata
     }
-
-    for (study, study_id) in ret_set:
-        ret_dict['studies'].append({
-            'study': study,
-            'study_id': study_id
-        })
 
     return json.dumps(ret_dict)
 
@@ -455,7 +455,8 @@ def edit_metadata():
         gender,
         birthday_raw,
         hard_of_hearing,
-        languages
+        languages,
+        snapshot_ids=json.loads(request.form['snapshot_ids'])
     )
 
     # Recalculate percentiles

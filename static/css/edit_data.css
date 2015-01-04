@@ -44,6 +44,10 @@
     display: none;
 }
 
+#cdi-selector-header {
+    min-width: 30px !important;
+}
+
 #edit-pane {
     display: none;
 }
@@ -75,9 +79,13 @@
     color: #757575;
 }
 
+#study-table {
+    font-size: 12px;
+}
+
 #study-table th {
     font-weight: normal;
-    min-width: 100px;
+    min-width: 80px;
     text-align: left;
 }
 

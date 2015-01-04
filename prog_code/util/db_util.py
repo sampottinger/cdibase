@@ -693,7 +693,7 @@ def clean_up_date(target_val):
 
 
 def update_participant_metadata(child_id, gender, birthday_str,
-    hard_of_hearing, languages, cursor=None):
+    hard_of_hearing, languages, snapshot_ids=None, cursor=None):
     """Update the participant metadata for all his / her snapshots.
 
     Update the "transient" metadata (metadata more likely needed to be changed
@@ -722,18 +722,28 @@ def update_participant_metadata(child_id, gender, birthday_str,
         cursor = connection.cursor()
 
     cols = ['gender', 'birthday', 'hard_of_hearing', 'languages']
+    cmd_template = None
+    if snapshot_ids:
+        cmd_template = 'UPDATE snapshots SET %s WHERE child_id=? AND '
+        cmd_template += 'study=? AND session_num=?'
+    else:
+        cmd_template = 'UPDATE snapshots SET %s WHERE child_id=?'
+
     col_statements = map(lambda x: x + '=?', cols)
-    cmd = 'UPDATE snapshots SET %s WHERE child_id=?' % ','.join(col_statements)
-    cursor.execute(
-        cmd,
-        (
-            gender,
-            birthday_str,
-            hard_of_hearing,
-            ','.join(languages),
-            child_id
-        )
-    )
+    col_strs = ','.join(col_statements)
+    cmd_final = cmd_template % col_strs
+    run_metadata_update = lambda params: cursor.execute(cmd_final, params)
+
+    if snapshot_ids:
+        for snapshot_id in snapshot_ids:
+            params = (gender, birthday_str, hard_of_hearing,
+                ','.join(languages), child_id, snapshot_id['study'],
+                snapshot_id['id'])
+            run_metadata_update(params)
+    else:
+        params = (gender, birthday_str, hard_of_hearing, ','.join(languages),
+            child_id)
+        run_metadata_update(params)
 
     if not cursor_provided:
         connection.commit()

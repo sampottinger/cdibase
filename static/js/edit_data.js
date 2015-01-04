@@ -73,6 +73,37 @@ function hideAllForUpdate() {
 }
 
 
+function makeDateHuman(isoDate) {
+    var components = isoDate.split('/');
+    var humanDate;
+
+    if (components.length === 3) {
+        humanDate = components[1] + '/';
+        humanDate += components[2] + '/';
+        humanDate += components[0];
+    } else {
+        humanDate = isoDate;
+    }
+
+    return humanDate;
+}
+
+
+function makeDateISO(humanDate) {
+    var components = humanDate.split('/');
+    var isoDate;
+    if (components.length == 3) {
+        isoDate = components[2] + '/';
+        isoDate += components[0] + '/';
+        isoDate += components[1];
+    } else {
+        isoDate = humanDate;
+    }
+
+    return isoDate;
+}
+
+
 /**
  * Respond to the user having successfully retrieved a participant.
 **/
@@ -84,10 +115,7 @@ function onLookupSuccess(data) {
 
     // Rearrange birthday
     var isoBirthday = data['metadata']['birthday'];
-    var birthdayComponents = isoBirthday.split('/');
-    var humanBirthday = birthdayComponents[1] + '/';
-    humanBirthday += birthdayComponents[2] + '/';
-    humanBirthday += birthdayComponents[0];
+    var humanBirthday = makeDateHuman(isoBirthday);
 
     // Display free text properties
     $('#global-id-display').html(selectedGlobalID);
@@ -104,8 +132,16 @@ function onLookupSuccess(data) {
 
     // Display table of studies
     $('#study-body').find('tr').remove();
-    data['studies'].forEach(function(studyInfo) {
+    data['cdis'].forEach(function(studyInfo) {
+        var checkboxCode = '<td class="cdi-selector-holder">'
+        checkboxCode += '<input type="checkbox" class="cdi-selector" '
+        checkboxCode += 'study="' + studyInfo['study'] + '" ';
+        checkboxCode += 'studyid="' + studyInfo['id'] + '"';
+        checkboxCode += '></input></td>';
+
         var row = $('<tr>');
+        row.append(checkboxCode);
+        row.append('<td>' + makeDateHuman(studyInfo['date']) + '</td>');
         row.append('<td>' + studyInfo['study'] + '</td>');
         row.append('<td>' + studyInfo['study_id'] + '</td>');
         $('#study-body').append(row);
@@ -219,22 +255,23 @@ function executeUpdate() {
         var hardOfHearingVal = $('.hard-of-hearing-radio:checked').val();
 
         // Rearrange birthday if date provided with forward slashes
-        var birthdayComponents = rawBirthdayVal.split('/');
-        var birthdayVal;
-        if (birthdayComponents.length == 3) {
-            var birthdayVal = birthdayComponents[2] + '/';
-            birthdayVal += birthdayComponents[0] + '/';
-            birthdayVal += birthdayComponents[1];
-        } else {
-            birthdayVal = rawBirthdayVal;
-        }
+        var birthdayVal = makeDateISO(rawBirthdayVal);
+
+        var snapshotIDs = [];
+        $('.cdi-selector:checked').each(function() {
+            var selection = $(this);
+            var study = selection.attr('study');
+            var id = parseInt(selection.attr('studyid'));
+            snapshotIDs.push({study: study, id: id});
+        });
 
         var data = {
             global_id: selectedGlobalID,
             gender: genderVal,
             birthday: birthdayVal,
             languages: languagesVal,
-            hard_of_hearing: hardOfHearingVal
+            hard_of_hearing: hardOfHearingVal,
+            snapshot_ids: JSON.stringify(snapshotIDs)
         };
 
         $.ajax({

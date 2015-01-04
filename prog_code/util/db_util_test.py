@@ -101,7 +101,7 @@ class DBUtilTests(mox.MoxTestBase):
         self.assertEqual(TEST_SNAPSHOT.child_id, test_command[1][0])
         self.assertEqual(TEST_SNAPSHOT.languages, test_command[1][14])
 
-    def test_update_participant_metadata(self):
+    def test_update_participant_metadata_all(self):
         fake_cursor = FakeCursor()
 
         db_util.update_participant_metadata(
@@ -122,3 +122,34 @@ class DBUtilTests(mox.MoxTestBase):
         self.assertEqual(TEST_SNAPSHOT.hard_of_hearing, test_command[1][2])
         self.assertEqual(TEST_SNAPSHOT.languages, test_command[1][3])
         self.assertEqual(TEST_SNAPSHOT.child_id, test_command[1][4])
+
+    def test_update_participant_metadata_select(self):
+        fake_cursor = FakeCursor()
+
+        db_util.update_participant_metadata(
+            TEST_SNAPSHOT.child_id,
+            TEST_SNAPSHOT.gender,
+            TEST_SNAPSHOT.birthday,
+            TEST_SNAPSHOT.hard_of_hearing,
+            TEST_SNAPSHOT.languages.split(','),
+            cursor=fake_cursor,
+            snapshot_ids=[
+                {'study': 'test-study-1', 'id': 1},
+                {'study': 'test-study-1', 'id': 2}
+            ]
+        )
+
+        self.assertEqual(len(fake_cursor.commands), 2)
+
+        test_command = fake_cursor.commands[0]
+        self.assertEqual(TEST_SNAPSHOT.gender, test_command[1][0])
+        self.assertEqual(TEST_SNAPSHOT.birthday, test_command[1][1])
+        self.assertEqual(TEST_SNAPSHOT.hard_of_hearing, test_command[1][2])
+        self.assertEqual(TEST_SNAPSHOT.languages, test_command[1][3])
+        self.assertEqual(TEST_SNAPSHOT.child_id, test_command[1][4])
+        self.assertEqual('test-study-1', test_command[1][5])
+        self.assertEqual(1, test_command[1][6])
+
+        test_command = fake_cursor.commands[1]
+        self.assertEqual('test-study-1', test_command[1][5])
+        self.assertEqual(2, test_command[1][6])
