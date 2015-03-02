@@ -1,5 +1,14 @@
 {% extends "base.html" %}
 
+{% block head %}
+<link href="/static/css/home.css" rel="stylesheet" media="screen">
+{% endblock %}
+
+{% block jsinclude %}
+<script type="text/javascript" src="/static/js/d3.v3.min.js"></script>
+<script type="text/javascript" src="/static/js/homeviz.js"></script>
+{% endblock %}
+
 {% block contents %}
 <!-- Interface allowing users to navigate to other application sections.
 
@@ -19,43 +28,56 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<div class="hero-unit">
-    <h3>Making daxlab's data nicer since 2012</h3>
-    <p>
-        DaxlabBase supports the <a href="">CU Language Project</a> for early language acquisition research by allowing researchers and authorized parents to securely and remotely access lab data.
-    </p>
-</div>
-<div class="small-center-content" id="login-form-container">
-    <div id="login-form">
-        {% if not email %}
-        <form action="/base/account/login" method="POST">
-            <h3>Login</h3>
-            <div class="form-entry">
-                <label clas="wide-input">Email</label>
-                <input type="text" name="email">
-                <label clas="wide-input">Password</label>
-                <input type="password" name="password">
+<div id="viz-body">
+    <h2 class="compact-title">How many CDIs do I have?</h2>
+    <div class="compact-subtitle">Number of CDI's completed by study and per participant.</div>
+
+    <div id="main-body">
+        <div class="controls-section-holder">
+            <div id="top-controls" class="controls-section row">
+                <div class="span2"></div>
+                <div class="span3 span-no-left span-top-offset ctrl-subsection"><a id="change-studies-link" href="#">Include / exclude studies</a></div>
+                <div class="span5 ctrl-subsection">
+                    Show <select id="aggregation-drop">
+                        <option value="sum">sum</option>
+                        <option value="max">max</option>
+                    </select> for participant across all studies
+                </div>
+                <div class="span3 span-top-offset ctrl-subsection"><a id="change-histograms-link" href="#">Modify histogram buckets</a></div>
             </div>
-            <input class="btn btn-primary" value="Login" type="submit">
-            or <a href="/base/account/forgot_password">forgot password?</a>
+        </div>
+
+        <div id="viz-container">
+            <svg id="viz-target" width="900" height="700"></svg>
+        </div>
+    </div>
+
+    <div class="embedded-form" id="study-selector">
+        <h4>Studies:</h4>
+        <form>
+            <div id="study-selection-list"></div>
+            <a class="btn btn-primary" id="finish-change-studies-link" href="#">Update studies displayed</a>
         </form>
-        {% else %}
-        <h3>Logged in.</h3>
-        <ul>
-            {% if user.can_access_data %}<li><a href="/base/access_data">Access lab CDI database >></a></li>{% endif %}
-            {% if user.can_enter_data %}<li><a href="/base/enter_data">Enter new CDI records >></a></li>{% endif %}
-            {% if user.can_delete_data %}<li><a href="/base/delete_data">Delete / restore CDI records >></a></li>{% endif %}
-            {% if user.can_import_data %}<li><a href="/base/import_data">Import CSV CDI results >></a></li>{% endif %}
-            {% if user.can_edit_parents %}<li><a href="/base/parent_accounts">Manage digital parent CDIs >></a></li>{% endif %}
-            {% if user.can_change_formats %}<li><a href="/base/edit_formats">Edit CDI and presentation formats >></a></li>{% endif %}
-            {% if user.can_admin %}<li><a href="/base/edit_users">Edit users >></a></li>{% endif %}
-            {% if user.can_use_api_key %}<li><a href="/base/config_api_key">Configure API keys >></a></li>{% endif %}
-            <li><a href="/base/account">Edit your account >></a></li>
-        </ul>
-        {% endif %}
+    </div>
+
+    <div class="embedded-form" id="bucket-selector">
+        <h4>Studies:</h4>
+        <form>
+            <table id="bucket-list" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Min CDIs for Bucket</th>
+                        <th>Max CDIs for Bucket</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody id="bucket-list-bod">
+                </tbody>
+            </table>
+            <a class="btn" id="add-bucket-link" href="#">Add bucket</a>
+            <a class="btn btn-primary" id="finish-buckets-link" href="#">Update studies displayed</a>
+        </form>
     </div>
 </div>
-<div class="detail">
-Technical contact / application curator: <a href="http://gleap.org">A. Samuel Pottinger</a>
-</div>
+
 {% endblock %}

@@ -159,6 +159,12 @@ def abort_download():
     return json.dumps(ret_val)
 
 
+@app.route('/base/access_data/distribution')
+@session_util.require_login(access_data=True)
+def get_study_distribution():
+    return json.dumps(db_util.get_counts())
+
+
 @app.route('/base/access_data/add_filter', methods=['POST'])
 @session_util.require_login(access_data=True)
 def add_filter():

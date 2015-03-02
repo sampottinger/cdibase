@@ -955,3 +955,33 @@ def remove_parent_form(form_id):
     form_info = cursor.fetchone()
     connection.commit()
     connection.close()
+
+
+def get_counts():
+    """Get the number of CDIs completed by study by child ID"""
+    by_study = {}
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute('SELECT study,child_id FROM snapshots WHERE deleted=0')
+    
+    metadata = cursor.fetchone()
+    while metadata != None:
+
+        study = metadata[0]
+        child_id = metadata[1]
+        print study, child_id
+        if not study in by_study:
+            by_study[study] = {}
+
+        study_info = by_study[study]
+        if not child_id in study_info:
+            study_info[child_id] = 0
+
+        study_info[child_id] = study_info[child_id] + 1
+
+        metadata = cursor.fetchone()
+    
+    connection.close()
+
+    return by_study
