@@ -55,11 +55,18 @@ def main():
     @return: Rendered version of the DaxlabBase homepage.
     @rtype: flask.Response
     """
-    return flask.render_template(
-        "home.html",
-        cur_page="home",
-        **session_util.get_standard_template_values()
-    )
+    if session_util.is_logged_in():
+        return flask.render_template(
+            "home.html",
+            cur_page="home",
+            **session_util.get_standard_template_values()
+        )
+    else:
+        return flask.render_template(
+            "login_home.html",
+            cur_page="home",
+            **session_util.get_standard_template_values()
+        )
 
 
 def disable_email():
