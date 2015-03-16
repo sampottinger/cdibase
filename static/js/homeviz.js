@@ -18,6 +18,12 @@ var aggregationMethod = 'sum';
 var sourceData;
 
 
+/**
+ * Update the frequency distribution buckets.
+ *
+ * Recalculate the distribution of CDIs per study for the frequency distribution
+ * display.
+ */  
 function updateBuckets() {
     histogramBuckets.forEach(function(bucket) {
         bucket.count = 0;
@@ -77,6 +83,13 @@ function updateBuckets() {
 }
 
 
+/**
+ * Redraw the frequency distribution visualization.
+ *
+ * Redraw a simple frequency distrubtion display that shows how many CDIs were
+ * collected per study with the studies on the left side and the frequency
+ * "buckets" on the right side.
+ */
 function updateViz() {
     var studyYCoord = d3.map();
     var studiesList = studySizes.entries().filter(function(entry) {
@@ -375,6 +388,9 @@ function updateViz() {
 }
 
 
+/**
+ * Process and display the frequency distribution data returned by the server.
+ */
 function initViz(err, data) {
     // Process data
     sourceData = d3.map(data);
@@ -444,6 +460,12 @@ function initViz(err, data) {
 }
 
 
+/**
+ * Create the UI to select the studies to include in the frequency calc.
+ *
+ * Create a user interface that allows the client to include / exclude studies
+ * within the frequency distribution calculation.
+ */
 function createStudySelectionList() {
     var list = d3.select('#study-selection-list').selectAll('.study-check')
         .data(studySelection.keys());
@@ -469,6 +491,9 @@ function createStudySelectionList() {
 }
 
 
+/**
+ * Update the display that shows how many studies had how many CDIs.
+ */
 function updateBucketTable() {
     var listItems = d3.select('#bucket-list-bod').selectAll('.bucket-list-item')
         .data(histogramBuckets.map(function (x, i) { return i; }));
@@ -507,6 +532,10 @@ function updateBucketTable() {
 }
 
 
+/**
+ * Register callback for when the user changes the frequency distribution
+ * calculation method.
+ */
 $('#aggregation-drop').change(function() {
     aggregationMethod = $('#aggregation-drop option:selected').val();
     updateBuckets();
@@ -514,6 +543,10 @@ $('#aggregation-drop').change(function() {
 });
 
 
+/**
+ * Register callback for when the user wants to change the studies that should
+ * be included in the frequency distribution calcuation.
+ */
 $('#change-studies-link').click(function() {
     $('#main-body').slideUp();
     $('#study-selector').slideDown();
@@ -521,6 +554,10 @@ $('#change-studies-link').click(function() {
 });
 
 
+/**
+ * Register callback for when the user finishes selecting the studies that
+ * should be included in the frequency distribution calcuation.
+ */
 $('#finish-change-studies-link').click(function() {
     var checks = d3.select('#study-selection-list').selectAll('.study-check');
 
@@ -540,6 +577,12 @@ $('#finish-change-studies-link').click(function() {
 });
 
 
+/**
+ * Register callback for when the user adds a new frequency distribution
+ * classification. This allows the user to have the frequency distribution
+ * group all of the studies with some number of CDIs together into the same
+ * bucket to display the "long tail" of the distribution more effectively.
+ */
 $('#add-bucket-link').click(function() {
     histogramBuckets.push({
         countByStudy: d3.map(),
@@ -553,6 +596,9 @@ $('#add-bucket-link').click(function() {
 });
 
 
+/**
+ * Register callback for when the user wants to change the histogram buckets.
+ */ 
 $('#change-histograms-link').click(function() {
     $('#main-body').slideUp();
     $('#bucket-selector').slideDown();
@@ -560,6 +606,9 @@ $('#change-histograms-link').click(function() {
 })
 
 
+/**
+ * Register callback for when the user finishes changing the historgram buckets.
+ */
 $('#finish-buckets-link').click(function() {
     var items = d3.select('#bucket-list-bod').selectAll('.bucket-list-item');
     items.each(function(i) {
@@ -590,4 +639,5 @@ $('#finish-buckets-link').click(function() {
 });
 
 
+// Request frequency distribution data from the server.
 d3.json('/base/access_data/distribution', initViz);
