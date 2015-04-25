@@ -297,6 +297,30 @@ class SnapshotMetadata:
         same = self.deleted == other.deleted and same
         return same
 
+    def clone(self):
+        return SnapshotMetadata(
+            self.database_id,
+            self.child_id,
+            self.study_id,
+            self.study, 
+            self.gender, 
+            self.age,
+            self.birthday, 
+            self.session_date, 
+            self.session_num, 
+            self.total_num_sessions, 
+            self.words_spoken,
+            self.items_excluded, 
+            self.percentile, 
+            self.extra_categories, 
+            self.revision, 
+            self.languages,
+            self.num_languages, 
+            self.mcdi_type, 
+            self.hard_of_hearing, 
+            self.deleted
+        )
+
 
 class SnapshotContent:
     """Record of a single MCDI word as part of a snapshot."""

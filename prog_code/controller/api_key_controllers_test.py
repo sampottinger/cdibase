@@ -30,6 +30,7 @@ from ..util import constants
 from ..util import db_util
 from ..util import filter_util
 from ..util import parent_account_util
+from ..util import report_util
 from ..util import session_util
 from ..util import user_util
 
@@ -70,7 +71,7 @@ TEST_USER = models.User(
     False,
     False,
     True,
-    False,
+    True,
     False,
     True,
     False
@@ -938,9 +939,6 @@ class TestAPIKeyControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
 
             resp = client.get('/base/api/v0/send_parent_forms?' +
                 urllib.urlencode({
@@ -960,3 +958,40 @@ class TestAPIKeyControllers(mox.MoxTestBase):
                 })
             )
             self.assertFalse('error' in json.loads(resp.data))
+
+    def test_get_child_words_by_api(self):
+        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(filter_util, 'run_search_query')
+        self.mox.StubOutWithMock(report_util, 'summarize_snapshots')
+
+        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+
+        filter_util.run_search_query(
+            mox.IsA(list),
+            'snapshots',
+            True
+        ).AndReturn([TEST_SNAPSHOT])
+
+        report_util.summarize_snapshots([TEST_SNAPSHOT]).AndReturn(
+            {'word1': None, 'word2': '2015/01/02'}
+        )
+
+        self.mox.ReplayAll()
+
+        with self.app.test_client() as client:
+
+            resp = client.get('/base/api/v0/get_child_words?' +
+                urllib.urlencode({
+                    'api_key': TEST_API_KEY,
+                    'child_id': 123
+                })
+            )
+
+            resp_info = json.loads(resp.data)
+            self.assertFalse('error' in resp_info)
+
+            word_vals = resp_info['words']
+            self.assertEqual(word_vals['word1'], None)
+            self.assertEqual(word_vals['word2'], '2015/01/02')

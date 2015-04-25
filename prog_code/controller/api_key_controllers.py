@@ -99,6 +99,9 @@ INVALID_INTERPRETATION_MSG = 'Invalid presentation format name provided.'
 ISO_PARSE_STR = '%Y-%m-%d'
 DATE_OUT_STR = '%Y/%m/%d'
 
+CHILD_ID_FIELD = 'child_id'
+NO_CHILD_ID_MSG = 'No child ID provided.'
+
 INVALID_REQUEST_STATUS = 400
 UNAUTHORIZED_STATUS = 403
 
@@ -870,3 +873,63 @@ def get_child_info_by_api():
         serialized_snapshots_by_child_id[child_id].append(snapshot_serialized)
 
     return json.dumps(serialized_snapshots_by_child_id)
+
+
+@app.route('/base/api/v0/get_child_words', methods=['GET', 'POST'])
+def get_child_words_by_api():
+    """Get the words a child knows and when those words were first learned.
+
+    Controller that allows other applications and services to look up the words
+    known by a child.
+
+    DESCRIPTION: Get a listing of the words ever known by a child and when that
+                 word was first reported.
+
+    SUPPORTED METHODS: GET
+
+    REQUIRED PARAMETERS:
+     - api_key
+       // Executes this request on behalf of the user account with this API key.
+     - child_id
+       // Kelp Child ID.
+
+    All parameters should be provided as a URI query component.
+    """
+    # Pull parameters
+    api_key = flask.request.args.get(API_KEY_FIELD, None)
+    if not api_key:
+        return generate_invalid_request_error(NO_API_KEY_MSG)
+
+    child_id = flask.request.args.get(CHILD_ID_FIELD, None)
+    if not child_id:
+        return generate_invalid_request_error(NO_CHILD_ID_MSG)
+
+    api_key_record = db_util.get_api_key(api_key)
+    if not api_key_record:
+        return generate_invalid_request_error(INVALID_API_KEY_MSG)
+
+    # Check attached account
+    user = user_util.get_user(api_key_record.user_id)
+    if not user:
+        return generate_invalid_request_error(INVALID_API_KEY_MSG)
+
+    if not user.can_use_api_key:
+        return generate_unauthorized_error(USER_NOT_API_AUTHORIZED_MSG)
+
+    if not user.can_access_data:
+        return generate_unauthorized_error(USER_NOT_DB_AUTHORIZED_MSG)
+
+    # Pull data
+    db_filters = [ models.Filter('child_id', 'eq', child_id) ]
+
+    matching_snapshot_metadata = filter_util.run_search_query(
+        db_filters,
+        SNAPSHOTS_DB_TABLE,
+        True
+    )
+
+    # Serialize data
+    ret_serialization = report_util.summarize_snapshots(
+        matching_snapshot_metadata
+    )
+    return json.dumps({'words': ret_serialization})

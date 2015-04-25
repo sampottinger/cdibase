@@ -86,6 +86,43 @@ def interpret_word_value(value, presentation_format):
     return presentation_format.details[name]
 
 
+def summarize_snapshots(snapshot_metas):
+    cdi_spoken_set = {}
+    ret_serialization = {}
+
+    for meta in snapshot_metas:
+        
+        # Get the values that count as "spoken"
+        mcdi_name = meta.mcdi_type
+        cdi_date = meta.session_date
+        if not mcdi_name in cdi_spoken_set:
+            mcdi_info = db_util.load_mcdi_model(mcdi_name)
+            words_spoken_set = mcdi_info.details['count_as_spoken']
+            cdi_spoken_set[mcdi_name] = words_spoken_set
+        else:
+            words_spoken_set = cdi_spoken_set[mcdi_name]
+
+        # Parse the words
+        contents = db_util.load_snapshot_contents(meta)
+        for word_info in contents:
+            word = word_info.word
+            value = word_info.value
+            
+            # Replace existing if this snapshot is earlier
+            if value in words_spoken_set:
+                to_enter = not word in ret_serialization
+                to_enter = to_enter or ret_serialization[word] == None
+                to_enter = to_enter or ret_serialization[word] > cdi_date
+                if to_enter:
+                    ret_serialization[word] = cdi_date
+
+            # Report not known if not already reported
+            elif not word in ret_serialization:
+                ret_serialization[word] = None
+
+    return ret_serialization
+
+
 def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
     report_dict=False, include_words=True):
     """Turn a snapshot uft8 encoded list of strings.

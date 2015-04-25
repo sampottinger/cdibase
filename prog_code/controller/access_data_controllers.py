@@ -162,6 +162,11 @@ def abort_download():
 @app.route('/base/access_data/distribution')
 @session_util.require_login(access_data=True)
 def get_study_distribution():
+    """Get a JSON file describing how many CDIs there are per study.
+
+    @return: JSON serialization of CDI frequency distribution.
+    @rtype: str
+    """
     return json.dumps(db_util.get_counts())
 
 
