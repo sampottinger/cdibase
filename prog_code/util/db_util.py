@@ -970,7 +970,6 @@ def get_counts():
 
         study = metadata[0]
         child_id = metadata[1]
-        print study, child_id
         if not study in by_study:
             by_study[study] = {}
 
