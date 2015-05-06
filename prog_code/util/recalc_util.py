@@ -32,19 +32,19 @@ class CachedMCDIAdapter:
         self.mcdi_models = {}
         self.max_word_counts = {}
 
-    def load_mcdi_model(self, type_name):
+    def read_cdi_format_model(self, type_name):
         if type_name in self.mcdi_models:
             return self.mcdi_models[type_name]
 
-        mcdi_model = db_util.load_mcdi_model(type_name)
+        mcdi_model = db_util.read_cdi_format_model(type_name)
         self.mcdi_models[type_name] = mcdi_model
         return mcdi_model
 
-    def load_percentile_model(self, type_name):
+    def read_percentile_model(self, type_name):
         if type_name in self.percentiles:
             return self.percentiles[type_name]
 
-        percentile_model = db_util.load_percentile_model(type_name)
+        percentile_model = db_util.read_percentile_model(type_name)
         self.percentiles[type_name] = percentile_model
         return percentile_model
 
@@ -53,9 +53,9 @@ class CachedMCDIAdapter:
             return self.max_word_counts[type_name]
 
         words = 0
-        mcdi_model = self.load_mcdi_model(type_name)
+        mcdi_model = self.read_cdi_format_model(type_name)
         if mcdi_model == None:
-            mcdi_model = self.load_mcdi_model('fullenglishmcdi')
+            mcdi_model = self.read_cdi_format_model('fullenglishmcdi')
 
         categories = mcdi_model.details['categories']
         category_num_words = map(lambda x: len(x['words']), categories)
@@ -77,9 +77,9 @@ def recalculate_percentile(snapshot, cached_adapter):
     """
     @type snapshot: SnapshotMetadata
     """
-    mcdi_model = cached_adapter.load_mcdi_model(snapshot.mcdi_type)
+    mcdi_model = cached_adapter.read_cdi_format_model(snapshot.mcdi_type)
     if mcdi_model == None:
-        mcdi_model = cached_adapter.load_mcdi_model('fullenglishmcdi')
+        mcdi_model = cached_adapter.read_cdi_format_model('fullenglishmcdi')
 
     meta_percentile_info = mcdi_model.details['percentiles']
     gender = snapshot.gender
@@ -90,7 +90,7 @@ def recalculate_percentile(snapshot, cached_adapter):
     else:
         percentiles_name = meta_percentile_info['female']
 
-    percentiles = cached_adapter.load_percentile_model(percentiles_name)
+    percentiles = cached_adapter.read_percentile_model(percentiles_name)
 
     count_as_spoken_vals = mcdi_model.details['count_as_spoken']
     individual_words = db_util.load_snapshot_contents(snapshot)
@@ -122,12 +122,12 @@ def recalculate_percentiles(snapshots):
         recalculate_percentile(snapshot, adapter)
 
 
-def update_snapshots(snapshots):
+def update_snapshot_models(snapshots):
     connection = db_util.get_db_connection()
     cursor = connection.cursor()
 
     for snapshot in snapshots:
-        db_util.update_snapshot(snapshot, cursor)
+        db_util.update_snapshot_model(snapshot, cursor)
 
     connection.commit()
     connection.close()
@@ -138,4 +138,4 @@ def recalculate_ages_and_percentiles(snapshots, save=True):
     recalculate_percentiles(snapshots)
 
     if save:
-        update_snapshots(snapshots)
+        update_snapshot_models(snapshots)

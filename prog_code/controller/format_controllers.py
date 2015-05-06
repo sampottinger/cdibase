@@ -107,9 +107,9 @@ FORMATS = {
     'mcdi': Format(
         'MCDI',
         'mcdi',
-        db_util.load_mcdi_model,
-        db_util.save_mcdi_model,
-        db_util.delete_mcdi_model,
+        db_util.read_cdi_format_model,
+        db_util.create_cdi_format_model,
+        db_util.delete_cdi_format_model,
         models.MCDIFormatMetadata,
         models.MCDIFormat,
         '.yaml'
@@ -117,8 +117,8 @@ FORMATS = {
     'presentation': Format(
         'Presentation',
         'presentation',
-        db_util.load_presentation_model,
-        db_util.save_presentation_model,
+        db_util.read_presentation_model,
+        db_util.create_presentation_model,
         db_util.delete_presentation_model,
         models.PresentationFormatMetadata,
         models.PresentationFormat,
@@ -127,8 +127,8 @@ FORMATS = {
     'percentile': Format(
         'Percentile',
         'percentile',
-        db_util.load_percentile_model,
-        db_util.save_percentile_model,
+        db_util.read_percentile_model,
+        db_util.create_percentile_model,
         db_util.delete_percentile_model,
         models.PercentileTableMetadata,
         models.PercentileTable,
@@ -152,9 +152,9 @@ def edit_formats():
     return flask.render_template(
         'edit_formats.html',
         cur_page='edit_formats',
-        mcdi_formats=db_util.load_mcdi_model_listing(),
-        presentation_formats=db_util.load_presentation_model_listing(),
-        percentile_tables=db_util.load_percentile_model_listing(),
+        mcdi_formats=db_util.load_cdi_format_model_listing(),
+        presentation_formats=db_util.read_presentation_model_listing(),
+        percentile_tables=db_util.read_percentile_model_listing(),
         **session_util.get_standard_template_values()
     )
 

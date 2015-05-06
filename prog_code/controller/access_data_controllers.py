@@ -74,14 +74,14 @@ def access_data():
     @return: Listing of available CSV rendering "formats" 
     @rtype: flask.Response
     """
-    formats = list(db_util.load_presentation_model_listing())
+    formats = list(db_util.read_presentation_model_listing())
     formats.reverse()
     return flask.render_template(
         'access_data.html',
         cur_page='access_data',
         formats=formats,
         filters=map(interp_util.filter_to_str, session_util.get_filters()),
-        studies=db_util.list_stuides(),
+        studies=db_util.list_studies(),
         **session_util.get_standard_template_values()
     )
 
@@ -269,7 +269,7 @@ def execute_zip_access_request():
         return flask.redirect(ACCESS_DATA_URL)
 
     pres_format_name = flask.session[FORMAT_SESSION_ATTR]
-    presentation_format = db_util.load_presentation_model(pres_format_name)
+    presentation_format = db_util.read_presentation_model(pres_format_name)
     if presentation_format == None:
         session_util.set_waiting_on_download(False)
         flask.session[ERROR_ATTR] = UNKNOWN_PRESENTATION_FORMAT_MSG
@@ -317,7 +317,7 @@ def execute_csv_access_request():
         return flask.redirect(ACCESS_DATA_URL)
 
     pres_format_name = flask.session[FORMAT_SESSION_ATTR]
-    presentation_format = db_util.load_presentation_model(pres_format_name)
+    presentation_format = db_util.read_presentation_model(pres_format_name)
     if presentation_format == None:
         session_util.set_waiting_on_download(False)
         flask.session[ERROR_ATTR] = UNKNOWN_PRESENTATION_FORMAT_MSG

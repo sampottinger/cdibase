@@ -23,24 +23,24 @@ import db_util
 import user_util
 
 
-def interp_csv_field(target):
+def interp_csv_field(csv_field):
     """Interpret a simple comma seperated string as a list of string values.
 
     Interpret a simple string that deliminates values by commas (no quoting
     or escape characters allowed.
 
-    @param target: The string to interpret.
-    @type target: str
+    @param csv_field: The string to interpret.
+    @type csv_field: str
     @return: CSV string interpreted as a list of values.
     @rtype: list
     """
-    if target == '':
+    if csv_field == '':
         return []
     else:
-        return target.split(',')
+        return csv_field.split(',')
 
 
-def get_if_avail(target_list, index, default_value=''):
+def get_list_item_if_avail(target_list, index, default_value=''):
     """Get a value from a list if that item is available.
 
     @param target_list: The list to try to get an item from.
@@ -70,12 +70,12 @@ def generate_new_api_key():
 
     while not found: 
         new_key = user_util.generate_password(pass_len=20).lower()
-        found = db_util.get_api_key(new_key) == None
+        found = db_util.read_api_key_model_record(new_key) == None
 
     return new_key
 
 
-def get_api_key(user_id):
+def read_api_key_model(user_id):
     """Get the API key for a given user.
 
     @param user_id: The database id of the user to get the API key for.
@@ -83,10 +83,10 @@ def get_api_key(user_id):
     @return: API key assigned to the given user or None if not found.
     @rtype: str
     """
-    return db_util.get_api_key(user_id)
+    return db_util.read_api_key_model_record(user_id)
 
 
-def create_new_api_key(user_id):
+def create_api_key_model(user_id):
     """Create a new API key and assign it to the given user.
 
     Create a new randomly generated API key for the given user, assigning the
@@ -97,8 +97,8 @@ def create_new_api_key(user_id):
     @return: The newly generated API key.
     @rtype: str
     """
-    if get_api_key(user_id):
-        db_util.delete_api_key(user_id)
+    if read_api_key_model(user_id):
+        db_util.delete_api_key_model(user_id)
 
     api_key = generate_new_api_key()
-    return db_util.create_new_api_key(user_id, api_key)
+    return db_util.create_api_key_model(user_id, api_key)

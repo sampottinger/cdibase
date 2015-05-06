@@ -328,37 +328,37 @@ class TestEditParentControllers(mox.MoxTestBase):
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(parent_account_util,
             'generate_unique_mcdi_form_id')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
 
         # Ensure these are not called
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
+        self.mox.StubOutWithMock(db_util, 'create_parent_form_model')
         self.mox.StubOutWithMock(parent_account_util, 'send_mcdi_email')
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_mcdi_model('invalid_format').AndReturn(None)
+        db_util.read_cdi_format_model('invalid_format').AndReturn(None)
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_mcdi_model(TEST_MCDI_TYPE).AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model(TEST_MCDI_TYPE).AndReturn(TEST_FORMAT)
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_mcdi_model(TEST_MCDI_TYPE).AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model(TEST_MCDI_TYPE).AndReturn(TEST_FORMAT)
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_mcdi_model(TEST_MCDI_TYPE).AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model(TEST_MCDI_TYPE).AndReturn(TEST_FORMAT)
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_mcdi_model(TEST_MCDI_TYPE).AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model(TEST_MCDI_TYPE).AndReturn(TEST_FORMAT)
 
         self.mox.ReplayAll()
 
@@ -421,27 +421,27 @@ class TestEditParentControllers(mox.MoxTestBase):
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(parent_account_util,
             'generate_unique_mcdi_form_id')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
+        self.mox.StubOutWithMock(db_util, 'create_parent_form_model')
         self.mox.StubOutWithMock(parent_account_util, 'send_mcdi_email')
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_mcdi_model(TEST_MCDI_TYPE).AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model(TEST_MCDI_TYPE).AndReturn(TEST_FORMAT)
         filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
             [TEST_SNAPSHOT])
-        db_util.insert_parent_form(EXPECTED_PARENT_FORM)
+        db_util.create_parent_form_model(EXPECTED_PARENT_FORM)
         parent_account_util.send_mcdi_email(EXPECTED_PARENT_FORM)
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_mcdi_model(TEST_MCDI_TYPE).AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model(TEST_MCDI_TYPE).AndReturn(TEST_FORMAT)
         filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
             [TEST_SNAPSHOT])
-        db_util.insert_parent_form(EXPECTED_PARENT_FORM)
+        db_util.create_parent_form_model(EXPECTED_PARENT_FORM)
         parent_account_util.send_mcdi_email(EXPECTED_PARENT_FORM)
 
         self.mox.ReplayAll()
@@ -484,20 +484,20 @@ class TestEditParentControllers(mox.MoxTestBase):
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(parent_account_util,
             'generate_unique_mcdi_form_id')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
+        self.mox.StubOutWithMock(db_util, 'create_parent_form_model')
         self.mox.StubOutWithMock(parent_account_util, 'send_mcdi_email')
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID_MOD)
-        db_util.load_mcdi_model(TEST_MCDI_TYPE).AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model(TEST_MCDI_TYPE).AndReturn(TEST_FORMAT)
         filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
             [TEST_SNAPSHOT])
         filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
             [TEST_SNAPSHOT])
-        db_util.insert_parent_form(EXPECTED_MODIFIED_PARENT_FORM)
+        db_util.create_parent_form_model(EXPECTED_MODIFIED_PARENT_FORM)
         parent_account_util.send_mcdi_email(EXPECTED_MODIFIED_PARENT_FORM)
 
         self.mox.ReplayAll()
@@ -519,39 +519,39 @@ class TestEditParentControllers(mox.MoxTestBase):
                 sess[constants.CONFIRMATION_ATTR] = ''
 
     def test_handle_parent_mcdi_form_bad_id(self):
-        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(db_util, 'read_parent_form_model_by_id')
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_db_id')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_study_id')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
 
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(None)
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(None)
 
         parent_form_no_db_id = copy.copy(EXPECTED_PARENT_FORM)
         parent_form_no_db_id.database_id = None
         user_util.get_user(None).AndReturn(None)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             parent_form_no_db_id)
 
         parent_form_no_study_id = copy.copy(EXPECTED_PARENT_FORM)
         parent_form_no_study_id.study_id = None
         user_util.get_user(None).AndReturn(None)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             parent_form_no_study_id)
 
         parent_form_no_ids = copy.copy(EXPECTED_PARENT_FORM)
         parent_form_no_ids.study_id = None
         parent_form_no_ids.database_id = None
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             parent_form_no_ids)
 
         # Should not be called
-        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
-        self.mox.StubOutWithMock(db_util, 'remove_parent_form')
+        self.mox.StubOutWithMock(db_util, 'create_snapshot_model')
+        self.mox.StubOutWithMock(db_util, 'delete_parent_form_model')
 
         self.mox.ReplayAll()
 
@@ -574,55 +574,55 @@ class TestEditParentControllers(mox.MoxTestBase):
             self.assertEqual(resp.status_code, 404)
 
     def test_handle_parent_mcdi_form_bad_input(self):
-        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(db_util, 'read_parent_form_model_by_id')
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_db_id')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_study_id')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
 
         no_birthday_form = copy.copy(EXPECTED_PARENT_FORM)
         no_birthday_form.birthday = None
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             no_birthday_form)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
         no_gender_form = copy.copy(EXPECTED_PARENT_FORM)
         no_gender_form.gender = None
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             no_gender_form)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
         missing_items_excluded_form = copy.copy(EXPECTED_PARENT_FORM)
         missing_items_excluded_form.items_excluded = None
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             missing_items_excluded_form)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             missing_items_excluded_form)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
         missing_extra_categories_form = copy.copy(EXPECTED_PARENT_FORM)
         missing_extra_categories_form.extra_categories = None
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             missing_extra_categories_form)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             missing_extra_categories_form)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
         no_languages_form = copy.copy(EXPECTED_PARENT_FORM)
         no_languages_form.languages = None
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             no_languages_form)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             no_languages_form)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
         self.mox.ReplayAll()
 
@@ -707,21 +707,21 @@ class TestEditParentControllers(mox.MoxTestBase):
                 self.assertFalse(constants.CONFIRMATION_ATTR in sess)
 
     def test_missing_word_value(self):
-        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(db_util, 'read_parent_form_model_by_id')
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_db_id')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_study_id')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
 
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             EXPECTED_PARENT_FORM)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             EXPECTED_PARENT_FORM)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
         self.mox.ReplayAll()
 
@@ -747,17 +747,17 @@ class TestEditParentControllers(mox.MoxTestBase):
                 self.assertFalse(constants.CONFIRMATION_ATTR in sess)
 
     def test_invalid_word_value(self):
-        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(db_util, 'read_parent_form_model_by_id')
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_db_id')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_study_id')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
 
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             EXPECTED_PARENT_FORM)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
         self.mox.ReplayAll()
 
@@ -774,21 +774,21 @@ class TestEditParentControllers(mox.MoxTestBase):
                 self.assertFalse(constants.CONFIRMATION_ATTR in sess)
 
     def test_invalid_percentile_table(self):
-        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(db_util, 'read_parent_form_model_by_id')
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_db_id')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_study_id')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'load_percentile_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
+        self.mox.StubOutWithMock(db_util, 'read_percentile_model')
 
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             EXPECTED_PARENT_FORM)
         parent_account_util.get_snapshot_chronology_for_db_id(
             TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        db_util.load_percentile_model(MALE_TEST_PERCENTILE_NAME).AndReturn(
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_percentile_model(MALE_TEST_PERCENTILE_NAME).AndReturn(
             None)
 
         self.mox.ReplayAll()
@@ -803,26 +803,26 @@ class TestEditParentControllers(mox.MoxTestBase):
                 self.assertFalse(constants.CONFIRMATION_ATTR in sess)
 
     def test_submit_parent_form_no_params(self):
-        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(db_util, 'read_parent_form_model_by_id')
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_db_id')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_study_id')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'load_percentile_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
+        self.mox.StubOutWithMock(db_util, 'read_percentile_model')
         self.mox.StubOutWithMock(interp_util, 'monthdelta')
         self.mox.StubOutWithMock(math_util, 'find_percentile')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
-        self.mox.StubOutWithMock(db_util, 'remove_parent_form')
+        self.mox.StubOutWithMock(db_util, 'create_snapshot_model')
+        self.mox.StubOutWithMock(db_util, 'delete_parent_form_model')
 
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             EXPECTED_PARENT_FORM)
         parent_account_util.get_snapshot_chronology_for_db_id(
             TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        db_util.load_percentile_model(MALE_TEST_PERCENTILE_NAME).AndReturn(
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_percentile_model(MALE_TEST_PERCENTILE_NAME).AndReturn(
             TEST_PERCENTILE_TABLE)
 
         interp_util.monthdelta(TEST_BIRTHDAY_DATE, TODAY).AndReturn(TEST_AGE)
@@ -840,8 +840,8 @@ class TestEditParentControllers(mox.MoxTestBase):
             lambda (word, val): (word.replace('_report', ''), val),
             TEMPLATE_WORD_SPOKEN_VALUES.items()
         ))
-        db_util.insert_snapshot(EXPECTED_SNAPSHOT, mox.IsA(dict))
-        db_util.remove_parent_form(str(TEST_PARENT_FORM_ID))
+        db_util.create_snapshot_model(EXPECTED_SNAPSHOT, mox.IsA(dict))
+        db_util.delete_parent_form_model(str(TEST_PARENT_FORM_ID))
 
         self.mox.ReplayAll()
 
@@ -849,19 +849,19 @@ class TestEditParentControllers(mox.MoxTestBase):
             client.post(PARENT_MCDI_FORM_URL, data=TEMPLATE_WORD_SPOKEN_VALUES)
 
     def test_submit_parent_form_missing_record(self):
-        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(db_util, 'read_parent_form_model_by_id')
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_db_id')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_study_id')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'load_percentile_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
+        self.mox.StubOutWithMock(db_util, 'read_percentile_model')
         self.mox.StubOutWithMock(interp_util, 'monthdelta')
         self.mox.StubOutWithMock(math_util, 'find_percentile')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
-        self.mox.StubOutWithMock(db_util, 'remove_parent_form')
+        self.mox.StubOutWithMock(db_util, 'create_snapshot_model')
+        self.mox.StubOutWithMock(db_util, 'delete_parent_form_model')
 
         partial_parent_form = copy.copy(EXPECTED_PARENT_FORM)
         partial_parent_form.items_excluded = None
@@ -869,12 +869,12 @@ class TestEditParentControllers(mox.MoxTestBase):
         partial_parent_form.child_name = None
         partial_parent_form.parent_email = None
         partial_parent_form.birthday = None
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             partial_parent_form)
         parent_account_util.get_snapshot_chronology_for_db_id(
             TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        db_util.load_percentile_model(MALE_TEST_PERCENTILE_NAME).AndReturn(
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_percentile_model(MALE_TEST_PERCENTILE_NAME).AndReturn(
             TEST_PERCENTILE_TABLE)
 
         interp_util.monthdelta(TEST_BIRTHDAY_DATE_MOD, TODAY).AndReturn(
@@ -893,8 +893,8 @@ class TestEditParentControllers(mox.MoxTestBase):
             lambda (word, val): (word.replace('_report', ''), val),
             TEMPLATE_WORD_SPOKEN_VALUES.items()
         ))
-        db_util.insert_snapshot(EXPECTED_SNAPSHOT_MOD, mox.IsA(dict))
-        db_util.remove_parent_form(str(TEST_PARENT_FORM_ID))
+        db_util.create_snapshot_model(EXPECTED_SNAPSHOT_MOD, mox.IsA(dict))
+        db_util.delete_parent_form_model(str(TEST_PARENT_FORM_ID))
 
         self.mox.ReplayAll()
 
@@ -914,26 +914,26 @@ class TestEditParentControllers(mox.MoxTestBase):
                 self.assertTrue(constants.CONFIRMATION_ATTR in sess)
 
     def test_submit_parent_form_favor_record_values(self):
-        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(db_util, 'read_parent_form_model_by_id')
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_db_id')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_study_id')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'load_percentile_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
+        self.mox.StubOutWithMock(db_util, 'read_percentile_model')
         self.mox.StubOutWithMock(interp_util, 'monthdelta')
         self.mox.StubOutWithMock(math_util, 'find_percentile')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
-        self.mox.StubOutWithMock(db_util, 'remove_parent_form')
+        self.mox.StubOutWithMock(db_util, 'create_snapshot_model')
+        self.mox.StubOutWithMock(db_util, 'delete_parent_form_model')
 
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             EXPECTED_PARENT_FORM)
         parent_account_util.get_snapshot_chronology_for_db_id(
             TEST_DB_ID).AndReturn([TEST_SNAPSHOT])
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        db_util.load_percentile_model(MALE_TEST_PERCENTILE_NAME).AndReturn(
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_percentile_model(MALE_TEST_PERCENTILE_NAME).AndReturn(
             TEST_PERCENTILE_TABLE)
 
         interp_util.monthdelta(TEST_BIRTHDAY_DATE, TODAY).AndReturn(
@@ -948,8 +948,8 @@ class TestEditParentControllers(mox.MoxTestBase):
         
         filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn([])
 
-        db_util.insert_snapshot(EXPECTED_SNAPSHOT, TEMPLATE_WORD_SPOKEN_RECORD)
-        db_util.remove_parent_form(str(TEST_PARENT_FORM_ID))
+        db_util.create_snapshot_model(EXPECTED_SNAPSHOT, TEMPLATE_WORD_SPOKEN_RECORD)
+        db_util.delete_parent_form_model(str(TEST_PARENT_FORM_ID))
 
         self.mox.ReplayAll()
 
@@ -968,19 +968,19 @@ class TestEditParentControllers(mox.MoxTestBase):
                 self.assertTrue(constants.CONFIRMATION_ATTR in sess)
 
     def test_fill_parent_form_previous_snapshot(self):
-        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(db_util, 'read_parent_form_model_by_id')
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(parent_account_util,
             'get_snapshot_chronology_for_db_id')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
         self.mox.StubOutWithMock(db_util, 'load_snapshot_contents')
 
-        db_util.get_parent_form_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
+        db_util.read_parent_form_model_by_id(str(TEST_PARENT_FORM_ID)).AndReturn(
             EXPECTED_PARENT_FORM)
         chronology = copy.deepcopy([EXPECTED_SNAPSHOT, EXPECTED_SNAPSHOT_MOD])
         chronology[0].database_id = 1
         chronology[1].database_id = 2
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
         user_util.get_user(None).AndReturn(None)
         parent_account_util.get_snapshot_chronology_for_db_id(
             TEST_DB_ID).AndReturn(chronology)

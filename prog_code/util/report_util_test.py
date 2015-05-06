@@ -112,10 +112,10 @@ class ReportUtilTest(mox.MoxTestBase):
             models.SnapshotContent(0, 'word4', 2, 1)
         ]
 
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
         self.mox.StubOutWithMock(db_util, 'load_snapshot_contents')
 
-        db_util.load_mcdi_model('mcdi_type_1').AndReturn(
+        db_util.read_cdi_format_model('mcdi_type_1').AndReturn(
             models.MCDIFormat('', '', '', {'count_as_spoken': [1, 2]})
         )
         db_util.load_snapshot_contents(test_metadata[0]).AndReturn(
@@ -126,7 +126,7 @@ class ReportUtilTest(mox.MoxTestBase):
             test_contents_2
         )
 
-        db_util.load_mcdi_model('mcdi_type_2').AndReturn(
+        db_util.read_cdi_format_model('mcdi_type_2').AndReturn(
             models.MCDIFormat('', '', '', {'count_as_spoken': [1]})
         )
         db_util.load_snapshot_contents(test_metadata[2]).AndReturn(

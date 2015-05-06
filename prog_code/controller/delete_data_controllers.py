@@ -90,7 +90,7 @@ def delete_data():
     return flask.render_template(
         'delete_data.html',
         cur_page='delete_data',
-        formats=db_util.load_presentation_model_listing(),
+        formats=db_util.read_presentation_model_listing(),
         filters=map(interp_util.filter_to_str, session_util.get_filters()),
         **session_util.get_standard_template_values()
     )

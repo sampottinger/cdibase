@@ -85,14 +85,14 @@ class FakeConnection:
 
 class DBUtilTests(mox.MoxTestBase):
     
-    def test_clean_up_date(self):
-        self.assertEqual(db_util.clean_up_date('1992/1/10'), '1992/01/10')
-        self.assertEqual(db_util.clean_up_date('1992/01/10'), '1992/01/10')
+    def test_clean_up_date_str(self):
+        self.assertEqual(db_util.clean_up_date_str('1992/1/10'), '1992/01/10')
+        self.assertEqual(db_util.clean_up_date_str('1992/01/10'), '1992/01/10')
 
-    def test_update_snapshot(self):
+    def test_update_snapshot_model(self):
         fake_cursor = FakeCursor()
 
-        db_util.update_snapshot(TEST_SNAPSHOT, fake_cursor)
+        db_util.update_snapshot_model(TEST_SNAPSHOT, fake_cursor)
 
         self.assertEqual(len(fake_cursor.commands), 1)
 
@@ -101,10 +101,10 @@ class DBUtilTests(mox.MoxTestBase):
         self.assertEqual(TEST_SNAPSHOT.child_id, test_command[1][0])
         self.assertEqual(TEST_SNAPSHOT.languages, test_command[1][14])
 
-    def test_update_participant_metadata_all(self):
+    def test_update_db_wide_participant_metadata_all(self):
         fake_cursor = FakeCursor()
 
-        db_util.update_participant_metadata(
+        db_util.update_db_wide_participant_metadata(
             TEST_SNAPSHOT.child_id,
             TEST_SNAPSHOT.gender,
             TEST_SNAPSHOT.birthday,
@@ -123,10 +123,10 @@ class DBUtilTests(mox.MoxTestBase):
         self.assertEqual(TEST_SNAPSHOT.languages, test_command[1][3])
         self.assertEqual(TEST_SNAPSHOT.child_id, test_command[1][4])
 
-    def test_update_participant_metadata_select(self):
+    def test_update_db_wide_participant_metadata_select(self):
         fake_cursor = FakeCursor()
 
-        db_util.update_participant_metadata(
+        db_util.update_db_wide_participant_metadata(
             TEST_SNAPSHOT.child_id,
             TEST_SNAPSHOT.gender,
             TEST_SNAPSHOT.birthday,

@@ -96,7 +96,7 @@ def summarize_snapshots(snapshot_metas):
         mcdi_name = meta.mcdi_type
         cdi_date = meta.session_date
         if not mcdi_name in cdi_spoken_set:
-            mcdi_info = db_util.load_mcdi_model(mcdi_name)
+            mcdi_info = db_util.read_cdi_format_model(mcdi_name)
             words_spoken_set = mcdi_info.details['count_as_spoken']
             cdi_spoken_set[mcdi_name] = words_spoken_set
         else:
@@ -332,9 +332,9 @@ def generate_study_report_csv(snapshots_from_study, presentation_format):
     mcdi_type_name = snapshots_from_study[0].mcdi_type
     safe_mcdi_name = mcdi_type_name.replace(' ', '')
     safe_mcdi_name = urllib.quote_plus(safe_mcdi_name).lower()
-    mcdi_format = db_util.load_mcdi_model(safe_mcdi_name)
+    mcdi_format = db_util.read_cdi_format_model(safe_mcdi_name)
     if mcdi_format == None:
-        mcdi_format = db_util.load_mcdi_model(DEFAULT_MCDI)
+        mcdi_format = db_util.read_cdi_format_model(DEFAULT_MCDI)
     rows = generate_study_report_rows(snapshots_from_study, presentation_format)
     rows = sort_by_study_order(rows, mcdi_format)
     csv_writer.writerows(

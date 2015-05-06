@@ -122,7 +122,7 @@ def send_mcdi_form():
 
         # Check that the MCDI type provided has been defined and can be found
         # in the application database.
-        mcdi_model = db_util.load_mcdi_model(mcdi_type)
+        mcdi_model = db_util.read_cdi_format_model(mcdi_type)
         if mcdi_type == None or mcdi_type == '' or mcdi_model == None:
             flask.session[constants.ERROR_ATTR] = MCDI_TYPE_NOT_GIVEN_MSG
             return flask.redirect(PARENT_ACCOUNT_CONTROLS_URL)
@@ -236,7 +236,7 @@ def send_mcdi_form():
 
         # Save the filled parent form to the database and send a link for
         # filling out that form to the specified parent email address.
-        db_util.insert_parent_form(new_form)
+        db_util.create_parent_form_model(new_form)
         parent_account_util.send_mcdi_email(new_form)
 
         last_parms_dict = flask.session['LAST_PARENT_PARAMS']
@@ -273,7 +273,7 @@ def send_mcdi_form():
             'parent_accounts.html',
             cur_page='edit_parents',
             users=user_util.get_all_users(),
-            mcdi_formats=db_util.load_mcdi_model_listing(),
+            mcdi_formats=db_util.load_cdi_format_model_listing(),
             gender_male_constant=constants.MALE,
             gender_female_constant=constants.FEMALE,
             gender_other_constant=constants.OTHER_GENDER,
@@ -317,7 +317,7 @@ def handle_parent_mcdi_form(form_id):
     # that are orphaned.
 
     # Ensure the parent form still exists (and has not been submitted already).
-    parent_form = db_util.get_parent_form_by_id(form_id)
+    parent_form = db_util.read_parent_form_model_by_id(form_id)
     if not parent_form:
         return flask.render_template(
             'end_parent_form_404.html',
@@ -336,7 +336,7 @@ def handle_parent_mcdi_form(form_id):
         ), 404
 
     # Ensure that the selected format is valid and is specified in the databse.
-    selected_format = db_util.load_mcdi_model(parent_form.mcdi_type)
+    selected_format = db_util.read_cdi_format_model(parent_form.mcdi_type)
     if selected_format == None:
         return flask.render_template(
             'end_parent_form_404.html',
@@ -519,7 +519,7 @@ def handle_parent_mcdi_form(form_id):
 
             # TODO(samp): This should be in db_util
             # Calculate percentiles
-            percentile_model = db_util.load_percentile_model(
+            percentile_model = db_util.read_percentile_model(
                 percentile_table_name)
             if percentile_model == None:
                 msg = COULD_NOT_FIND_PERCENTILES_MSG
@@ -568,8 +568,8 @@ def handle_parent_mcdi_form(form_id):
             hard_of_hearing,
             False
         )
-        db_util.insert_snapshot(new_snapshot, word_entries)
-        db_util.remove_parent_form(form_id)
+        db_util.create_snapshot_model(new_snapshot, word_entries)
+        db_util.delete_parent_form_model(form_id)
 
         flask.session[constants.CONFIRMATION_ATTR] = SUBMITTED_MSG
         flask.session['SAVED_WORDS'] = None

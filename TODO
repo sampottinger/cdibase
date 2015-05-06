@@ -26,7 +26,7 @@ DISLOCATED:
  - Is form id always a string?
  - Testing util for invalid input
  - Use is_birthday_valid
- - db_util.load_percentile_model should return None when percentile model cannot
+ - db_util.read_percentile_model should return None when percentile model cannot
    be found.
  - Mention num session study specific
  - Prefer new information over previous child info

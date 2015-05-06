@@ -456,23 +456,23 @@ def build_snapshot(prototype, mcdi_type, languages, hard_of_hearing, cursor):
     for word_prototype in prototype['words']:
         words[word_prototype['word']] = word_prototype['val']
 
-    db_util.insert_snapshot(metadata, words, cursor)
+    db_util.create_snapshot_model(metadata, words, cursor)
     return metadata
 
 
 def parse_csv(contents, mcdi_type, languages, hard_of_hearing,
     act_as_file=False):
 
-    mcdi_model = db_util.load_mcdi_model(mcdi_type)
+    mcdi_model = db_util.read_cdi_format_model(mcdi_type)
     percentile_names = mcdi_model.details['percentiles']
     
     male_percentiles_name = percentile_names['male']
     female_percentiles_name = percentile_names['female']
     other_percentiles_name = percentile_names['other']
 
-    male_percentiles = db_util.load_percentile_model(male_percentiles_name)
-    female_percentiles = db_util.load_percentile_model(female_percentiles_name)
-    other_percentiles = db_util.load_percentile_model(other_percentiles_name)
+    male_percentiles = db_util.read_percentile_model(male_percentiles_name)
+    female_percentiles = db_util.read_percentile_model(female_percentiles_name)
+    other_percentiles = db_util.read_percentile_model(other_percentiles_name)
     
     percentile_tables = {
         constants.MALE: male_percentiles,

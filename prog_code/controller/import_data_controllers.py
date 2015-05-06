@@ -44,14 +44,14 @@ def import_data():
     """
     default_format = flask.session.get(
         'last_format_used',
-        db_util.load_mcdi_model_listing()[0].safe_name
+        db_util.load_cdi_format_model_listing()[0].safe_name
     )
 
     if flask.request.method == 'GET':
         return flask.render_template(
             'import_data.html',
             cur_page='import_data',
-            formats=db_util.load_mcdi_model_listing(),
+            formats=db_util.load_cdi_format_model_listing(),
             default_format=default_format,
             **session_util.get_standard_template_values()
         )

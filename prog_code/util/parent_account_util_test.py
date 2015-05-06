@@ -42,11 +42,11 @@ class ParentAccountUtilTests(mox.MoxTestBase):
         self.assertTrue(test_result)
 
     def test_generate_unique_mcdi_form_id(self):
-        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+        self.mox.StubOutWithMock(db_util, 'read_parent_form_model_by_id')
 
-        db_util.get_parent_form_by_id(mox.IsA(basestring)).AndReturn(True)
-        db_util.get_parent_form_by_id(mox.IsA(basestring)).AndReturn(True)
-        db_util.get_parent_form_by_id(mox.IsA(basestring)).AndReturn(None)
+        db_util.read_parent_form_model_by_id(mox.IsA(basestring)).AndReturn(True)
+        db_util.read_parent_form_model_by_id(mox.IsA(basestring)).AndReturn(True)
+        db_util.read_parent_form_model_by_id(mox.IsA(basestring)).AndReturn(None)
 
         self.mox.ReplayAll()
 

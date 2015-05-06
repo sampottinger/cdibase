@@ -229,7 +229,7 @@ def generate_unique_mcdi_form_id():
     ret_id = None
     while not found:
         ret_id = user_util.generate_password().lower()
-        found = db_util.get_parent_form_by_id(ret_id) == None
+        found = db_util.read_parent_form_model_by_id(ret_id) == None
 
     return ret_id
 

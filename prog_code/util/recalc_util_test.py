@@ -95,33 +95,33 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
 
 class RecalcPercentilesTest(mox.MoxTestBase):
 
-    def test_load_mcdi_model(self):
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        db_util.load_mcdi_model('test_format').AndReturn(TEST_MCDI_MODEL)
+    def test_read_cdi_format_model(self):
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
+        db_util.read_cdi_format_model('test_format').AndReturn(TEST_MCDI_MODEL)
         self.mox.ReplayAll()
 
         adapter = recalc_util.CachedMCDIAdapter()
-        result_1 = adapter.load_mcdi_model('test_format')
-        result_2 = adapter.load_mcdi_model('test_format')
+        result_1 = adapter.read_cdi_format_model('test_format')
+        result_2 = adapter.read_cdi_format_model('test_format')
 
         self.assertEqual(result_1, TEST_MCDI_MODEL)
         self.assertEqual(result_2, TEST_MCDI_MODEL)
 
-    def test_load_percentile_model(self):
-        self.mox.StubOutWithMock(db_util, 'load_percentile_model')
-        db_util.load_percentile_model('test_format').AndReturn(TEST_MCDI_MODEL)
+    def test_read_percentile_model(self):
+        self.mox.StubOutWithMock(db_util, 'read_percentile_model')
+        db_util.read_percentile_model('test_format').AndReturn(TEST_MCDI_MODEL)
         self.mox.ReplayAll()
 
         adapter = recalc_util.CachedMCDIAdapter()
-        result_1 = adapter.load_percentile_model('test_format')
-        result_2 = adapter.load_percentile_model('test_format')
+        result_1 = adapter.read_percentile_model('test_format')
+        result_2 = adapter.read_percentile_model('test_format')
 
         self.assertEqual(result_1, TEST_MCDI_MODEL)
         self.assertEqual(result_2, TEST_MCDI_MODEL)
 
     def test_get_max_mcdi_words(self):
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        db_util.load_mcdi_model('test_format').AndReturn(TEST_MCDI_MODEL)
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
+        db_util.read_cdi_format_model('test_format').AndReturn(TEST_MCDI_MODEL)
         self.mox.ReplayAll()
 
         adapter = recalc_util.CachedMCDIAdapter()
@@ -143,7 +143,7 @@ class RecalcPercentilesTest(mox.MoxTestBase):
         adapter.percentiles['typical-male'] = TEST_PERCENTILES_MODEL
         test_snapshot = copy.deepcopy(TEST_SNAPSHOT)
 
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
         self.mox.StubOutWithMock(db_util, 'load_snapshot_contents')
 
         test_word_1 = models.SnapshotContent(0, '', 1, 0)

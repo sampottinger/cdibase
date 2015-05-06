@@ -38,20 +38,20 @@ class APIKeyUtilTests(mox.MoxTestBase):
         result = api_key_util.interp_csv_field('test,test2,')
         self.assertEqual(result, ['test', 'test2', ''])
 
-    def test_get_if_avail(self):
-        result = api_key_util.get_if_avail(['1', '2', '3'], 2)
+    def test_get_list_item_if_avail(self):
+        result = api_key_util.get_list_item_if_avail(['1', '2', '3'], 2)
         self.assertEqual(result, '3')
 
-        result = api_key_util.get_if_avail(['1', '2'], 2, 'DEFAULT')
+        result = api_key_util.get_list_item_if_avail(['1', '2'], 2, 'DEFAULT')
         self.assertEqual(result, 'DEFAULT')
 
     def test_generate_new_api_key(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(db_util, 'read_api_key_model_record')
 
-        db_util.get_api_key(mox.IsA(basestring)).AndReturn(None)
-        db_util.get_api_key(mox.IsA(basestring)).AndReturn(True)
-        db_util.get_api_key(mox.IsA(basestring)).AndReturn(True)
-        db_util.get_api_key(mox.IsA(basestring)).AndReturn(None)
+        db_util.read_api_key_model_record(mox.IsA(basestring)).AndReturn(None)
+        db_util.read_api_key_model_record(mox.IsA(basestring)).AndReturn(True)
+        db_util.read_api_key_model_record(mox.IsA(basestring)).AndReturn(True)
+        db_util.read_api_key_model_record(mox.IsA(basestring)).AndReturn(None)
 
         self.mox.ReplayAll()
 
@@ -59,16 +59,16 @@ class APIKeyUtilTests(mox.MoxTestBase):
         api_key_util.generate_new_api_key()
 
 
-    def test_create_new_api_key(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
-        self.mox.StubOutWithMock(db_util, 'delete_api_key')
-        self.mox.StubOutWithMock(db_util, 'create_new_api_key')
+    def test_create_api_key_model(self):
+        self.mox.StubOutWithMock(db_util, 'read_api_key_model_record')
+        self.mox.StubOutWithMock(db_util, 'delete_api_key_model')
+        self.mox.StubOutWithMock(db_util, 'create_api_key_model')
 
-        db_util.get_api_key('123').AndReturn(True)
-        db_util.delete_api_key('123')
-        db_util.get_api_key(mox.IsA(basestring)).AndReturn(None)
-        db_util.create_new_api_key('123', mox.IsA(basestring))
+        db_util.read_api_key_model_record('123').AndReturn(True)
+        db_util.delete_api_key_model('123')
+        db_util.read_api_key_model_record(mox.IsA(basestring)).AndReturn(None)
+        db_util.create_api_key_model('123', mox.IsA(basestring))
 
         self.mox.ReplayAll()
 
-        api_key_util.create_new_api_key('123')
+        api_key_util.create_api_key_model('123')

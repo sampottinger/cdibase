@@ -133,7 +133,7 @@ def check_user_password(email, password):
     @rtype: bool
     """
     email = email.lower()
-    user = db_util.load_user_model(email)
+    user = db_util.read_user_model(email)
     if not user:
         return False
     pass_hash = user.password_hash
@@ -151,10 +151,10 @@ def change_user_password(email, password):
     @type password: str
     """
     email = email.lower()
-    user = db_util.load_user_model(email)
+    user = db_util.read_user_model(email)
     user.password_hash = werkzeug.generate_password_hash(password,
         method='sha512')
-    db_util.save_user_model(user)
+    db_util.update_user_model(user)
 
 def update_user(orig_email, email, can_enter_data, can_delete_data,
     can_import_data, can_edit_parents, can_access_data, can_change_formats,
@@ -187,7 +187,7 @@ def update_user(orig_email, email, can_enter_data, can_delete_data,
     @type can_admin: bool
     """
     email = email.lower()
-    user = db_util.load_user_model(orig_email)
+    user = db_util.read_user_model(orig_email)
     user.email = email
     user.can_enter_data = can_enter_data
     user.can_delete_data = can_delete_data
@@ -197,7 +197,7 @@ def update_user(orig_email, email, can_enter_data, can_delete_data,
     user.can_change_formats = can_change_formats
     user.can_use_api_key = can_use_api_key
     user.can_admin = can_admin
-    db_util.save_user_model(user, existing_email=orig_email)
+    db_util.update_user_model(user, existing_email=orig_email)
 
 def reset_password(email, pass_len=10):
     """Set user's password to random string and send email with new credentials.
@@ -227,7 +227,7 @@ def get_user(identifier):
     @return: User account info for use with given email address.
     @rtype: models.User
     """
-    return db_util.load_user_model(identifier)
+    return db_util.read_user_model(identifier)
 
 def delete_user(email):
     """Delete the user with the given email address.
@@ -244,4 +244,4 @@ def get_all_users():
     @return: Collection of all user accounts for this application.
     @rtype: Collection of models.User
     """
-    return db_util.get_all_user_models()
+    return db_util.load_user_model_listing()

@@ -140,13 +140,13 @@ def build_delete_query(filters, table, restore):
         return build_query(filters, table, 'UPDATE %s SET deleted=1 WHERE %s')
 
 
-def run_search_query(filters, table, exclude_deleted=True):
+def run_search_query(filters, table_str, exclude_deleted=True):
     """Builds and runs a SQL select query on the given table with given filters.
 
     @param filters: The filters to build the query out of.
     @type: Iterable over models.Filter
-    @param table: The name of the table to query.
-    @type table: str
+    @param table_str: The name of the table to query.
+    @type table_str: str
     @return: Results of SQL select query for the given table with the given
         filters.
     @rtype: Iterable over models.SnapshotMetadata
@@ -157,7 +157,7 @@ def run_search_query(filters, table, exclude_deleted=True):
     if exclude_deleted:
         filters.append(models.Filter('deleted', 'eq', 0))
 
-    query_info = build_search_query(filters, table)
+    query_info = build_search_query(filters, table_str)
     raw_operands = map(lambda x: x.operand, filters)
     filter_fields_and_operands = zip(query_info.filter_fields, raw_operands)
     operands = map(

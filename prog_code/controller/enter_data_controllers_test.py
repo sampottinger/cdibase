@@ -216,15 +216,15 @@ class EnterDataControllersTests(mox.MoxTestBase):
 
     def test_format_for_enter_data(self):
         self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
+        self.mox.StubOutWithMock(db_util, 'create_snapshot_model')
         
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        db_util.load_mcdi_model(TEST_MCDI_FORMAT_NAME).AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model(TEST_MCDI_FORMAT_NAME).AndReturn(TEST_FORMAT)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        db_util.load_mcdi_model('invalid format').AndReturn(None)
+        db_util.read_cdi_format_model('invalid format').AndReturn(None)
 
         self.mox.ReplayAll()
 
@@ -248,12 +248,12 @@ class EnterDataControllersTests(mox.MoxTestBase):
 
     def test_missing_enter_data_params(self):
         self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
+        self.mox.StubOutWithMock(db_util, 'create_snapshot_model')
 
         for i in range(0, 10):
             user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-            db_util.load_mcdi_model(TEST_MCDI_FORMAT_NAME).AndReturn(
+            db_util.read_cdi_format_model(TEST_MCDI_FORMAT_NAME).AndReturn(
                 TEST_FORMAT)
 
         self.mox.ReplayAll()
@@ -367,12 +367,12 @@ class EnterDataControllersTests(mox.MoxTestBase):
 
     def test_invalid_enter_data_params(self):
         self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
+        self.mox.StubOutWithMock(db_util, 'create_snapshot_model')
 
         for i in range(0, 8):
             user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-            db_util.load_mcdi_model(TEST_MCDI_FORMAT_NAME).AndReturn(
+            db_util.read_cdi_format_model(TEST_MCDI_FORMAT_NAME).AndReturn(
                 TEST_FORMAT)
 
 
@@ -467,21 +467,21 @@ class EnterDataControllersTests(mox.MoxTestBase):
 
     def test_success_enter_data(self):
         self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'load_percentile_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
+        self.mox.StubOutWithMock(db_util, 'read_percentile_model')
         self.mox.StubOutWithMock(math_util, 'find_percentile')
-        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
+        self.mox.StubOutWithMock(db_util, 'create_snapshot_model')
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        db_util.load_mcdi_model(TEST_MCDI_FORMAT_NAME).AndReturn(
+        db_util.read_cdi_format_model(TEST_MCDI_FORMAT_NAME).AndReturn(
             TEST_FORMAT)
-        db_util.load_percentile_model(MALE_TEST_PERCENTILE_NAME).AndReturn(
+        db_util.read_percentile_model(MALE_TEST_PERCENTILE_NAME).AndReturn(
             TEST_PERCENTILE_MODEL
         )
         math_util.find_percentile('test details', 3, TEST_AGE, 6).AndReturn(
             TEST_PERCENTILE
         )
-        db_util.insert_snapshot(
+        db_util.create_snapshot_model(
             TEST_EXPECTED_SNAPSHOT,
             TEST_EXPECTED_WORD_ENTRIES
         )
@@ -620,7 +620,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         ]
 
         self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'update_participant_metadata')
+        self.mox.StubOutWithMock(db_util, 'update_db_wide_participant_metadata')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
         self.mox.StubOutWithMock(
             recalc_util,
@@ -628,7 +628,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         )
         
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        db_util.update_participant_metadata(
+        db_util.update_db_wide_participant_metadata(
             TEST_DB_ID,
             constants.FEMALE,
             new_birthday,

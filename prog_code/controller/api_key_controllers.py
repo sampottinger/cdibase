@@ -108,7 +108,7 @@ UNAUTHORIZED_STATUS = 403
 SNAPSHOTS_DB_TABLE = constants.SNAPSHOTS_DB_TABLE
 
 
-def generate_error(msg, code):
+def generate_api_error(msg, code):
     """Generate a JSON serialized error message that the API can return.
 
     @param msg: The error message to provide to the API client.
@@ -137,7 +137,7 @@ def generate_unauthorized_error(msg):
         from a Flask request handler.
     @rtype: tuple
     """
-    return generate_error(msg, UNAUTHORIZED_STATUS)
+    return generate_api_error(msg, UNAUTHORIZED_STATUS)
 
 
 def generate_invalid_request_error(msg):
@@ -154,10 +154,10 @@ def generate_invalid_request_error(msg):
         from a Flask request handler.
     @rtype: tuple
     """
-    return generate_error(msg, INVALID_REQUEST_STATUS)
+    return generate_api_error(msg, INVALID_REQUEST_STATUS)
 
 
-def make_filter(field, value):
+def make_api_child_filter(field, value):
     """Add a filter to the serialized specification of a database query.
 
     Creates a Filter object that can be used with a filter_util search query.
@@ -196,7 +196,7 @@ def make_filter(field, value):
 
 @app.route('/base/config_api_key')
 @session_util.require_login(use_api_key=True)
-def config_api_keys():
+def render_config_api_keys_ui():
     """GUI page for configuring API keys.
 
     @return: Current API key and controls to modify that key.
@@ -206,14 +206,14 @@ def config_api_keys():
     return flask.render_template(
         'edit_api_keys.html',
         cur_page='conifg_api_key',
-        api_key=api_key_util.get_api_key(user_id),
+        api_key=api_key_util.read_api_key_model(user_id),
         **session_util.get_standard_template_values()
     )
 
 
 @app.route('/base/config_api_key/new')
 @session_util.require_login(use_api_key=True)
-def create_api_key():
+def handle_create_api_key_request():
     """Controller that allows for the creation of a new API key.
 
     Controller that assigns a user a new API key. Note that this controller will
@@ -225,7 +225,7 @@ def create_api_key():
     @rtype: Flask response
     """
     user_id = session_util.get_user_id()
-    api_key_util.create_new_api_key(user_id)
+    api_key_util.create_api_key_model(user_id)
     flask.session[CONFIRMATION_ATTR] = NEW_API_KEY_MSG
     return flask.redirect('/base/config_api_key')
 
@@ -247,7 +247,7 @@ def verify_api_key_for_parent_forms(api_key):
     if not api_key:
         return generate_invalid_request_error(NO_API_KEY_MSG)
 
-    api_key_record = db_util.get_api_key(api_key)
+    api_key_record = db_util.read_api_key_model(api_key)
     if not api_key_record:
         return generate_invalid_request_error(INVALID_API_KEY_MSG)
 
@@ -265,7 +265,7 @@ def verify_api_key_for_parent_forms(api_key):
 
 
 @app.route('/base/api/v0/send_parent_form', methods=['GET', 'POST'])
-def send_parent_form():
+def handle_send_single_parent_form_request():
     """API controller that allows external applications to send an MCDI form.
 
     API controller that allows external applications and services to send a
@@ -341,7 +341,7 @@ def send_parent_form():
     # operation.
     interpretation_format_name = request.args.get(FORMAT_ATTR,
         DEFAULT_INTERPRETATION_FORMAT)
-    interpretation_format = db_util.load_presentation_model(
+    interpretation_format = db_util.read_presentation_model(
         interpretation_format_name)
 
     # Reject API request if the interpretation format was not provided or if the
@@ -376,7 +376,7 @@ def send_parent_form():
 
     # Ensure that the name of the desired MCDI format is specified / exists in
     # the application database.
-    if db_util.load_mcdi_model(mcdi_type) == None:
+    if db_util.read_cdi_format_model(mcdi_type) == None:
         msg = INVALID_MCDI_TYPE_MSG % mcdi_type
         return generate_invalid_request_error(msg)
 
@@ -463,14 +463,14 @@ def send_parent_form():
 
     # Save the filled parent form to the database and send a link for filling
     # out that form to the specified parent email address.
-    db_util.insert_parent_form(new_form)
+    db_util.create_parent_form_model(new_form)
     parent_account_util.send_mcdi_email(new_form)
 
     return SUCCESS_JSON_MSG
 
 
 @app.route('/base/api/v0/send_parent_forms', methods=['GET', 'POST'])
-def send_parent_forms():
+def handle_send_many_parent_forms_request():
     """API controller that allows external applications to send many MCDI forms.
 
     API controller that allows external applications and services to send many
@@ -558,7 +558,7 @@ def send_parent_forms():
     # operation.
     interpretation_format_name = request.args.get(FORMAT_ATTR,
         DEFAULT_INTERPRETATION_FORMAT)
-    interpretation_format = db_util.load_presentation_model(
+    interpretation_format = db_util.read_presentation_model(
         interpretation_format_name)
 
     # Reject API request if the interpretation format was not provided or if the
@@ -620,22 +620,25 @@ def send_parent_forms():
         # Get the grouping of parameters across the parameter arrays. Note that
         # get if avail returns '' if the parameter is not provided.
         global_id = interp_util.safe_int_interpret(
-            api_key_util.get_if_avail(global_id_vals, i))
-        study_id = api_key_util.get_if_avail(study_id_vals, i)
-        study = api_key_util.get_if_avail(study_vals, i)
-        gender = api_key_util.get_if_avail(gender_vals, i)
-        birthday = api_key_util.get_if_avail(birthday_vals, i)
+            api_key_util.get_list_item_if_avail(global_id_vals, i))
+        study_id = api_key_util.get_list_item_if_avail(study_id_vals, i)
+        study = api_key_util.get_list_item_if_avail(study_vals, i)
+        gender = api_key_util.get_list_item_if_avail(gender_vals, i)
+        birthday = api_key_util.get_list_item_if_avail(birthday_vals, i)
         items_excluded = interp_util.safe_int_interpret(
-            api_key_util.get_if_avail(items_excluded_vals, i))
+            api_key_util.get_list_item_if_avail(items_excluded_vals, i))
         total_num_sessions = interp_util.safe_int_interpret(
-            api_key_util.get_if_avail(total_num_sessions_vals, i))
+            api_key_util.get_list_item_if_avail(total_num_sessions_vals, i))
         extra_categories = interp_util.safe_int_interpret(
-            api_key_util.get_if_avail(extra_categories_vals, i))
-        languages = api_key_util.get_if_avail(languages_vals, i)
-        hard_of_hearing = api_key_util.get_if_avail(hard_of_hearing_vals, i)
-        child_name = api_key_util.get_if_avail(child_name_vals, i)
-        parent_email = api_key_util.get_if_avail(parent_email_vals, i)
-        mcdi_type = api_key_util.get_if_avail(mcdi_type_vals, i)
+            api_key_util.get_list_item_if_avail(extra_categories_vals, i))
+        languages = api_key_util.get_list_item_if_avail(languages_vals, i)
+        hard_of_hearing = api_key_util.get_list_item_if_avail(
+            hard_of_hearing_vals,
+            i
+        )
+        child_name = api_key_util.get_list_item_if_avail(child_name_vals, i)
+        parent_email = api_key_util.get_list_item_if_avail(parent_email_vals, i)
+        mcdi_type = api_key_util.get_list_item_if_avail(mcdi_type_vals, i)
 
         # Generate a new unique randomly generated ID for this new parent form.
         form_id = parent_account_util.generate_unique_mcdi_form_id()
@@ -646,7 +649,7 @@ def send_parent_forms():
 
         # Ensure that the name of the desired MCDI format has been specified / 
         # the MCDI format is in the application's database.
-        if db_util.load_mcdi_model(mcdi_type) == None:
+        if db_util.read_cdi_format_model(mcdi_type) == None:
             msg = INVALID_MCDI_TYPE_MSG % mcdi_type
             return generate_invalid_request_error(msg)
 
@@ -744,14 +747,14 @@ def send_parent_forms():
 
         # Save the filled parent form to the database and send a link for
         # filling out that form to the specified parent email address.
-        db_util.insert_parent_form(new_form)
+        db_util.create_parent_form_model(new_form)
         parent_account_util.send_mcdi_email(new_form)
 
     return SUCCESS_JSON_MSG
 
 
 @app.route("/base/api/v0/mcdi_metadata.json")
-def get_child_info_by_api():
+def handle_child_info_request():
     """Get information about a child in the MCDI database.
 
     Controller that allows other applications and services to look up MCDI
@@ -828,7 +831,7 @@ def get_child_info_by_api():
     if not api_key:
         return generate_invalid_request_error(NO_API_KEY_MSG)
 
-    api_key_record = db_util.get_api_key(api_key)
+    api_key_record = db_util.read_api_key_model(api_key)
     if not api_key_record:
         return generate_invalid_request_error(INVALID_API_KEY_MSG)
 
@@ -844,11 +847,11 @@ def get_child_info_by_api():
 
     fields = filter(lambda (name, value): name not in INGORE_FIELDS,
         flask.request.args.items())
-    db_filters = map(lambda x: make_filter(*x), fields)
+    db_filters = map(lambda x: make_api_child_filter(*x), fields)
 
     present_format = flask.request.args.get(FORMAT_ATTR, None)
     if present_format:
-        present_format = db_util.load_presentation_model(present_format)
+        present_format = db_util.read_presentation_model(present_format)
     
     matching_snapshots = filter_util.run_search_query(
         db_filters,
@@ -876,7 +879,7 @@ def get_child_info_by_api():
 
 
 @app.route('/base/api/v0/get_child_words', methods=['GET', 'POST'])
-def get_child_words_by_api():
+def handle_child_words_request():
     """Get the words a child knows and when those words were first learned.
 
     Controller that allows other applications and services to look up the words
@@ -904,7 +907,7 @@ def get_child_words_by_api():
     if not child_id:
         return generate_invalid_request_error(NO_CHILD_ID_MSG)
 
-    api_key_record = db_util.get_api_key(api_key)
+    api_key_record = db_util.read_api_key_model(api_key)
     if not api_key_record:
         return generate_invalid_request_error(INVALID_API_KEY_MSG)
 

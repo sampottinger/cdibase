@@ -123,43 +123,43 @@ def get_db_connection():
     """
     return SharedConnection.get_instance()
 
-def save_mcdi_model(newMetadataModel):
+def create_cdi_format_model(new_model):
     """Save a metadata for a MCDI format.
 
-    @param newMetadataModel: Model containing format metadata.
-    @type newMetadataModel: models.MCDIFormatMetadata
+    @param new_model: Model containing format metadata.
+    @type new_model: models.MCDIFormatMetadata
     """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
         'INSERT INTO mcdi_formats VALUES (?, ?, ?)',
         (
-            newMetadataModel.human_name,
-            newMetadataModel.safe_name,
-            newMetadataModel.filename
+            new_model.human_name,
+            new_model.safe_name,
+            new_model.filename
         )
     )
     connection.commit()
     connection.close()
 
 
-def delete_mcdi_model(metadataModelName):
+def delete_cdi_format_model(name):
     """Delete an existing saved MCDI format.
 
-    @param metadataModelName: The name of the MCDI format to delete.
-    @type metadataModelName: str
+    @param name: The name of the MCDI format to delete.
+    @type name: str
     """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
         'DELETE FROM mcdi_formats WHERE safe_name=?',
-        (metadataModelName,)
+        (name,)
     )
     connection.commit()
     connection.close()
 
 
-def load_mcdi_model_listing():
+def load_cdi_format_model_listing():
     """Load metadata for all MCDI formats.
 
     @return: Iterable over metadata for all MCDI formats..
@@ -175,7 +175,7 @@ def load_mcdi_model_listing():
     return ret_val
 
 
-def load_mcdi_model(name):
+def read_cdi_format_model(name):
     """Load a complete MCDI format.
 
     @param name: The name of the MCDI format to load.
@@ -206,43 +206,43 @@ def load_mcdi_model(name):
     return models.MCDIFormat(metadata[0], metadata[1], metadata[2], spec)
 
 
-def save_presentation_model(newMetadataModel):
+def create_presentation_model(new_model):
     """Save a presentation format.
 
-    @param newMetadataModel: Model containing format metadata.
-    @type newMetadataModel: models.PresentationFormatMetadata
+    @param new_model: Model containing format metadata.
+    @type new_model: models.PresentationFormatMetadata
     """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
         'INSERT INTO presentation_formats VALUES (?, ?, ?)',
         (
-            newMetadataModel.safe_name,
-            newMetadataModel.human_name,
-            newMetadataModel.filename
+            new_model.safe_name,
+            new_model.human_name,
+            new_model.filename
         )
     )
     connection.commit()
     connection.close()
 
 
-def delete_presentation_model(metadataModelName):
+def delete_presentation_model(name):
     """Delete an existing saved presentation format.
 
-    @param metadataModelName: The name of the presentation format to delete.
-    @type metadataModelName: str
+    @param name: The name of the presentation format to delete.
+    @type name: str
     """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
         'DELETE FROM presentation_formats WHERE safe_name=?',
-        (metadataModelName,)
+        (name,)
     )
     connection.commit()
     connection.close()
 
 
-def load_presentation_model_listing():
+def read_presentation_model_listing():
     """Load metadata for all presentation formats.
 
     @return: Iterable over metadata for all MCDI formats..
@@ -259,7 +259,7 @@ def load_presentation_model_listing():
     return ret_val
 
 
-def load_presentation_model(name):
+def read_presentation_model(name):
     """Load a complete MCDI format.
 
     @param name: The name of the MCDI format to load.
@@ -291,7 +291,7 @@ def load_presentation_model(name):
         spec)
 
 
-def save_percentile_model(newMetadataModel):
+def create_percentile_model(new_model):
     """Save a table of values necessary for calcuating child MCDI percentiles.
 
     @param name: The name of the precentile table model to load.
@@ -304,32 +304,32 @@ def save_percentile_model(newMetadataModel):
     cursor.execute(
         'INSERT INTO percentile_tables VALUES (?, ?, ?)',
         (
-            newMetadataModel.safe_name,
-            newMetadataModel.human_name,
-            newMetadataModel.filename
+            new_model.safe_name,
+            new_model.human_name,
+            new_model.filename
         )
     )
     connection.commit()
     connection.close()
 
 
-def delete_percentile_model(metadataModelName):
+def delete_percentile_model(name):
     """Delete an existing saved percentile data table.
 
-    @param metadataModelName: The name of the precentile table to delete.
-    @type metadataModelName: str
+    @param name: The name of the precentile table to delete.
+    @type name: str
     """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
         'DELETE FROM percentile_tables WHERE safe_name=?',
-        (metadataModelName,)
+        (name,)
     )
     connection.commit()
     connection.close()
 
 
-def load_percentile_model_listing():
+def read_percentile_model_listing():
     """Load metadata for all percentile tables.
 
     @return: Iterable over metadata for all percentile tables.
@@ -346,7 +346,7 @@ def load_percentile_model_listing():
     return ret_val
 
 
-def load_percentile_model(name):
+def read_percentile_model(name):
     """Load a complete percentile table.
 
     @param name: The name of the percentile table to load.
@@ -376,7 +376,13 @@ def load_percentile_model(name):
     return models.PercentileTable(metadata[0], metadata[1], metadata[2], spec)
 
 
-def list_stuides():
+def list_studies():
+    """Enumerate the set of names of all studies across the dataset.
+
+    @return: Iterable over all names of the studies across the dataset without
+        duplicates.
+    @rtype: str
+    """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
@@ -387,28 +393,7 @@ def list_stuides():
     return ret_val
 
 
-def load_snapshot_contents(snapshot):
-    """Load reports of individual statuses for words.
-
-    Load status for individual / state of words as part of an MCDI snapshot.
-
-    @param snapshot: The snapshot to get contents for.
-    @type snapshot: model.SnapshotMetadata
-    @return: Iterable over the details of the given MCDI snapshot.
-    @rtype: Iterable over models.SnapshotContent
-    """
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute(
-        'SELECT * FROM snapshot_content WHERE snapshot_id=?',
-        (snapshot.database_id,)
-    )
-    ret_val = map(lambda x: models.SnapshotContent(*x), cursor.fetchall())
-    connection.close()
-    return ret_val
-
-
-def load_user_model(identifier):
+def read_user_model(identifier):
     """Load the user model for a user account with the given email address.
 
     @param identifier: The email of the user for which a user model should be
@@ -441,7 +426,7 @@ def load_user_model(identifier):
     return models.User(*(result))
 
 
-def save_user_model(user, existing_email=None):
+def update_user_model(user, existing_email=None):
     """Save data about a user account.
 
     @param user: The user model to save to the database.
@@ -521,7 +506,7 @@ def delete_user_model(email):
     connection.close()
 
 
-def get_all_user_models():
+def load_user_model_listing():
     """Get a listing of all user accounts for the web application.
 
     @return: Iterable over user account information.
@@ -567,7 +552,7 @@ def lookup_global_participant_id(study, participant_study_id):
     return ret_val
 
 
-def get_api_key_by_user(user_id):
+def read_api_key_model_by_user(user_id):
     """Get the API key for a user.
 
     @param user_id: The ID of a user account. This function will return the API
@@ -593,7 +578,7 @@ def get_api_key_by_user(user_id):
         return None
 
 
-def get_api_key_by_key(api_key):
+def read_api_key_model_by_key(api_key):
     """Get the record for an API key.
 
     @param api_key: The API key to find a record for.
@@ -618,7 +603,7 @@ def get_api_key_by_key(api_key):
         return None
 
 
-def get_api_key(identifier):
+def read_api_key_model(identifier):
     """Get the record for an API key for a user ID or the API key iteself.
 
     Given either an integer user ID or a string API key, this function returns
@@ -632,12 +617,12 @@ def get_api_key(identifier):
     @rtype: models.APIKey
     """
     if isinstance(identifier, basestring):
-        return get_api_key_by_key(identifier)
+        return read_api_key_model_by_key(identifier)
     else:
-        return get_api_key_by_user(identifier)
+        return read_api_key_model_by_user(identifier)
 
 
-def delete_api_key(user_id):
+def delete_api_key_model(user_id):
     """Delete a record of an API key for a user.
 
     @param user_id: The integer ID of the user to delete an API key for.
@@ -652,7 +637,7 @@ def delete_api_key(user_id):
     connection.close()
 
 
-def create_new_api_key(user_id, api_key):
+def create_api_key_model(user_id, api_key):
     """Create a new record of an API key.
 
     @param user_id: The integer ID of the user to create an API key record for.
@@ -671,7 +656,14 @@ def create_new_api_key(user_id, api_key):
     return models.APIKey(user_id, api_key)
 
 
-def clean_up_date(target_val):
+def clean_up_date_str(target_val):
+    """Standardize a date string before persisting.
+
+    @param target_val: The date string to standardize.
+    @type target_val: str
+    @return: Cleaned up date string.
+    @rtype: str
+    """
     parts = target_val.split('/')
     if len(parts) != 3:
         return None
@@ -692,7 +684,7 @@ def clean_up_date(target_val):
     return '%d/%02d/%02d' % (year, month, day)
 
 
-def update_participant_metadata(child_id, gender, birthday_str,
+def update_db_wide_participant_metadata(child_id, gender, birthday_str,
     hard_of_hearing, languages, snapshot_ids=None, cursor=None):
     """Update the participant metadata for all his / her snapshots.
 
@@ -714,6 +706,11 @@ def update_participant_metadata(child_id, gender, birthday_str,
     @type hard_of_hearing: int
     @param languages: Comma separated list of languages the participant speaks.
     @type languages: list of str
+    @keyword snapshot_ids: The specific snapshots to update. If not provided,
+        updates all participant snapshots.
+    @type snapshot_ids: int
+    @keyword cursor: The dtabase cursor to re-use in executing this task.
+    @type cursor: sqlite3 database cursor
     """
 
     cursor_provided = cursor != None
@@ -750,7 +747,12 @@ def update_participant_metadata(child_id, gender, birthday_str,
         connection.close()
 
 
-def update_snapshot(snapshot_metadata, cursor=None):
+def update_snapshot_model(snapshot_metadata, cursor=None):
+    """Update a snapshot already in the database.
+
+    @param snapshot_metadata: The metadata of the snapshot to update.
+    @type snapshot_metadata: models.SnapshotMetadata
+    """
     cursor_provided = cursor != None
     if not cursor_provided:
         connection = get_db_connection()
@@ -763,8 +765,8 @@ def update_snapshot(snapshot_metadata, cursor=None):
         child_id = snapshot_metadata.child_id
 
     # Standardize date
-    snapshot_metadata.birthday = clean_up_date(snapshot_metadata.birthday)
-    snapshot_metadata.session_date = clean_up_date(
+    snapshot_metadata.birthday = clean_up_date_str(snapshot_metadata.birthday)
+    snapshot_metadata.session_date = clean_up_date_str(
         snapshot_metadata.session_date)
 
     if isinstance(snapshot_metadata.languages, basestring):
@@ -807,7 +809,7 @@ def update_snapshot(snapshot_metadata, cursor=None):
 
 
 # TODO: Combined for transaction
-def insert_snapshot(snapshot_metadata, word_entries, cursor=None):
+def create_snapshot_model(snapshot_metadata, word_entries, cursor=None):
     """Insert a new MCDI snapshot.
 
     @param snapshot_metadata: The metadata for this snapshot that should be
@@ -830,8 +832,8 @@ def insert_snapshot(snapshot_metadata, word_entries, cursor=None):
         child_id = snapshot_metadata.child_id
 
     # Standardize date
-    snapshot_metadata.birthday = clean_up_date(snapshot_metadata.birthday)
-    snapshot_metadata.session_date = clean_up_date(
+    snapshot_metadata.birthday = clean_up_date_str(snapshot_metadata.birthday)
+    snapshot_metadata.session_date = clean_up_date_str(
         snapshot_metadata.session_date)
 
     cmd = 'INSERT INTO snapshots VALUES (%s)' % (', '.join('?' * 20))
@@ -880,7 +882,28 @@ def insert_snapshot(snapshot_metadata, word_entries, cursor=None):
         connection.close()
 
 
-def insert_parent_form(form_metadata):
+def load_snapshot_contents(snapshot):
+    """Load reports of individual statuses for words.
+
+    Load status for individual / state of words as part of an MCDI snapshot.
+
+    @param snapshot: The snapshot to get contents for.
+    @type snapshot: model.SnapshotMetadata
+    @return: Iterable over the details of the given MCDI snapshot.
+    @rtype: Iterable over models.SnapshotContent
+    """
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(
+        'SELECT * FROM snapshot_content WHERE snapshot_id=?',
+        (snapshot.database_id,)
+    )
+    ret_val = map(lambda x: models.SnapshotContent(*x), cursor.fetchall())
+    connection.close()
+    return ret_val
+
+
+def create_parent_form_model(form_metadata):
     """Create a record of a parent form.
 
     @param form_metadata: Information about the parent form to persist.
@@ -915,7 +938,7 @@ def insert_parent_form(form_metadata):
     connection.close()
 
 
-def get_parent_form_by_id(form_id):
+def read_parent_form_model_by_id(form_id):
     """Get information about a parent MCDI form.
 
     @param form_id: The ID of the parent MCDI form to get the record for.
@@ -940,7 +963,7 @@ def get_parent_form_by_id(form_id):
         return None
 
 
-def remove_parent_form(form_id):
+def delete_parent_form_model(form_id):
     """Delete the record of a parent MCDI form.
 
     @param form_id: The ID of the parent MCDI form to delete.
@@ -958,7 +981,11 @@ def remove_parent_form(form_id):
 
 
 def get_counts():
-    """Get the number of CDIs completed by study by child ID"""
+    """Get the number of CDIs completed by study by child ID
+
+    @return: Mapping from study to child id to count of CDIs completed.
+    @rtype: dict<str, dict<str, int>>
+    """
     by_study = {}
 
     connection = get_db_connection()

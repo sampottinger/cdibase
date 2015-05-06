@@ -81,7 +81,7 @@ def enter_data_index():
     return flask.render_template(
         'enter_data.html',
         cur_page='enter_data',
-        formats=db_util.load_mcdi_model_listing(),
+        formats=db_util.load_cdi_format_model_listing(),
         **session_util.get_standard_template_values()
     )
 
@@ -102,7 +102,7 @@ def enter_data_form(format_name):
     """
     request = flask.request
 
-    selected_format = db_util.load_mcdi_model(format_name)
+    selected_format = db_util.read_cdi_format_model(format_name)
     if selected_format == None:
         flask.session[constants.ERROR_ATTR] = MCDI_NOT_FOUND_MSG
         return flask.redirect(ENTER_DATA_URL)
@@ -113,7 +113,7 @@ def enter_data_form(format_name):
             'enter_data_form.html',
             cur_page='enter_data',
             selected_format=selected_format,
-            formats=db_util.load_mcdi_model_listing(),
+            formats=db_util.load_cdi_format_model_listing(),
             male_val=constants.MALE,
             female_val=constants.FEMALE,
             other_gender_val=constants.OTHER_GENDER,
@@ -250,7 +250,7 @@ def enter_data_form(format_name):
 
         # TODO(samp): This should be in db_util
         # Calculate percentiles
-        percentile_model = db_util.load_percentile_model(percentile_table_name)
+        percentile_model = db_util.read_percentile_model(percentile_table_name)
         percentile = math_util.find_percentile(
             percentile_model.details,
             words_spoken,
@@ -282,7 +282,7 @@ def enter_data_form(format_name):
             False
         )
 
-        db_util.insert_snapshot(new_snapshot, word_entries)
+        db_util.create_snapshot_model(new_snapshot, word_entries)
 
         if global_id != None:
             msg = MCDI_ADDED_MSG % global_id
@@ -450,7 +450,7 @@ def edit_metadata():
         return (error, 400)
 
     # Update the snapshots
-    db_util.update_participant_metadata(
+    db_util.update_db_wide_participant_metadata(
         global_id,
         gender,
         birthday_raw,

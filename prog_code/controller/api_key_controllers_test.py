@@ -173,7 +173,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
     def test_generate_error(self):
         test_message = 'test_message'
         
-        ret_str, status = api_key_controllers.generate_error(test_message,
+        ret_str, status = api_key_controllers.generate_api_error(test_message,
             TEST_DB_ID)
         self.assertEqual(json.loads(ret_str)[constants.ERROR_ATTR],
             test_message)
@@ -192,19 +192,19 @@ class TestAPIKeyControllers(mox.MoxTestBase):
         self.assertEqual(status, api_key_controllers.INVALID_REQUEST_STATUS)
 
     def test_make_filter(self):
-        filterModel = api_key_controllers.make_filter('test_field', 'test val')
+        filterModel = api_key_controllers.make_api_child_filter('test_field', 'test val')
         self.assertEqual(filterModel.field, 'test_field')
         self.assertEqual(filterModel.operand, 'test val')
         self.assertEqual(filterModel.operator, 'eq')
 
         self.assertIn('min_percentile', FLOAT_FIELDS)
         self.assertIn('min_percentile', SPECIAL_API_QUERY_FIELDS)
-        filterModel = api_key_controllers.make_filter('min_percentile', '50')
+        filterModel = api_key_controllers.make_api_child_filter('min_percentile', '50')
         self.assertEqual(filterModel.field, 'percentile')
         self.assertTrue(math.fabs(filterModel.operand - 50) < 0.001)
 
         self.assertIn('child_id', INTEGER_FIELDS)
-        filterModel = api_key_controllers.make_filter('child_id', '100')
+        filterModel = api_key_controllers.make_api_child_filter('child_id', '100')
         self.assertEqual(filterModel.field, 'child_id')
         self.assertEqual(filterModel.operand, 100)
         self.assertEqual(filterModel.operator, 'eq')
@@ -212,11 +212,11 @@ class TestAPIKeyControllers(mox.MoxTestBase):
     def test_create_api_key(self):
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(session_util, 'get_user_id')
-        self.mox.StubOutWithMock(api_key_util, 'create_new_api_key')
+        self.mox.StubOutWithMock(api_key_util, 'create_api_key_model')
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         session_util.get_user_id().AndReturn(TEST_DB_ID)
-        api_key_util.create_new_api_key(TEST_DB_ID)
+        api_key_util.create_api_key_model(TEST_DB_ID)
 
         self.mox.ReplayAll()
 
@@ -233,12 +233,12 @@ class TestAPIKeyControllers(mox.MoxTestBase):
                 self.assertFalse(constants.ERROR_ATTR in sess)
 
     def test_verify_api_key_for_parent_forms(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(db_util, 'read_api_key_model_record')
         self.mox.StubOutWithMock(user_util, 'get_user')
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(None)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(None)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(models.User(
             TEST_DB_ID,
             TEST_EMAIL,
@@ -253,7 +253,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
             False
         ))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(models.User(
             TEST_DB_ID,
             TEST_EMAIL,
@@ -268,7 +268,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
             False
         ))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
         self.mox.ReplayAll()
@@ -290,19 +290,19 @@ class TestAPIKeyControllers(mox.MoxTestBase):
         self.assertEqual(problem, None)
 
     def test_send_parent_form_missing_params(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(db_util, 'read_api_key_model_record')
         self.mox.StubOutWithMock(user_util, 'get_user')
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
         self.mox.ReplayAll()
@@ -350,71 +350,71 @@ class TestAPIKeyControllers(mox.MoxTestBase):
             self.assertTrue('error' in json.loads(resp.data))
 
     def test_send_parent_form_invalid_params(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(db_util, 'read_api_key_model_record')
         self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
+        self.mox.StubOutWithMock(db_util, 'read_presentation_model')
         self.mox.StubOutWithMock(parent_account_util,
             'generate_unique_mcdi_form_id')
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('invalid_format').AndReturn(None)
+        db_util.read_cdi_format_model('invalid_format').AndReturn(None)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('invalid_format').AndReturn(None)
-        db_util.load_mcdi_model('standard').AndReturn(None)
+        db_util.read_presentation_model('invalid_format').AndReturn(None)
+        db_util.read_cdi_format_model('standard').AndReturn(None)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
 
         self.mox.ReplayAll()
@@ -517,25 +517,25 @@ class TestAPIKeyControllers(mox.MoxTestBase):
             self.assertTrue('error' in json.loads(resp.data))
 
     def test_send_parent_form_defaults(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(db_util, 'read_api_key_model_record')
         self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
-        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
+        self.mox.StubOutWithMock(db_util, 'create_parent_form_model')
+        self.mox.StubOutWithMock(db_util, 'read_presentation_model')
         self.mox.StubOutWithMock(parent_account_util,
             'generate_unique_mcdi_form_id')
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
         filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
             [TEST_SNAPSHOT])
-        db_util.insert_parent_form(EXPECTED_PARENT_FORM)
+        db_util.create_parent_form_model(EXPECTED_PARENT_FORM)
 
         self.mox.ReplayAll()
 
@@ -556,25 +556,25 @@ class TestAPIKeyControllers(mox.MoxTestBase):
             self.assertFalse('error' in json.loads(resp.data))
 
     def test_send_parent_form_non_defaults(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(db_util, 'read_api_key_model_record')
         self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'read_presentation_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
+        self.mox.StubOutWithMock(db_util, 'create_parent_form_model')
         self.mox.StubOutWithMock(parent_account_util,
             'generate_unique_mcdi_form_id')
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID_MOD)
-        db_util.load_presentation_model('standard_mod').AndReturn(
+        db_util.read_presentation_model('standard_mod').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard_mod').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard_mod').AndReturn(TEST_FORMAT)
         filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
             [TEST_SNAPSHOT])
-        db_util.insert_parent_form(EXPECTED_MODIFIED_PARENT_FORM)
+        db_util.create_parent_form_model(EXPECTED_MODIFIED_PARENT_FORM)
 
         self.mox.ReplayAll()
 
@@ -604,19 +604,19 @@ class TestAPIKeyControllers(mox.MoxTestBase):
             self.assertFalse('error' in json.loads(resp.data))
 
     def test_send_parent_forms_missing_params(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(db_util, 'read_api_key_model_record')
         self.mox.StubOutWithMock(user_util, 'get_user')
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
         self.mox.ReplayAll()
@@ -664,72 +664,72 @@ class TestAPIKeyControllers(mox.MoxTestBase):
             self.assertTrue('error' in json.loads(resp.data))
 
     def test_send_parent_forms_invalid_params(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(db_util, 'read_api_key_model_record')
         self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
+        self.mox.StubOutWithMock(db_util, 'read_presentation_model')
         self.mox.StubOutWithMock(parent_account_util,
             'generate_unique_mcdi_form_id')
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('invalid_format').AndReturn(None)
+        db_util.read_cdi_format_model('invalid_format').AndReturn(None)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        db_util.load_presentation_model('invalid_format').AndReturn(None)
+        db_util.read_presentation_model('invalid_format').AndReturn(None)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
+
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
+            TEST_PARENT_FORM_ID)
+        db_util.read_presentation_model('standard').AndReturn(
+            TEST_PRESENTATION_FORMAT_METADATA)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
         self.mox.ReplayAll()
 
@@ -831,25 +831,25 @@ class TestAPIKeyControllers(mox.MoxTestBase):
             self.assertTrue('error' in json.loads(resp.data))
 
     def test_send_parent_forms_defaults(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(db_util, 'read_api_key_model_record')
         self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
-        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
+        self.mox.StubOutWithMock(db_util, 'create_parent_form_model')
+        self.mox.StubOutWithMock(db_util, 'read_presentation_model')
         self.mox.StubOutWithMock(parent_account_util,
             'generate_unique_mcdi_form_id')
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
         filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
             [TEST_SNAPSHOT])
-        db_util.insert_parent_form(EXPECTED_PARENT_FORM)
+        db_util.create_parent_form_model(EXPECTED_PARENT_FORM)
 
         self.mox.ReplayAll()
 
@@ -870,29 +870,29 @@ class TestAPIKeyControllers(mox.MoxTestBase):
             self.assertFalse('error' in json.loads(resp.data))
 
     def test_send_parent_forms_fila_part_way(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(db_util, 'read_api_key_model_record')
         self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
-        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
+        self.mox.StubOutWithMock(db_util, 'create_parent_form_model')
+        self.mox.StubOutWithMock(db_util, 'read_presentation_model')
         self.mox.StubOutWithMock(parent_account_util,
             'generate_unique_mcdi_form_id')
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
+        db_util.read_presentation_model('standard').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
         filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
             [TEST_SNAPSHOT])
 
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard').AndReturn(TEST_FORMAT)
 
         self.mox.ReplayAll()
 
@@ -916,25 +916,25 @@ class TestAPIKeyControllers(mox.MoxTestBase):
 
 
     def test_send_parent_forms_non_defaults(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(db_util, 'read_api_key_model_record')
         self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
+        self.mox.StubOutWithMock(db_util, 'read_presentation_model')
+        self.mox.StubOutWithMock(db_util, 'read_cdi_format_model')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
+        self.mox.StubOutWithMock(db_util, 'create_parent_form_model')
         self.mox.StubOutWithMock(parent_account_util,
             'generate_unique_mcdi_form_id')
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         parent_account_util.generate_unique_mcdi_form_id().AndReturn(
             TEST_PARENT_FORM_ID_MOD)
-        db_util.load_presentation_model('standard_mod').AndReturn(
+        db_util.read_presentation_model('standard_mod').AndReturn(
             TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard_mod').AndReturn(TEST_FORMAT)
+        db_util.read_cdi_format_model('standard_mod').AndReturn(TEST_FORMAT)
         filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
             [TEST_SNAPSHOT])
-        db_util.insert_parent_form(EXPECTED_MODIFIED_PARENT_FORM)
+        db_util.create_parent_form_model(EXPECTED_MODIFIED_PARENT_FORM)
 
         self.mox.ReplayAll()
 
@@ -960,12 +960,12 @@ class TestAPIKeyControllers(mox.MoxTestBase):
             self.assertFalse('error' in json.loads(resp.data))
 
     def test_get_child_words_by_api(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        self.mox.StubOutWithMock(db_util, 'read_api_key_model_record')
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
         self.mox.StubOutWithMock(report_util, 'summarize_snapshots')
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
+        db_util.read_api_key_model_record(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
         filter_util.run_search_query(

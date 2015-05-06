@@ -335,7 +335,7 @@ class TestAccessDataControllers(mox.MoxTestBase):
 
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
+        self.mox.StubOutWithMock(db_util, 'read_presentation_model')
         self.mox.StubOutWithMock(report_util, 'generate_study_report')
         self.mox.StubOutWithMock(report_util,
             'generate_consolidated_study_report')
@@ -343,7 +343,7 @@ class TestAccessDataControllers(mox.MoxTestBase):
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         filter_util.run_search_query(mox.IsA(list), 'snapshots',
             True).AndReturn(query_results)
-        db_util.load_presentation_model('test_format').AndReturn(
+        db_util.read_presentation_model('test_format').AndReturn(
             'test_format_spec')
         report_util.generate_study_report(query_results,
             'test_format_spec').AndReturn(test_zip_file)
@@ -351,12 +351,12 @@ class TestAccessDataControllers(mox.MoxTestBase):
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         filter_util.run_search_query(mox.IsA(list), 'snapshots',
             True).AndReturn(query_results)
-        db_util.load_presentation_model('test_format_2').AndReturn(None)
+        db_util.read_presentation_model('test_format_2').AndReturn(None)
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         filter_util.run_search_query(mox.IsA(list), 'snapshots',
             True).AndReturn(query_results)
-        db_util.load_presentation_model('test_format').AndReturn(
+        db_util.read_presentation_model('test_format').AndReturn(
             'test_format_spec')
         report_util.generate_consolidated_study_report(query_results,
             'test_format_spec').AndReturn(test_csv_file)
@@ -364,7 +364,7 @@ class TestAccessDataControllers(mox.MoxTestBase):
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         filter_util.run_search_query(mox.IsA(list), 'snapshots',
             True).AndReturn(query_results)
-        db_util.load_presentation_model('test_format_2').AndReturn(None)
+        db_util.read_presentation_model('test_format_2').AndReturn(None)
 
         self.mox.ReplayAll()
 
