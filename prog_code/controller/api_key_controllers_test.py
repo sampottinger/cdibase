@@ -982,7 +982,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
 
         with self.app.test_client() as client:
 
-            resp = client.get('/base/api/v0/get_child_words?' +
+            resp = client.get('/base/api/v0/get_child_words.json?' +
                 urllib.urlencode({
                     'api_key': TEST_API_KEY,
                     'child_id': 123

@@ -875,7 +875,7 @@ def get_child_info_by_api():
     return json.dumps(serialized_snapshots_by_child_id)
 
 
-@app.route('/base/api/v0/get_child_words', methods=['GET', 'POST'])
+@app.route('/base/api/v0/get_child_words.json', methods=['GET', 'POST'])
 def get_child_words_by_api():
     """Get the words a child knows and when those words were first learned.
 
