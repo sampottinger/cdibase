@@ -200,12 +200,6 @@
     margin: 20px auto;
 }
 
-.inline-check
-{
-    float: left;
-    margin-right: 20px;
-}
-
 .hero-unit p {
     margin: 20px 0;
 }
@@ -215,9 +209,23 @@
     font-size: 12px;
 }
 
+.inline-check
+{
+    float: left;
+    margin-right: 20px;
+}
+
 .long-running-op-display {
     margin-bottom: 20px;
     display: none;
+}
+
+.middle-td-content {
+    border-right: 1px dotted #C0C0C0;
+}
+
+.middle-td-title {
+    border-left: 1px dotted #C0C0C0;
 }
 
 #studies-list {
