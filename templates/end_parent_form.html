@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </p>
 
     <p>
-    Please go through the list and mark the words you have heard your child use in English, a second language, or both languages. If your child uses a different pronunciation of a word consistently (for example, "raffe" instead of "giraffe" or "sketti" for "spaghetti"), we do consider that to be <b>said</b>, as long as the pronunciation approximates the standard English pronunciation. 
+    {{ selected_format.details.inclusion_text }} If your child uses a different pronunciation of a word consistently (for example, "raffe" instead of "giraffe" or "sketti" for "spaghetti"), we do consider that to be <b>said</b>, as long as the pronunciation approximates the standard English pronunciation. 
     </p>
 
     <p>Remember that this is a "catalogue" or “sample” of common words that are used by many different children. This list is used for children up to 30-months-old. Don’t worry if your child knows only a few of these right now or uses words not included in this list. 
@@ -118,9 +118,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                         <tr>
                             <th>Word</th>
                             <th>Word Said in:</th>
+                            <th>Word</th>
+                            <th>Word Said in:</th>
                         </tr>
                         {% for word in category.words %}
-                        <tr>
+                        {% if loop.index0 is even %}<tr>{% endif %}
                             <td>{{ word }}</td>
                             <td>
                             {% for option in selected_format.details.options %}
@@ -129,7 +131,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                                 </label>
                             {% endfor %}
                             </td>
-                        </tr>
+                        {% if loop.last or loop.index0 is odd %}</tr>{% endif %}
                         {% endfor %}
                     </table>
                 </div>
