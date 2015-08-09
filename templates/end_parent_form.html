@@ -120,18 +120,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                             <th>Word Said in:</th>
                             <th>Word</th>
                             <th>Word Said in:</th>
+                            <th>Word</th>
+                            <th>Word Said in:</th>
                         </tr>
                         {% for word in category.words %}
-                        {% if loop.index0 is even %}<tr>{% endif %}
-                            <td>{{ word }}</td>
+                        {% if loop.index0 is divisibleby(3) %}<tr>{% endif %}
+                            <td><strong>{{ word }}</strong></td>
                             <td>
                             {% for option in selected_format.details.options %}
-                                <label class="checkbox inline-check">
-                                    <input type="radio" name="{{ word }}_report" value="{{ option.value }}" {% if option.value == word_entries.get(word.replace('*', '').lower(), None) or ((word_entries.get(word.replace('*', '').lower(), None) not in option_values) and loop.last) %}checked{% endif %}> {{ option.name }}
+                                <label class="checkbox">
+                                    <input type="radio" name="{{ word }}_report" value="{{ option.value }}" {% if option.value == word_entries.get(word.replace('*', '').lower(), None) or option.get("prefill_value", -1) == word_entries.get(word.replace('*', '').lower(), None) or ((word_entries.get(word.replace('*', '').lower(), None) not in option_values) and loop.last) %}checked{% endif %}> {{ option.name }}
                                 </label>
                             {% endfor %}
                             </td>
-                        {% if loop.last or loop.index0 is odd %}</tr>{% endif %}
+                        {% if loop.last or loop.index0 % 3 == 2 %}</tr>{% endif %}
                         {% endfor %}
                     </table>
                 </div>
