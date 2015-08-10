@@ -602,7 +602,7 @@ def handle_parent_mcdi_form(form_id):
                 word_entries = dict(known_words_tuples)
 
         option_values = map(
-            lambda x: x['value'],
+            lambda x: x['value'] + x.get('prefill_value', []),
             selected_format.details['options']
         )
 
