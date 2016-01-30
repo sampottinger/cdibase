@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import csv
+import datetime
 import os
 import json
 import sqlite3
@@ -991,11 +992,12 @@ def report_usage(email_address, action_name, args_snapshot):
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        'INSERT INTO usage_report VALUES (?, ?, ?)',
+        'INSERT INTO usage_report VALUES (?, ?, ?, ?)',
         (
             email_address,
             action_name,
-            args_snapshot
+            args_snapshot,
+            datetime.datetime.now().isoformat()
         )
     )
     connection.commit()
