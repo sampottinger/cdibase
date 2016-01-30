@@ -270,6 +270,8 @@ class TestDeleteDataControllers(mox.MoxTestBase):
                 self.assertTrue('already deleted' in sess[ERROR_ATTR])
 
     def test_access_requests(self):
+        TEST_PAYLOAD = '{"restore": true, "filters": [{"operand": "val3", "field": "val1", "operator": "val2", "operand_float": null}, {"operand": "val6", "field": "val4", "operator": "val5", "operand_float": null}]}'
+
         query_results = [models.SnapshotMetadata(
             'database_id',
             'child_id',
@@ -293,10 +295,18 @@ class TestDeleteDataControllers(mox.MoxTestBase):
             False
         )]
 
+        self.mox.StubOutWithMock(db_util, 'report_usage')
         self.mox.StubOutWithMock(filter_util, 'run_delete_query')
         self.mox.StubOutWithMock(user_util, 'get_user')
         
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+
+        db_util.report_usage(
+            TEST_EMAIL,
+            "Delete Data",
+            TEST_PAYLOAD
+        )
+
         filter_util.run_delete_query(
             mox.IsA(list),
             SNAPSHOTS_DB_TABLE,

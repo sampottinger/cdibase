@@ -167,6 +167,12 @@ def get_study_distribution():
     @return: JSON serialization of CDI frequency distribution.
     @rtype: str
     """
+    db_util.report_usage(
+        session_util.get_user_email(),
+        "Access Study Distribution",
+        []
+    )
+
     return json.dumps(db_util.get_counts())
 
 
@@ -257,10 +263,21 @@ def execute_zip_access_request():
         flask.session[ERROR_ATTR] = NO_FILTER_MESSAGE
         return flask.redirect(ACCESS_DATA_URL)
 
+    include_deleted = request.args.get('deleted', 'ignore') == 'ignore'
+
+    db_util.report_usage(
+        session_util.get_user_email(),
+        "Download Data as zip",
+        json.dumps({
+            "include deleted": include_deleted,
+            "filters": session_util.get_filters_serialized()
+        })
+    )
+
     snapshots = filter_util.run_search_query(
         session_util.get_filters(),
         SNAPSHOTS_DB_TABLE,
-        request.args.get('deleted', 'ignore') == 'ignore'
+        include_deleted
     )
 
     if len(snapshots) == 0:
@@ -305,10 +322,21 @@ def execute_csv_access_request():
         flask.session[ERROR_ATTR] = NO_FILTER_MESSAGE
         return flask.redirect(ACCESS_DATA_URL)
 
+    include_deleted = request.args.get('deleted', 'ignore') == 'ignore'
+
+    db_util.report_usage(
+        session_util.get_user_email(),
+        "Download Data as CSV",
+        json.dumps({
+            "include deleted": include_deleted,
+            "filters": session_util.get_filters_serialized()
+        })
+    )
+
     snapshots = filter_util.run_search_query(
         session_util.get_filters(),
         SNAPSHOTS_DB_TABLE,
-        request.args.get('deleted', 'ignore') == 'ignore'
+        include_deleted
     )
 
     if len(snapshots) == 0:

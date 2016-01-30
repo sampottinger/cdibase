@@ -282,6 +282,16 @@ def enter_data_form(format_name):
             False
         )
 
+        db_util.report_usage(
+            session_util.get_user_email(),
+            "Enter Data",
+            json.dumps({
+                "global_id": global_id,
+                "study_id": study_id,
+                "study": study
+            })
+        )
+
         db_util.insert_snapshot(new_snapshot, word_entries)
 
         if global_id != None:
@@ -448,6 +458,14 @@ def edit_metadata():
 
     if error:
         return (error, 400)
+
+    db_util.report_usage(
+        session_util.get_user_email(),
+        "Update Metadata",
+        json.dumps({
+            "global_id": global_id
+        })
+    )
 
     # Update the snapshots
     db_util.update_participant_metadata(

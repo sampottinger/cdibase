@@ -490,9 +490,11 @@ def parse_csv(contents, mcdi_type, languages, hard_of_hearing,
         return {'error': parse_info['error']}
 
     prototypes = parse_info['prototypes']
+    ids = map(lambda x: x['child_id'], prototypes)
+
     for prototype in prototypes:
         build_snapshot(prototype, mcdi_type, languages, hard_of_hearing, cursor)
 
     connection.commit()
     connection.close()
-    return {'error': None}
+    return {'error': None, 'ids': ids}

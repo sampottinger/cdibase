@@ -61,12 +61,21 @@ def import_data():
             unicode(flask.request.files['file'].read()), newline=None
         )
         mcdi_type = flask.request.form.get('cdi-type', '')
+
         results = csv_import_util.parse_csv(
             contents,
             mcdi_type,
             ['english'],
             constants.EXPLICIT_FALSE,
             True
+        )
+
+        db_util.report_usage(
+            session_util.get_user_email(),
+            "Import Data",
+            json.dumps({
+                "global_ids": results["ids"]
+            })
         )
 
         if results['error']:

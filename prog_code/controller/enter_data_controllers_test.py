@@ -218,6 +218,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
         self.mox.StubOutWithMock(db_util, 'insert_snapshot')
+        self.mox.StubOutWithMock(db_util, 'report_usage')
         
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         db_util.load_mcdi_model(TEST_MCDI_FORMAT_NAME).AndReturn(TEST_FORMAT)
@@ -250,6 +251,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
         self.mox.StubOutWithMock(db_util, 'insert_snapshot')
+        self.mox.StubOutWithMock(db_util, 'report_usage')
 
         for i in range(0, 10):
             user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
@@ -369,6 +371,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
         self.mox.StubOutWithMock(db_util, 'insert_snapshot')
+        self.mox.StubOutWithMock(db_util, 'report_usage')
 
         for i in range(0, 8):
             user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
@@ -471,6 +474,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         self.mox.StubOutWithMock(db_util, 'load_percentile_model')
         self.mox.StubOutWithMock(math_util, 'find_percentile')
         self.mox.StubOutWithMock(db_util, 'insert_snapshot')
+        self.mox.StubOutWithMock(db_util, 'report_usage')
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         db_util.load_mcdi_model(TEST_MCDI_FORMAT_NAME).AndReturn(
@@ -481,6 +485,13 @@ class EnterDataControllersTests(mox.MoxTestBase):
         math_util.find_percentile('test details', 3, TEST_AGE, 6).AndReturn(
             TEST_PERCENTILE
         )
+
+        db_util.report_usage(
+            'test.email@example.com',
+            'Enter Data',
+            '{"study_id": "456", "study": "test study", "global_id": 1}'
+        )
+
         db_util.insert_snapshot(
             TEST_EXPECTED_SNAPSHOT,
             TEST_EXPECTED_WORD_ENTRIES
@@ -511,6 +522,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
 
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
         self.mox.StubOutWithMock(user_util, 'get_user')
+        self.mox.StubOutWithMock(db_util, 'report_usage')
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         filter_util.run_search_query(
@@ -564,6 +576,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
         self.mox.StubOutWithMock(db_util, 'lookup_global_participant_id')
+        self.mox.StubOutWithMock(db_util, 'report_usage')
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         db_util.lookup_global_participant_id(TEST_STUDY, TEST_STUDY_ID
@@ -622,12 +635,20 @@ class EnterDataControllersTests(mox.MoxTestBase):
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(db_util, 'update_participant_metadata')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
+        self.mox.StubOutWithMock(db_util, 'report_usage')
         self.mox.StubOutWithMock(
             recalc_util,
             'recalculate_ages_and_percentiles'
         )
         
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+
+        db_util.report_usage(
+            'test.email@example.com',
+            'Update Metadata',
+            '{"global_id": 1}'
+        )
+
         db_util.update_participant_metadata(
             TEST_DB_ID,
             constants.FEMALE,

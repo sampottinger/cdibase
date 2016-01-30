@@ -308,6 +308,8 @@ class TestAccessDataControllers(mox.MoxTestBase):
                 self.assertTrue('already deleted' in sess[ERROR_ATTR])
 
     def test_access_requests(self):
+        TEST_USAGE_REPORT_PAYLOAD = '{"include deleted": true, "filters": [{"operand": "val3", "field": "val1", "operator": "val2", "operand_float": null}, {"operand": "val6", "field": "val4", "operator": "val5", "operand_float": null}]}'
+
         query_results = [models.SnapshotMetadata(
             'database_id',
             'child_id',
@@ -336,11 +338,20 @@ class TestAccessDataControllers(mox.MoxTestBase):
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(filter_util, 'run_search_query')
         self.mox.StubOutWithMock(db_util, 'load_presentation_model')
+        self.mox.StubOutWithMock(db_util, 'report_usage')
         self.mox.StubOutWithMock(report_util, 'generate_study_report')
         self.mox.StubOutWithMock(report_util,
             'generate_consolidated_study_report')
 
+        # First request
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+
+        db_util.report_usage(
+            'test_mail',
+            'Download Data as zip',
+            TEST_USAGE_REPORT_PAYLOAD
+        )
+
         filter_util.run_search_query(mox.IsA(list), 'snapshots',
             True).AndReturn(query_results)
         db_util.load_presentation_model('test_format').AndReturn(
@@ -348,12 +359,28 @@ class TestAccessDataControllers(mox.MoxTestBase):
         report_util.generate_study_report(query_results,
             'test_format_spec').AndReturn(test_zip_file)
 
+        # Second request
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+
+        db_util.report_usage(
+            'test_mail',
+            'Download Data as zip',
+            TEST_USAGE_REPORT_PAYLOAD
+        )
+
         filter_util.run_search_query(mox.IsA(list), 'snapshots',
             True).AndReturn(query_results)
         db_util.load_presentation_model('test_format_2').AndReturn(None)
 
+        # Third request
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+        
+        db_util.report_usage(
+            'test_mail',
+            'Download Data as CSV',
+            TEST_USAGE_REPORT_PAYLOAD
+        )
+
         filter_util.run_search_query(mox.IsA(list), 'snapshots',
             True).AndReturn(query_results)
         db_util.load_presentation_model('test_format').AndReturn(
@@ -361,7 +388,15 @@ class TestAccessDataControllers(mox.MoxTestBase):
         report_util.generate_consolidated_study_report(query_results,
             'test_format_spec').AndReturn(test_csv_file)
 
+        # Final request
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+        
+        db_util.report_usage(
+            'test_mail',
+            'Download Data as zip',
+            TEST_USAGE_REPORT_PAYLOAD
+        )
+
         filter_util.run_search_query(mox.IsA(list), 'snapshots',
             True).AndReturn(query_results)
         db_util.load_presentation_model('test_format_2').AndReturn(None)

@@ -25,6 +25,7 @@ from ..struct import models
 
 import constants
 import user_util
+import db_util
 
 LOGIN_AGAIN_MSG = 'Whoops! For security, please log in again.'
 NOT_AUTHORIZED_ACCESS_DATA_MSG = 'You are not authorized to access data.'
@@ -54,6 +55,10 @@ def get_standard_template_values():
         'user': user_util.get_user(get_user_email()),
         'scroll': get_scroll()
     }
+
+
+def create_args_snapshot():
+    return flask.request.form.items() + flask.request.args.items()
 
 
 def require_login(access_data=False, admin=False, enter_data=False,
@@ -238,6 +243,12 @@ def unserialize_filter(target_filter_dict):
     )
 
 
+def get_filters_serialized(session=None):
+    if session == None:
+        session = flask.session
+    return session.get('filters', None)
+
+
 def get_filters(session=None):
     """Get a collection of filters that the current user has created.
 
@@ -247,9 +258,7 @@ def get_filters(session=None):
     @return: Collection of filters in the query the user is currently building.
     @rtype: Collection of models.Filter
     """
-    if session == None:
-        session = flask.session
-    filters = session.get('filters', None)
+    filters = get_filters_serialized(session)
     if not filters:
         return []
     return map(unserialize_filter, filters)

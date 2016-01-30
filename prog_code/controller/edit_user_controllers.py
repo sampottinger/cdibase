@@ -20,12 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v3
 """
+import json
 
 import flask
 
 from ..util import constants
 from ..util import session_util
 from ..util import user_util
+from ..util import db_util
 
 from daxlabbase import app
 
@@ -71,6 +73,12 @@ def delete_user(email):
         flask.session[constants.ERROR_ATTR] = USER_NOT_FOUND_MSG % email
         return flask.redirect(EDIT_USERS_URL)
 
+    db_util.report_usage(
+        session_util.get_user_email(),
+        "Delete User",
+        json.dumps({"user": email})
+    )
+
     user_util.delete_user(email)
     flask.session[constants.CONFIRMATION_ATTR] = ACCOUNT_UPDATED_MSG % email
     return flask.redirect(EDIT_USERS_URL)
@@ -108,6 +116,12 @@ def edit_user(email):
             msg = USER_ALREADY_EXISTS_MSG % new_email
             flask.session[constants.ERROR_ATTR] = msg
             return flask.redirect(request.path)
+
+        db_util.report_usage(
+            session_util.get_user_email(),
+            "Edit User",
+            json.dumps({"user": email})
+        )
 
         on_val = constants.FORM_SELECTED_VALUE
         user_util.update_user(
@@ -154,6 +168,12 @@ def add_user():
             msg = USER_ALREADY_EXISTS_MSG % email
             flask.session[constants.ERROR_ATTR] = msg
             return flask.redirect(ADD_USERS_URL)
+
+        db_util.report_usage(
+            session_util.get_user_email(),
+            "Add User",
+            json.dumps({"user": email})
+        )
 
         on_val = constants.FORM_SELECTED_VALUE
 

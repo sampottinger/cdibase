@@ -243,6 +243,15 @@ def execute_delete_request():
         flask.session[ERROR_ATTR] = NO_FILTER_MESSAGE
         return flask.redirect(DELETE_DATA_URL)
 
+    db_util.report_usage(
+        session_util.get_user_email(),
+        "Delete Data",
+        json.dumps({
+            "restore": operation == RESTORE_OPERATION,
+            "filters": session_util.get_filters_serialized()
+        })
+    )
+
     snapshots = filter_util.run_delete_query(
         session_util.get_filters(),
         SNAPSHOTS_DB_TABLE,
