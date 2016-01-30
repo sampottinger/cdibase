@@ -170,7 +170,7 @@ def get_study_distribution():
     db_util.report_usage(
         session_util.get_user_email(),
         "Access Study Distribution",
-        []
+        ""
     )
 
     return json.dumps(db_util.get_counts())
