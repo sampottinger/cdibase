@@ -8,7 +8,7 @@ Released under the [GNU GPL v3 License](https://www.gnu.org/licenses/gpl-3.0.txt
 
 [Sam Pottinger](http://gleap.org) continues to be the active maintainer / project lead.
 
-(c) 2014 [Sam Pottinger](http://gleap.org)
+(c) 2016 [Sam Pottinger](http://gleap.org)
 
 <br>
 ### Background and Motivation
