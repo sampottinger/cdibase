@@ -25,6 +25,7 @@ var LIST_Y = 50;
 
 var studySelection = d3.map();
 var studySizes = d3.map();
+
 var histogramBuckets = [
     {countByStudy: d3.map(), count: 0, min: 1, max: 1},
     {countByStudy: d3.map(), count: 0, min: 2, max: 2},
@@ -33,6 +34,7 @@ var histogramBuckets = [
     {countByStudy: d3.map(), count: 0, min: 5, max: 5},
     {countByStudy: d3.map(), count: 0, min: 6, max: null}
 ];
+
 var aggregationMethod = 'sum';
 var sourceData;
 
