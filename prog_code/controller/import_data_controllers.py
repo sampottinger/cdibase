@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import io
+import json
 
 import flask
 
@@ -70,6 +71,12 @@ def import_data():
             True
         )
 
+        if results['error']:
+            flask.session[constants.ERROR_ATTR] = results['error']
+            return flask.redirect('/base/import_data')
+        else:
+            flask.session[constants.CONFIRMATION_ATTR] = CONFIRM_MSG
+
         db_util.report_usage(
             session_util.get_user_email(),
             "Import Data",
@@ -77,11 +84,6 @@ def import_data():
                 "global_ids": results["ids"]
             })
         )
-
-        if results['error']:
-            flask.session[constants.ERROR_ATTR] = results['error']
-        else:
-            flask.session[constants.CONFIRMATION_ATTR] = CONFIRM_MSG
 
         if mcdi_type != '':
             flask.session['last_format_used'] = mcdi_type
