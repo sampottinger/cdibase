@@ -27,7 +27,7 @@ import flask
 from daxlabbase import app
 
 from ..util import constants
-from ..util import csv_import_util
+from ..util import legacy_csv_import_util
 from ..util import db_util
 from ..util import session_util
 
@@ -63,7 +63,7 @@ def import_data():
         )
         mcdi_type = flask.request.form.get('cdi-type', '')
 
-        results = csv_import_util.parse_csv(
+        results = legacy_csv_import_util.parse_csv(
             contents,
             mcdi_type,
             ['english'],

@@ -21,7 +21,7 @@ import unittest
 import mox
 
 import constants
-import csv_import_util
+import legacy_csv_import_util
 import math_util
 
 
@@ -35,7 +35,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
 
     def setUp(self):
         mox.MoxTestBase.setUp(self)
-        self.__test_automaton = csv_import_util.UploadParserAutomaton({
+        self.__test_automaton = legacy_csv_import_util.UploadParserAutomaton({
             constants.MALE: FakePercentileTable([-1]),
             constants.FEMALE: FakePercentileTable([-2]),
             constants.OTHER_GENDER: FakePercentileTable([-3])
@@ -45,7 +45,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.__test_automaton.enter_error_state('test error')
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
         self.assertEqual(
             self.__test_automaton.get_error(),
@@ -57,7 +57,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
             'test', 1))
         self.assertNotEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
         self.assertNotEqual(
             self.__test_automaton.get_error(),
@@ -69,7 +69,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
             'other', 1))
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
         self.assertEqual(
             self.__test_automaton.get_error(),
@@ -83,7 +83,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertFalse(self.__test_automaton.safe_parse_float('a', 1), 1)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
         self.assertEqual(
             self.__test_automaton.get_error(),
@@ -97,7 +97,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertFalse(self.__test_automaton.safe_parse_int('a', 1), 1)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
         self.assertEqual(
             self.__test_automaton.get_error(),
@@ -118,7 +118,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertFalse(self.__test_automaton.safe_parse_date('a', 1), 1)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
         self.assertEqual(
             self.__test_automaton.get_error(),
@@ -132,7 +132,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         )
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
         self.assertEqual(
             self.__test_automaton.get_error(),
@@ -147,7 +147,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         )
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
         self.assertEqual(
             self.__test_automaton.get_error(),
@@ -164,7 +164,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(self.__test_automaton.get_prototypes()), 3)
 
     def test_parse_child_db_id(self):
-        self.__test_automaton.set_state(csv_import_util.STATE_PARSE_CHILD_DB_ID)
+        self.__test_automaton.set_state(legacy_csv_import_util.STATE_PARSE_CHILD_DB_ID)
         self.__test_automaton.parse_child_db_id(
             ['', 'Child\'s ID (from database)', '123', '456', '789'],
             1
@@ -174,7 +174,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_PARSE_CHILD_STUDY_ID
+            legacy_csv_import_util.STATE_PARSE_CHILD_STUDY_ID
         )
 
         self.assertEqual(prototypes[0]['child_id'], 123)
@@ -182,31 +182,31 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(prototypes[2]['child_id'], 789)
 
     def test_parse_child_db_id_invalid(self):
-        self.__test_automaton.set_state(csv_import_util.STATE_PARSE_CHILD_DB_ID)
+        self.__test_automaton.set_state(legacy_csv_import_util.STATE_PARSE_CHILD_DB_ID)
         self.__test_automaton.parse_child_db_id(
             ['', 'Child\'s ID (from database)', '123a', '456', '789'],
             1
         )
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_parse_child_db_id_wrong_label(self):
-        self.__test_automaton.set_state(csv_import_util.STATE_PARSE_CHILD_DB_ID)
+        self.__test_automaton.set_state(legacy_csv_import_util.STATE_PARSE_CHILD_DB_ID)
         self.__test_automaton.parse_child_db_id(
             ['', 'Child\'s ID (from daabase)', '123', '456', '789'],
             1
         )
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_parse_child_study_id(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_CHILD_STUDY_ID
+            legacy_csv_import_util.STATE_PARSE_CHILD_STUDY_ID
         )
         self.__test_automaton.parse_child_study_id(
             ['', 'Name / Number', '02', '46', '80'],
@@ -217,7 +217,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_PARSE_STUDY_AND_SOURCE
+            legacy_csv_import_util.STATE_PARSE_STUDY_AND_SOURCE
         )
 
         self.assertEqual(prototypes[0]['study_id'], '02')
@@ -227,7 +227,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
     def test_parse_child_study_id_wrong_label(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_CHILD_STUDY_ID
+            legacy_csv_import_util.STATE_PARSE_CHILD_STUDY_ID
         )
         self.__test_automaton.parse_child_study_id(
             ['', 'Name Number', '02', '46', '80'],
@@ -235,13 +235,13 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         )
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_parse_study_and_source(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_STUDY_AND_SOURCE
+            legacy_csv_import_util.STATE_PARSE_STUDY_AND_SOURCE
         )
         self.__test_automaton.parse_study_and_source(
             ['', 'Study / Source', 'Study1', 'Study2', 'Study3'],
@@ -252,7 +252,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_PARSE_GENDER
+            legacy_csv_import_util.STATE_PARSE_GENDER
         )
 
         self.assertEqual(prototypes[0]['study'], 'Study1')
@@ -262,7 +262,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
     def test_parse_study_and_source_wrong_label(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_STUDY_AND_SOURCE
+            legacy_csv_import_util.STATE_PARSE_STUDY_AND_SOURCE
         )
         self.__test_automaton.parse_study_and_source(
             ['', 'Study Source', 'Study1', 'Study2', 'Study3'],
@@ -270,13 +270,13 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         )
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_parse_gender_pass(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_GENDER
+            legacy_csv_import_util.STATE_PARSE_GENDER
         )
         self.__test_automaton.parse_gender(
             ['', 'Gender', 'M', 'F', 'O'],
@@ -287,7 +287,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_PARSE_AGE
+            legacy_csv_import_util.STATE_PARSE_AGE
         )
 
         self.assertEqual(prototypes[0]['gender'], constants.MALE)
@@ -297,7 +297,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
     def test_parse_gender_invalid(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_GENDER
+            legacy_csv_import_util.STATE_PARSE_GENDER
         )
         self.__test_automaton.parse_gender(
             ['', 'Gender', '5', 'F', 'O'],
@@ -305,13 +305,13 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         )
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_parse_gender_wrong_label(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_GENDER
+            legacy_csv_import_util.STATE_PARSE_GENDER
         )
         self.__test_automaton.parse_gender(
             ['', 'Genders', 'M', 'F', 'O'],
@@ -319,12 +319,12 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         )
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_parse_age(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
-        self.__test_automaton.set_state(csv_import_util.STATE_PARSE_AGE)
+        self.__test_automaton.set_state(legacy_csv_import_util.STATE_PARSE_AGE)
         self.__test_automaton.parse_age(
             ['', 'Age (months)', '123.1', '456.2', '789.3'],
             1
@@ -334,7 +334,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_PARSE_DATE_OF_BIRTH
+            legacy_csv_import_util.STATE_PARSE_DATE_OF_BIRTH
         )
 
         self.assertEqual(prototypes[0]['age'], 123.1)
@@ -343,32 +343,32 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
 
     def test_parse_age_invalid(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
-        self.__test_automaton.set_state(csv_import_util.STATE_PARSE_AGE)
+        self.__test_automaton.set_state(legacy_csv_import_util.STATE_PARSE_AGE)
         self.__test_automaton.parse_age(
             ['', 'Age (months)', 'a 123.1', '456.2', '789.3'],
             1
         )
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_parse_age_wrong_label(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
-        self.__test_automaton.set_state(csv_import_util.STATE_PARSE_AGE)
+        self.__test_automaton.set_state(legacy_csv_import_util.STATE_PARSE_AGE)
         self.__test_automaton.parse_age(
             ['', 'Age', '123.1', '456.2', '789.3'],
             1
         ) 
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_parse_date_of_birth(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_DATE_OF_BIRTH
+            legacy_csv_import_util.STATE_PARSE_DATE_OF_BIRTH
         )
         self.__test_automaton.parse_date_of_birth(
             ['', 'Date of Birth', '01/02/2013', '02/03/2013', '04/05/2013'],
@@ -379,7 +379,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_PARSE_DATE_OF_SESSION
+            legacy_csv_import_util.STATE_PARSE_DATE_OF_SESSION
         )
 
         self.assertEqual(prototypes[0]['birthday'], '2013/1/2')
@@ -389,7 +389,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
     def test_parse_date_of_birth_invalid(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_DATE_OF_BIRTH
+            legacy_csv_import_util.STATE_PARSE_DATE_OF_BIRTH
         )
         self.__test_automaton.parse_date_of_birth(
             ['', 'Date of Birth', '05/01/02', '2013/02/03', '2013/04/05'],
@@ -397,13 +397,13 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         )
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_parse_date_of_birth_wrong_label(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_DATE_OF_BIRTH
+            legacy_csv_import_util.STATE_PARSE_DATE_OF_BIRTH
         )
         self.__test_automaton.parse_date_of_birth(
             ['', 'Dae of Birth', '2013/01/02', '2013/02/03', '2013/04/05'],
@@ -411,13 +411,13 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         )
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_parse_date_of_session(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_DATE_OF_SESSION
+            legacy_csv_import_util.STATE_PARSE_DATE_OF_SESSION
         )
         self.__test_automaton.parse_date_of_session(
             ['', 'Date of Session', '01/02/2013', '02/03/2013', '04/05/2013'],
@@ -428,7 +428,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_PARSE_SESSION_NUM
+            legacy_csv_import_util.STATE_PARSE_SESSION_NUM
         )
 
         self.assertEqual(prototypes[0]['session_date'], '2013/1/2')
@@ -438,7 +438,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
     def test_parse_date_of_session_wrong_label(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_DATE_OF_SESSION
+            legacy_csv_import_util.STATE_PARSE_DATE_OF_SESSION
         )
         self.__test_automaton.parse_date_of_session(
             ['', 'Date of Sessin', '2013/01/02', '2013/02/03', '2013/04/05'],
@@ -446,13 +446,13 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         )
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_parse_date_of_session_invalid(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_DATE_OF_SESSION
+            legacy_csv_import_util.STATE_PARSE_DATE_OF_SESSION
         )
         self.__test_automaton.parse_date_of_session(
             ['', 'Date of Session', '2013/01/02a', '2013/02/03', '2013/04/05'],
@@ -460,12 +460,12 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         )
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_parse_session_num(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
-        self.__test_automaton.set_state(csv_import_util.STATE_PARSE_SESSION_NUM)
+        self.__test_automaton.set_state(legacy_csv_import_util.STATE_PARSE_SESSION_NUM)
         self.__test_automaton.parse_session_num(
             ['', 'Session #', '123', '456', '789'],
             1
@@ -475,7 +475,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_PARSE_TOTAL_SESSION_NUM
+            legacy_csv_import_util.STATE_PARSE_TOTAL_SESSION_NUM
         )
 
         self.assertEqual(prototypes[0]['session_num'], 123)
@@ -485,7 +485,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
     def test_parse_total_session_num(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_TOTAL_SESSION_NUM)
+            legacy_csv_import_util.STATE_PARSE_TOTAL_SESSION_NUM)
         self.__test_automaton.parse_total_session_num(
             ['', 'Total # of Sessions', '123', '456', '789'],
             1
@@ -495,7 +495,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_PARSE_WORDS_SPOKEN
+            legacy_csv_import_util.STATE_PARSE_WORDS_SPOKEN
         )
 
         self.assertEqual(prototypes[0]['total_num_sessions'], 123)
@@ -505,7 +505,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
     def test_parse_words_spoken(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_WORDS_SPOKEN)
+            legacy_csv_import_util.STATE_PARSE_WORDS_SPOKEN)
         self.__test_automaton.parse_words_spoken(
             ['', 'Words Spoken', '123', '456', '789'],
             1
@@ -515,7 +515,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_PARSE_ITEMS_EXCLUDED
+            legacy_csv_import_util.STATE_PARSE_ITEMS_EXCLUDED
         )
 
         self.assertEqual(prototypes[0]['words_spoken'], 123)
@@ -525,7 +525,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
     def test_parse_items_excluded(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_ITEMS_EXCLUDED)
+            legacy_csv_import_util.STATE_PARSE_ITEMS_EXCLUDED)
         self.__test_automaton.parse_items_excluded(
             ['', 'Items Excluded', '123', '456', '789'],
             1
@@ -535,7 +535,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_PARSE_PERCENTILE
+            legacy_csv_import_util.STATE_PARSE_PERCENTILE
         )
 
         self.assertEqual(prototypes[0]['items_excluded'], 123)
@@ -544,7 +544,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
 
     def test_parse_percentile(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
-        self.__test_automaton.set_state(csv_import_util.STATE_PARSE_PERCENTILE)
+        self.__test_automaton.set_state(legacy_csv_import_util.STATE_PARSE_PERCENTILE)
         self.__test_automaton.parse_percentile(
             ['', 'Percentile', '80.1', '90.2', 'calculate'],
             1
@@ -554,7 +554,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_PARSE_EXTRA_CATEGORIES
+            legacy_csv_import_util.STATE_PARSE_EXTRA_CATEGORIES
         )
 
         needing_precentile = self.__test_automaton.get_list_needing_precentile()
@@ -566,7 +566,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
 
     def test_parse_non_standard_percentile(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
-        self.__test_automaton.set_state(csv_import_util.STATE_PARSE_PERCENTILE)
+        self.__test_automaton.set_state(legacy_csv_import_util.STATE_PARSE_PERCENTILE)
         self.__test_automaton.parse_percentile(
             ['', 'Percentile', '80.1', '90.2', ''],
             1
@@ -576,25 +576,25 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_parse_percentile_invalid(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
-        self.__test_automaton.set_state(csv_import_util.STATE_PARSE_PERCENTILE)
+        self.__test_automaton.set_state(legacy_csv_import_util.STATE_PARSE_PERCENTILE)
         self.__test_automaton.parse_percentile(
             ['', 'Percentile', '100.1', '90.2', '95.3'],
             1
         )
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_parse_extra_categories(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_EXTRA_CATEGORIES)
+            legacy_csv_import_util.STATE_PARSE_EXTRA_CATEGORIES)
         self.__test_automaton.parse_extra_categories(
             ['', 'Extra Categories?', 'Y', 'N', 'Y'],
             1
@@ -604,7 +604,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_PARSE_SECTION_WORD_HEADING
+            legacy_csv_import_util.STATE_PARSE_SECTION_WORD_HEADING
         )
 
         self.assertEqual(prototypes[0]['extra_categories'],
@@ -617,19 +617,19 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
     def test_parse_extra_categories_invalid(self):
         self.__test_automaton.set_prototypes([{}, {}, {}])
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_EXTRA_CATEGORIES)
+            legacy_csv_import_util.STATE_PARSE_EXTRA_CATEGORIES)
         self.__test_automaton.parse_extra_categories(
             ['', 'Extra Categories?', '1', 'N', 'Y'],
             1
         )
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_parse_section_word_heading(self):
         self.__test_automaton.set_state(
-            csv_import_util.STATE_PARSE_SECTION_WORD_HEADING)
+            legacy_csv_import_util.STATE_PARSE_SECTION_WORD_HEADING)
         self.__test_automaton.set_prototypes([{}, {}, {}])
 
         self.__test_automaton.parse_section_word_heading(
@@ -641,11 +641,11 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(len(prototypes[0]['words']), 0)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_PARSE_WORDS
+            legacy_csv_import_util.STATE_PARSE_WORDS
         )
 
     def test_parse_words(self):
-        self.__test_automaton.set_state(csv_import_util.STATE_PARSE_WORDS)
+        self.__test_automaton.set_state(legacy_csv_import_util.STATE_PARSE_WORDS)
         self.__test_automaton.set_prototypes([
             {'words': []}, {'words': []}, {'words': []}
         ])
@@ -654,7 +654,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
 
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_PARSE_WORDS
+            legacy_csv_import_util.STATE_PARSE_WORDS
         )
 
         prototypes = self.__test_automaton.get_prototypes()
@@ -688,7 +688,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.__test_automaton.parse_words(['1', 'again', 'n', '', 'n'], 3)
         self.assertEqual(
             self.__test_automaton.get_state(),
-            csv_import_util.STATE_FOUND_ERROR
+            legacy_csv_import_util.STATE_FOUND_ERROR
         )
 
     def test_finish_without_error(self):
@@ -729,7 +729,7 @@ class UploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(target_prototype['percentile'], 50)
 
     def test_finish_with_error(self):
-        self.__test_automaton.set_state(csv_import_util.STATE_FOUND_ERROR)
+        self.__test_automaton.set_state(legacy_csv_import_util.STATE_FOUND_ERROR)
         self.__test_automaton.finish()
 
 
