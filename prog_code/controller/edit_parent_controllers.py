@@ -33,6 +33,7 @@ from ..util import filter_util
 from ..util import interp_util
 from ..util import math_util
 from ..util import parent_account_util
+from ..util import recalc_util
 from ..util import session_util
 from ..util import user_util
 
@@ -537,11 +538,7 @@ def handle_parent_mcdi_form(form_id):
             percentile = -1
 
         # Find prior entries in study
-        study_filter = models.Filter('study', 'eq', study)
-        study_id_filter = models.Filter('study_id', 'eq', study_id)
-        results = filter_util.run_search_query([study_filter, study_id_filter],
-            'snapshots')
-        session_number = len(results) + 1
+        session_number = recalc_util.get_session_number(study, study_id)
         if not total_num_sessions:
             total_num_sessions = session_number
 

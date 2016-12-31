@@ -21,8 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import constants
 import db_util
+import filter_util
 import interp_util
 import math_util
+
+from ..struct import models
 
 
 class CachedMCDIAdapter:
@@ -68,21 +71,48 @@ def recalculate_age(snapshot):
     """
     @type snapshot: SnapshotMetadata
     """
-    birthday = interp_util.interpret_date(snapshot.birthday)
-    session_date = interp_util.interpret_date(snapshot.session_date)
-    snapshot.age = interp_util.monthdelta(birthday, session_date)
+    snapshot.age = recalculate_age_raw(snapshot.birthday, snapshot.session_date)
+
+
+def recalculate_age_raw(birthday_str, session_date_str):
+    birthday = interp_util.interpret_date(birthday_str)
+    session_date = interp_util.interpret_date(session_date_str)
+    return interp_util.monthdelta(birthday, session_date)
 
 
 def recalculate_percentile(snapshot, cached_adapter):
     """
     @type snapshot: SnapshotMetadata
     """
-    mcdi_model = cached_adapter.load_mcdi_model(snapshot.mcdi_type)
+    mcdi_type = snapshot.mcdi_type
+    gender = snapshot.gender
+    individual_words = db_util.load_snapshot_contents(snapshot)
+
+    snapshot.words_spoken = get_words_spoken(
+        cached_adapter,
+        mcdi_type,
+        individual_words
+    )
+
+    snapshot.percentile = recalculate_percentile_raw(
+        cached_adapter,
+        mcdi_type,
+        gender,
+        snapshot.words_spoken,
+        snapshot.age
+    )
+
+
+def recalculate_percentile_raw(cached_adapter, mcdi_type, gender,
+    words_spoken, age):
+
+    # Load CDI information
+    mcdi_model = cached_adapter.load_mcdi_model(mcdi_type)
     if mcdi_model == None:
         mcdi_model = cached_adapter.load_mcdi_model('fullenglishmcdi')
 
+    # Get percentile information
     meta_percentile_info = mcdi_model.details['percentiles']
-    gender = snapshot.gender
 
     percentiles_name = None
     if gender == constants.MALE or gender == constants.OTHER_GENDER:
@@ -92,24 +122,27 @@ def recalculate_percentile(snapshot, cached_adapter):
 
     percentiles = cached_adapter.load_percentile_model(percentiles_name)
 
+    # Calculate percentile
+    return math_util.find_percentile(
+        percentiles.details,
+        words_spoken,
+        age,
+        cached_adapter.get_max_mcdi_words(mcdi_type)
+    )
+
+def get_words_spoken(cached_adapter, mcdi_type, individual_words):
+    mcdi_model = cached_adapter.load_mcdi_model(mcdi_type)
+    if mcdi_model == None:
+        mcdi_model = cached_adapter.load_mcdi_model('fullenglishmcdi')
+
     count_as_spoken_vals = mcdi_model.details['count_as_spoken']
-    individual_words = db_util.load_snapshot_contents(snapshot)
+
     words_spoken = 0
     for word in individual_words:
         if word.value in count_as_spoken_vals:
             words_spoken += 1
 
-    snapshot.words_spoken = words_spoken
-    
-    new_percentile = math_util.find_percentile(
-        percentiles.details,
-        snapshot.words_spoken,
-        snapshot.age,
-        cached_adapter.get_max_mcdi_words(snapshot.mcdi_type)
-    )
-
-    snapshot.percentile = new_percentile
-
+    return words_spoken
 
 def recalculate_ages(snapshots):
     for snapshot in snapshots:
@@ -139,3 +172,11 @@ def recalculate_ages_and_percentiles(snapshots, save=True):
 
     if save:
         update_snapshots(snapshots)
+
+
+def get_session_number(study, study_id):
+    study_filter = models.Filter('study', 'eq', study)
+    study_id_filter = models.Filter('study_id', 'eq', study_id)
+    results = filter_util.run_search_query([study_filter, study_id_filter],
+        'snapshots')
+    return len(results) + 1

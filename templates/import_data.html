@@ -47,6 +47,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             </select>
         </div>
         <div class="form-entry">
+            <label>Test Without Saving?</label>
+            <select name="dry-run">
+                <option value="no">No (upload and save data to database)</option>
+                <option value="yes">Yes (check for problems without save to database)</option>
+            </select>
+        </div>
+        <div class="form-entry">
             <label>CSV File</label>
             <input type="file" name="file"> 
         </div>

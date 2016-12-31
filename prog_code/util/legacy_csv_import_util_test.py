@@ -31,7 +31,7 @@ class FakePercentileTable:
         self.details = details
 
 
-class UploadParserAutomatonTests(mox.MoxTestBase):
+class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
 
     def setUp(self):
         mox.MoxTestBase.setUp(self)
