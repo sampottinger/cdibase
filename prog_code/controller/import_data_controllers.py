@@ -28,6 +28,7 @@ from daxlabbase import app
 
 from ..util import constants
 from ..util import legacy_csv_import_util
+from ..util import new_csv_import_util
 from ..util import db_util
 from ..util import session_util
 
@@ -62,30 +63,62 @@ def import_data():
             unicode(flask.request.files['file'].read()), newline=None
         )
         mcdi_type = flask.request.form.get('cdi-type', '')
+        file_format = flask.request.form['file-format']
 
-        results = legacy_csv_import_util.parse_csv(
-            contents,
-            mcdi_type,
-            ['english'],
-            constants.EXPLICIT_FALSE,
-            True
-        )
-
-        if results['error']:
-            flask.session[constants.ERROR_ATTR] = results['error']
-            return flask.redirect('/base/import_data')
+        if file_format == "new":
+            return import_data_new(contents)
         else:
-            flask.session[constants.CONFIRMATION_ATTR] = CONFIRM_MSG
+            return import_data_legacy(contents, mcdi_type)
 
-        db_util.report_usage(
-            session_util.get_user_email(),
-            "Import Data",
-            json.dumps({
-                "global_ids": results["ids"]
-            })
-        )
 
-        if mcdi_type != '':
-            flask.session['last_format_used'] = mcdi_type
+def import_data_new(contents):
+    results = new_csv_import_util.process_csv(contents)
 
+    if results.had_error:
+        flask.session[constants.ERROR_ATTR] = results.error_msg
         return flask.redirect('/base/import_data')
+
+    impacted_ids = []
+    for record in results.records:
+        db_util.insert_snapshot(record.meta, record.contents)
+        impacted_ids.append(record.meta.database_id)
+
+    db_util.report_usage(
+        session_util.get_user_email(),
+        "Import Data",
+        json.dumps({
+            "global_ids": impacted_ids
+        })
+    )
+
+    flask.session[constants.CONFIRMATION_ATTR] = CONFIRM_MSG
+    return flask.redirect('/base/import_data')
+
+
+def import_data_legacy(contents, mcdi_type):
+    results = legacy_csv_import_util.parse_csv(
+        contents,
+        mcdi_type,
+        ['english'],
+        constants.EXPLICIT_FALSE,
+        True
+    )
+
+    if results['error']:
+        flask.session[constants.ERROR_ATTR] = results['error']
+        return flask.redirect('/base/import_data')
+    else:
+        flask.session[constants.CONFIRMATION_ATTR] = CONFIRM_MSG
+
+    db_util.report_usage(
+        session_util.get_user_email(),
+        "Import Data",
+        json.dumps({
+            "global_ids": results["ids"]
+        })
+    )
+
+    if mcdi_type != '':
+        flask.session['last_format_used'] = mcdi_type
+
+    return flask.redirect('/base/import_data')

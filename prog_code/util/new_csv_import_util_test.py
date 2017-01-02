@@ -71,8 +71,7 @@ class NewUploadParserAutomatonTests(mox.MoxTestBase):
         self.__adapter = recalc_util.CachedMCDIAdapter()
 
         self.__test_automaton = new_csv_import_util.UploadParserAutomaton(
-            self.__adapter,
-            "test_mcdi_type"
+            self.__adapter
         )
 
     def __setup_test_cdi(self, run_automaton_actions=True):

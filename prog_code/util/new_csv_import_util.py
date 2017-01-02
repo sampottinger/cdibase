@@ -1,3 +1,4 @@
+import csv
 import collections
 import datetime
 
@@ -68,7 +69,9 @@ EXPECTED_BOOLEAN_VALUES = {
     "yes": constants.EXPLICIT_TRUE,
     "no": constants.EXPLICIT_FALSE,
     "1": constants.EXPLICIT_TRUE,
-    "0": constants.EXPLICIT_FALSE
+    "0": constants.EXPLICIT_FALSE,
+    str(constants.EXPLICIT_TRUE): constants.EXPLICIT_TRUE,
+    str(constants.EXPLICIT_FALSE): constants.EXPLICIT_FALSE
 }
 
 ERROR_INVALID_LENGTH = "Expected atleast 19 rows in the provided dataset. Found %d rows."
@@ -96,7 +99,7 @@ ERROR_UNEXPECTED_REVISION = "An invalid value (%s) was provided for revision in 
 ERROR_NO_LANGUAGES = "Languages missing in column %d."
 ERROR_UNEXPECTED_NUM_LANGUAGES = "An invalid value (%s) was provided for num languages in column %d."
 ERROR_UNKNOWN_CDI_TYPE = "An unknown CDI type (%s) was encountered in column %d."
-ERROR_WORDS_NOT_EXPECTED = "The words provided were not expected for CDI type %s."
+ERROR_WORDS_NOT_EXPECTED = "The words provided were not expected for CDI type %s (%s)."
 ERROR_HARD_OF_HEARING_VALUE = "Unexpected value (%s) for hard of hearing in column %d."
 ERROR_DELETED_VALUE = "Unexpected value (%s) for deleted in column %d."
 ERROR_UNKNOWN_WORD_VAL = "Unexpected value (%s) for word %s in column %d."
@@ -113,12 +116,17 @@ AutomatonResults = collections.namedtuple(
 )
 
 
+CSVResults = collections.namedtuple(
+    "CSVResults",
+    ["records", "had_error", "error_msg"]
+)
+
+
 class UploadParserAutomaton:
 
-    def __init__(self, cached_adapter, expected_cdi):
+    def __init__(self, cached_adapter):
         self.__cached_adapter = cached_adapter
 
-        self.__expected_cdi = expected_cdi
         self.__state = STATE_PARSE_HEADER
         self.__error = None
 
@@ -189,6 +197,9 @@ class UploadParserAutomaton:
         return self.__processed_records
 
     def process_column(self, input_vals):
+        if self.is_in_error():
+            return
+        
         if self.waiting_for_header():
             self.parse_header(input_vals)
         else:
@@ -246,8 +257,8 @@ class UploadParserAutomaton:
                 self.enter_error_state(
                     ERROR_INVALID_NUM_WORDS % (
                         self.__columns_processed + 1,
-                        user_provided_age,
-                        expected_age
+                        user_provided_num_words,
+                        expected_num_words
                     )
                 )
                 return
@@ -697,16 +708,33 @@ class UploadParserAutomaton:
             []
         ))
 
+        required_words = set(map(
+            lambda x: x.replace("*", "").lower(),
+            required_words
+        ))
+
         # Check allowed values
-        self.__allowed_word_values = set(map(
+        explicit_options = set(map(
             lambda x: x["value"],
             mcdi_model.details["options"]
         ))
 
+        prefill_values = set(reduce(
+            lambda prev, cur: extend_list(prev, cur.get("prefill_value", [])),
+            mcdi_model.details["options"],
+            []
+        ))
+
+        self.__allowed_word_values = explicit_options.union(prefill_values)
+
         self.__count_as_spoken_values = set(mcdi_model.details["count_as_spoken"])
 
-        if len(required_words.symmetric_difference(self.__expected_words)) > 0:
-            self.enter_error_state(ERROR_WORDS_NOT_EXPECTED % cdi_name)
+        difference = required_words.symmetric_difference(self.__expected_words)
+        if len(difference) > 0:
+            diff_str = ",".join(difference)
+            self.enter_error_state(
+                ERROR_WORDS_NOT_EXPECTED % (cdi_name, diff_str)
+            )
             return
 
         # Accept cdi model name
@@ -809,7 +837,8 @@ class UploadParserAutomaton:
         if str_val == "0":
             return 0
 
-        if str_val.startswith("0") or self.__is_empty(str_val):
+        invalid_zero = str_val.startswith("0") and not str_val.startswith("0.")
+        if invalid_zero or self.__is_empty(str_val):
             return None
 
         try:
@@ -832,12 +861,26 @@ class UploadParserAutomaton:
             return None
 
     def __parse_date(self, str_val):
-        str_val = str_val.strip()
+        str_val = str_val.strip().replace("-", "/")
 
+        converted_date = self.__parse_date_iso(str_val)
+        if not converted_date:
+            converted_date = self.__parse_date_usa(str_val)
+
+        if not converted_date:
+            return None
+
+        return converted_date.date().isoformat().replace("-", "/")
+
+    def __parse_date_iso(self, str_val):
         try:
-            str_val = str_val.replace("-", "/")
-            parsed_val = datetime.datetime.strptime(str_val, "%Y/%m/%d")
-            return parsed_val.date().isoformat().replace("-", "/")
+            return datetime.datetime.strptime(str_val, "%Y/%m/%d")
+        except ValueError:
+            return None
+
+    def __parse_date_usa(self, str_val):
+        try:
+            return datetime.datetime.strptime(str_val, "%m/%d/%Y")
         except ValueError:
             return None
 
@@ -851,4 +894,38 @@ class Counter:
         old_val = self.__i
         self.__i += 1
         return old_val
+
+
+def process_csv(input_rows_iterator):
+    columns = []
+
+    input_rows = list(csv.reader(input_rows_iterator))
+
+    for col_num in range(0, len(input_rows[0])):
+        column = map(lambda row: row[col_num], input_rows)
+        columns.append(column)
+
+    automaton = UploadParserAutomaton(recalc_util.CachedMCDIAdapter())
+
+    for column in columns:
+        automaton.process_column(column)
+
+    return CSVResults(
+        automaton.get_processed_records(),
+        automaton.is_in_error(),
+        automaton.get_error()
+    )
+
+
+def extend_list(prev, cur):
+    cur = cur if is_iterable(cur) else [cur]
+    return prev + cur
+
+
+def is_iterable(target):
+    try:
+        iter(target)
+        return True
+    except TypeError:
+        return False
 

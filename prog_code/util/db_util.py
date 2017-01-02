@@ -191,7 +191,7 @@ def load_mcdi_model(name):
     cursor.execute(
         '''SELECT human_name,safe_name,filename FROM mcdi_formats
         WHERE safe_name=?''',
-        (name,)
+        (name.replace(" ", ""),)
     )
     metadata = cursor.fetchone()
     connection.close()
@@ -816,9 +816,10 @@ def insert_snapshot(snapshot_metadata, word_entries, cursor=None):
         saved along with individual word entries.
     @type snapshot_metadata: models.SnapshotMetadata
     @param word_entries: Collection of records indicating what words were
-        spoken and what words were not. Keys should be words and values are
-        status indicators showing if those words were spoken or not.
-    @type: dict
+        spoken and what words were not. If dict, keys should be words and values
+        are status indicators showing if those words were spoken or not.
+        Othwerwise should be collection of models.SnapshotContent
+    @type: dict or list
     """
     cursor_provided = cursor != None
     if not cursor_provided:
@@ -866,16 +867,28 @@ def insert_snapshot(snapshot_metadata, word_entries, cursor=None):
     snapshot_metadata.database_id=new_snapshot_id
 
     # Put in snapshot contents
-    for (word, val) in word_entries.items():
-        cursor.execute(
-            'INSERT INTO snapshot_content VALUES (?, ?, ?, ?)',
-            (
-                new_snapshot_id,
-                word.lower(),
-                val,
-                0
+    if type(word_entries) is dict:
+        for (word, val) in word_entries.items():
+            cursor.execute(
+                'INSERT INTO snapshot_content VALUES (?, ?, ?, ?)',
+                (
+                    new_snapshot_id,
+                    word.lower(),
+                    val,
+                    0
+                )
             )
-        )
+    else:
+        for word_entry in word_entries:
+            cursor.execute(
+                'INSERT INTO snapshot_content VALUES (?, ?, ?, ?)',
+                (
+                    new_snapshot_id,
+                    word_entry.word.lower(),
+                    word_entry.value,
+                    word_entry.revision
+                )
+            )
 
     if not cursor_provided:
         connection.commit()
