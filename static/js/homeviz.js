@@ -32,7 +32,13 @@ var histogramBuckets = [
     {countByStudy: d3.map(), count: 0, min: 3, max: 3},
     {countByStudy: d3.map(), count: 0, min: 4, max: 4},
     {countByStudy: d3.map(), count: 0, min: 5, max: 5},
-    {countByStudy: d3.map(), count: 0, min: 6, max: null}
+    {countByStudy: d3.map(), count: 0, min: 6, max: 6},
+    {countByStudy: d3.map(), count: 0, min: 7, max: 7},
+    {countByStudy: d3.map(), count: 0, min: 8, max: 8},
+    {countByStudy: d3.map(), count: 0, min: 9, max: 9},
+    {countByStudy: d3.map(), count: 0, min: 10, max: 10},
+    {countByStudy: d3.map(), count: 0, min: 11, max: 11},
+    {countByStudy: d3.map(), count: 0, min: 12, max: null}
 ];
 
 var aggregationMethod = 'sum';

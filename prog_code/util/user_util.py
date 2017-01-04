@@ -136,7 +136,7 @@ def check_user_password(email, password):
     user = db_util.load_user_model(email)
     if not user:
         return False
-    pass_hash = user.password_hash
+    pass_hash = str(user.password_hash)
     try:
         return werkzeug.check_password_hash(pass_hash, password)
     except:
@@ -152,8 +152,9 @@ def change_user_password(email, password):
     """
     email = email.lower()
     user = db_util.load_user_model(email)
-    user.password_hash = werkzeug.generate_password_hash(password,
+    pass_hash = werkzeug.generate_password_hash(password,
         method='sha512')
+    user.password_hash = pass_hash
     db_util.save_user_model(user)
 
 def update_user(orig_email, email, can_enter_data, can_delete_data,
