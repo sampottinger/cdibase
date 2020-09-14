@@ -69,6 +69,8 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             self.__adapter
         )
 
+        self.__callback_called = False
+
     def __setup_test_cdi(self, callback, run_automaton_actions=True):
         with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock:
             mock.return_value = models.MCDIFormat(
@@ -801,12 +803,14 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
 
     def test_state_parse_mcdi_type_valid(self):
         def callback():
+            self.__callback_called = True
             self.assertEqual(
                 self.__test_automaton.get_state(),
                 new_csv_import_util.STATE_PARSE_HARD_OF_HEARING
             )
 
         self.__setup_test_cdi(callback)
+        self.assertTrue(self.__callback_called)
 
     def test_state_parse_mcdi_type_invalid(self):
         with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock:
@@ -981,6 +985,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
 
     def test_state_parse_start_words_valid(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.parse_word_start('1')
             self.__test_automaton.parse_word('1')
 
@@ -990,9 +995,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             )
 
         self.__setup_test_cdi(callback)
+        self.assertTrue(self.__callback_called)
 
     def test_state_parse_start_words_invalid_range(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.parse_word_start('1')
             self.__test_automaton.parse_word('2')
 
@@ -1002,9 +1009,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             )
 
         self.__setup_test_cdi(callback)
+        self.assertTrue(self.__callback_called)
 
     def test_state_parse_start_words_invalid_type(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.parse_word_start('1')
             self.__test_automaton.parse_word('a')
 
@@ -1014,9 +1023,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             )
 
         self.__setup_test_cdi(callback)
+        self.assertTrue(self.__callback_called)
 
     def test_state_parse_start_words_invalid_empty(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.parse_word_start('1')
             self.__test_automaton.parse_word('')
 
@@ -1026,9 +1037,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             )
 
         self.__setup_test_cdi(callback)
+        self.assertTrue(self.__callback_called)
 
     def test_state_parse_start_words_exhaust(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.parse_word_start('1')
             self.__test_automaton.parse_word('0')
             self.__test_automaton.parse_word('1')
@@ -1041,9 +1054,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             )
 
         self.__setup_test_cdi(callback)
+        self.assertTrue(self.__callback_called)
 
     def test_parse_full_record_valid_provided_percentile(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.process_column(CORRECT_TEST_HEADER_VALUES)
 
             self.__test_automaton.process_column([
@@ -1123,6 +1138,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             )
 
         self.__setup_for_parse_with_percentile(callback)
+        self.assertTrue(self.__callback_called)
 
     def test_parse_full_record_valid_not_provided_percentile(self):
         with unittest.mock.patch('prog_code.util.recalc_util.recalculate_percentile_raw') as mock:
@@ -1130,6 +1146,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             mock.return_value = 99
 
             def callback():
+                self.__callback_called = True
                 self.__test_automaton.process_column(CORRECT_TEST_HEADER_VALUES)
 
                 self.__test_automaton.process_column([
@@ -1175,9 +1192,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 )
 
             self.__setup_test_cdi(callback, False)
+            self.assertTrue(self.__callback_called)
 
     def test_parse_full_record_valid_not_provided_age(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.process_column(CORRECT_TEST_HEADER_VALUES)
 
             self.__test_automaton.process_column([
@@ -1215,9 +1234,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             self.assertTrue(abs(metadata.age - 24) < 0.1)
 
         self.__setup_for_parse_with_percentile(callback)
+        self.assertTrue(self.__callback_called)
 
     def test_parse_full_record_valid_empty_num_languages(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.process_column(CORRECT_TEST_HEADER_VALUES)
 
             self.__test_automaton.process_column([
@@ -1255,9 +1276,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             self.assertEqual(metadata.num_languages, 2)
 
         self.__setup_for_parse_with_percentile(callback)
+        self.assertTrue(self.__callback_called)
 
     def test_parse_full_record_invalid_num_languages(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.process_column(CORRECT_TEST_HEADER_VALUES)
 
             self.__test_automaton.process_column([
@@ -1296,9 +1319,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             )
 
         self.__setup_for_parse_with_percentile(callback, False)
+        self.assertTrue(self.__callback_called)
 
     def test_parse_full_record_invalid_word_value(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.process_column(CORRECT_TEST_HEADER_VALUES)
 
             self.__test_automaton.process_column([
@@ -1337,9 +1362,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             )
 
         self.__setup_for_parse_with_percentile(callback, False)
+        self.assertTrue(self.__callback_called)
 
     def test_parse_full_record_invalid_word_type(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.process_column(CORRECT_TEST_HEADER_VALUES)
 
             self.__test_automaton.process_column([
@@ -1378,8 +1405,10 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             )
 
         self.__setup_for_parse_with_percentile(callback, False)
+        self.assertTrue(self.__callback_called)
 
     def test_parse_full_record_invalid_word_prefix(self):
+        self.__callback_called = True
         def callback():
             self.__test_automaton.process_column(CORRECT_TEST_HEADER_VALUES)
 
@@ -1419,9 +1448,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             )
 
         self.__setup_for_parse_with_percentile(callback, False)
+        self.assertTrue(self.__callback_called)
 
     def test_parse_full_record_invalid_unexpected_words(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.process_column(CORRECT_TEST_HEADER_VALUES)
 
             self.__test_automaton.process_column([
@@ -1460,6 +1491,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             )
 
         self.__setup_for_parse_with_percentile(callback, False)
+        self.assertTrue(self.__callback_called)
 
     def test_parse_full_record_invalid_format(self):
         self.__test_automaton.process_column(CORRECT_TEST_HEADER_VALUES)
@@ -1501,6 +1533,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
 
     def test_parse_full_record_invalid_provided_percentile(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.process_column(CORRECT_TEST_HEADER_VALUES)
 
             self.__test_automaton.process_column([
@@ -1539,9 +1572,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             )
 
         self.__setup_for_parse_with_percentile(callback)
+        self.assertTrue(self.__callback_called)
 
     def test_parse_full_record_invalid_conflict_age(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.process_column(CORRECT_TEST_HEADER_VALUES)
 
             self.__test_automaton.process_column([
@@ -1580,9 +1615,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             )
 
         self.__setup_for_parse_with_percentile(callback, False)
+        self.assertTrue(self.__callback_called)
 
     def test_parse_full_record_valid_not_provided_session_num(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.process_column(CORRECT_TEST_HEADER_VALUES)
 
             self.__test_automaton.process_column([
@@ -1626,8 +1663,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
 
             mock.assert_called_with('test_study', 'test_study_id')
 
+        self.assertTrue(self.__callback_called)
+
     def test_parse_full_record_valid_not_provided_num_words_spoken(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.process_column(CORRECT_TEST_HEADER_VALUES)
 
             self.__test_automaton.process_column([
@@ -1665,9 +1705,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             self.assertEqual(metadata.words_spoken, 3)
 
         self.__setup_for_parse_with_percentile(callback)
+        self.assertTrue(self.__callback_called)
 
     def test_parse_full_record_invalid_conflict_num_words_spoken(self):
         def callback():
+            self.__callback_called = True
             self.__test_automaton.process_column(CORRECT_TEST_HEADER_VALUES)
 
             self.__test_automaton.process_column([
@@ -1706,3 +1748,4 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             )
 
         self.__setup_for_parse_with_percentile(callback, False)
+        self.assertTrue(self.__callback_called)
