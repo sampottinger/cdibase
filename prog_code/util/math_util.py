@@ -46,15 +46,17 @@ def find_percentile(table_entries, target_num_words, age_months, max_words):
         could know.
     @type max_words: int
     """
-    percentiles = map(lambda x: int(x[0]), table_entries[1:])
+    percentiles = list(map(lambda x: int(x[0]), table_entries[1:]))
     percentiles.insert(0,0)
     percentiles.append(0)
 
     first_month = int(table_entries[0][1])
     month_index = int(age_months - first_month + 1)
 
-    words_per_percentile = map(lambda x: int(get_with_end_max(x, month_index)),
-        table_entries)
+    words_per_percentile = list(map(lambda x:
+        int(get_with_end_max(x, month_index)),
+        table_entries
+    ))
     words_per_percentile.append(0)
     words_per_percentile[0] = max_words
 
@@ -72,7 +74,7 @@ def find_percentile(table_entries, target_num_words, age_months, max_words):
         lower_section_words = words_per_percentile[percentile_index+1]
     else:
         lower_section_words = upper_section_words - 1
-    
+
     upper_section_percentile = percentiles[percentile_index]
     if len(percentiles) > percentile_index+1:
         lower_section_percentile = percentiles[percentile_index+1]

@@ -36,7 +36,7 @@ from prog_code.util.file_util_test import *
 from prog_code.util.filter_util_test import *
 from prog_code.util.interp_util_test import *
 from prog_code.util.mail_util_test import *
-#from prog_code.util.math_util_test import *
+from prog_code.util.math_util_test import *
 #from prog_code.util.oper_interp_test import *
 #from prog_code.util.parent_account_util_test import *
 #from prog_code.util.recalc_util_test import *
