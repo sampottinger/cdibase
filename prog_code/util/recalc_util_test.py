@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import copy
 import unittest
+import unittest.mock
 
 from ..struct import models
 
@@ -94,40 +95,43 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
 class RecalcPercentilesTest(unittest.TestCase):
 
     def test_load_mcdi_model(self):
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        db_util.load_mcdi_model('test_format').AndReturn(TEST_MCDI_MODEL)
-        self.mox.ReplayAll()
+        with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock:
+            mock.return_value = TEST_MCDI_MODEL
 
-        adapter = recalc_util.CachedMCDIAdapter()
-        result_1 = adapter.load_mcdi_model('test_format')
-        result_2 = adapter.load_mcdi_model('test_format')
+            adapter = recalc_util.CachedMCDIAdapter()
+            result_1 = adapter.load_mcdi_model('test_format')
+            result_2 = adapter.load_mcdi_model('test_format')
 
-        self.assertEqual(result_1, TEST_MCDI_MODEL)
-        self.assertEqual(result_2, TEST_MCDI_MODEL)
+            self.assertEqual(result_1, TEST_MCDI_MODEL)
+            self.assertEqual(result_2, TEST_MCDI_MODEL)
+
+            mock.assert_called_with('test_format')
 
     def test_load_percentile_model(self):
-        self.mox.StubOutWithMock(db_util, 'load_percentile_model')
-        db_util.load_percentile_model('test_format').AndReturn(TEST_MCDI_MODEL)
-        self.mox.ReplayAll()
+        with unittest.mock.patch('prog_code.util.db_util.load_percentile_model') as mock:
+            mock.return_value = TEST_MCDI_MODEL
 
-        adapter = recalc_util.CachedMCDIAdapter()
-        result_1 = adapter.load_percentile_model('test_format')
-        result_2 = adapter.load_percentile_model('test_format')
+            adapter = recalc_util.CachedMCDIAdapter()
+            result_1 = adapter.load_percentile_model('test_format')
+            result_2 = adapter.load_percentile_model('test_format')
 
-        self.assertEqual(result_1, TEST_MCDI_MODEL)
-        self.assertEqual(result_2, TEST_MCDI_MODEL)
+            self.assertEqual(result_1, TEST_MCDI_MODEL)
+            self.assertEqual(result_2, TEST_MCDI_MODEL)
+
+            mock.assert_called_with('test_format')
 
     def test_get_max_mcdi_words(self):
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        db_util.load_mcdi_model('test_format').AndReturn(TEST_MCDI_MODEL)
-        self.mox.ReplayAll()
+        with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock:
+            mock.return_value = TEST_MCDI_MODEL
 
-        adapter = recalc_util.CachedMCDIAdapter()
-        result_1 = adapter.get_max_mcdi_words('test_format')
-        result_2 = adapter.get_max_mcdi_words('test_format')
+            adapter = recalc_util.CachedMCDIAdapter()
+            result_1 = adapter.get_max_mcdi_words('test_format')
+            result_2 = adapter.get_max_mcdi_words('test_format')
 
-        self.assertEqual(result_1, 5)
-        self.assertEqual(result_2, 5)
+            self.assertEqual(result_1, 5)
+            self.assertEqual(result_2, 5)
+
+            mock.assert_called_with('test_format')
 
     def test_recalculate_age(self):
         test_snapshot = copy.deepcopy(TEST_SNAPSHOT)
@@ -135,27 +139,27 @@ class RecalcPercentilesTest(unittest.TestCase):
         self.assertTrue(abs(test_snapshot.age - 17.71) < 0.01)
 
     def test_recalculate_percentile(self):
-        adapter = recalc_util.CachedMCDIAdapter()
-        adapter.max_word_counts['standard'] = 681
-        adapter.mcdi_models['standard'] = TEST_MCDI_MODEL
-        adapter.percentiles['typical-male'] = TEST_PERCENTILES_MODEL
-        test_snapshot = copy.deepcopy(TEST_SNAPSHOT)
+        with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock_mcdi:
+            with unittest.mock.patch('prog_code.util.db_util.load_snapshot_contents') as mock_snap:
+                adapter = recalc_util.CachedMCDIAdapter()
+                adapter.max_word_counts['standard'] = 681
+                adapter.mcdi_models['standard'] = TEST_MCDI_MODEL
+                adapter.percentiles['typical-male'] = TEST_PERCENTILES_MODEL
+                test_snapshot = copy.deepcopy(TEST_SNAPSHOT)
 
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'load_snapshot_contents')
+                test_word_1 = models.SnapshotContent(0, '', 1, 0)
+                test_word_2 = models.SnapshotContent(0, '', 2, 0)
+                test_word_3 = models.SnapshotContent(0, '', 3, 0)
+                words_spoken = [test_word_1] * 31
+                words_spoken.extend([test_word_2] * 22)
+                words_spoken.extend([test_word_3] * 13)
+                mock_snap.return_value = words_spoken
 
-        test_word_1 = models.SnapshotContent(0, '', 1, 0)
-        test_word_2 = models.SnapshotContent(0, '', 2, 0)
-        test_word_3 = models.SnapshotContent(0, '', 3, 0)
-        words_spoken = [test_word_1] * 31
-        words_spoken.extend([test_word_2] * 22)
-        words_spoken.extend([test_word_3] * 13)
-        db_util.load_snapshot_contents(test_snapshot).AndReturn(words_spoken)
+                recalc_util.recalculate_age(test_snapshot)
+                recalc_util.recalculate_percentile(test_snapshot, adapter)
+                self.assertTrue(abs(test_snapshot.age - 17.71) < 0.01)
+                self.assertEqual(test_snapshot.words_spoken, 53)
+                self.assertEqual(test_snapshot.percentile, 14)
 
-        self.mox.ReplayAll()
-
-        recalc_util.recalculate_age(test_snapshot)
-        recalc_util.recalculate_percentile(test_snapshot, adapter)
-        self.assertTrue(abs(test_snapshot.age - 17.71) < 0.01)
-        self.assertEqual(test_snapshot.words_spoken, 53)
-        self.assertEqual(test_snapshot.percentile, 14)
+                mock_snap.assert_called_with(test_snapshot)
+                self.assertEqual(len(mock_mcdi.mock_calls), 0)
