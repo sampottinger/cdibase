@@ -15,12 +15,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import json
 import math
+import unittest
 import urllib
-
-import mox
 
 import daxlabbase
 from ..controller import api_key_controllers
@@ -163,16 +161,15 @@ EXPECTED_MODIFIED_PARENT_FORM = models.ParentForm(
 )
 
 
-class TestAPIKeyControllers(mox.MoxTestBase):
+class TestAPIKeyControllers(unittest.TestCase):
 
     def setUp(self):
-        mox.MoxTestBase.setUp(self)
         self.app = daxlabbase.app
         self.app.debug = True
 
     def test_generate_error(self):
         test_message = 'test_message'
-        
+
         ret_str, status = api_key_controllers.generate_error(test_message,
             TEST_DB_ID)
         self.assertEqual(json.loads(ret_str)[constants.ERROR_ATTR],
@@ -221,7 +218,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -308,7 +305,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -420,7 +417,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -540,7 +537,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -579,7 +576,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -622,7 +619,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -734,7 +731,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -854,7 +851,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -897,7 +894,7 @@ class TestAPIKeyControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 

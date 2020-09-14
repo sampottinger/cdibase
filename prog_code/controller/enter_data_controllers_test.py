@@ -15,13 +15,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import collections
 import copy
 import datetime
 import json
-
-import mox
+import unittest
 
 import daxlabbase
 from ..struct import models
@@ -181,10 +179,9 @@ TEST_EXPECTED_WORD_ENTRIES = {
 }
 
 
-class EnterDataControllersTests(mox.MoxTestBase):
+class EnterDataControllersTests(unittest.TestCase):
 
     def setUp(self):
-        mox.MoxTestBase.setUp(self)
         self.app = daxlabbase.app
         self.app.debug = True
 
@@ -219,7 +216,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
         self.mox.StubOutWithMock(db_util, 'insert_snapshot')
         self.mox.StubOutWithMock(db_util, 'report_usage')
-        
+
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         db_util.load_mcdi_model(TEST_MCDI_FORMAT_NAME).AndReturn(TEST_FORMAT)
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
@@ -230,7 +227,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -263,7 +260,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         target_url = '/base/enter_data/%s' % TEST_MCDI_FORMAT_NAME
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -384,7 +381,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         target_url = '/base/enter_data/%s' % TEST_MCDI_FORMAT_NAME
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -502,7 +499,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         target_url = '/base/enter_data/%s' % TEST_MCDI_FORMAT_NAME
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -549,7 +546,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         result = json.loads(result_info.data)
         returned_global_id = result['global_id']
         returned_studies = result['cdis']
-        
+
         self.assertEqual(returned_global_id, TEST_DB_ID)
 
         self.assertEqual(len(returned_studies), 2)
@@ -606,7 +603,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
         result = json.loads(result_info.data)
         returned_global_id = result['global_id']
         returned_studies = result['cdis']
-        
+
         self.assertEqual(returned_global_id, TEST_DB_ID)
 
         self.assertEqual(len(returned_studies), 2)
@@ -640,7 +637,7 @@ class EnterDataControllersTests(mox.MoxTestBase):
             recalc_util,
             'recalculate_ages_and_percentiles'
         )
-        
+
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
         db_util.report_usage(

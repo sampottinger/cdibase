@@ -15,12 +15,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import collections
 import copy
 from datetime import date
-
-import mox
+import unittest
 
 import daxlabbase
 from ..util import constants
@@ -264,7 +262,7 @@ EXPECTED_SNAPSHOT_MOD = models.SnapshotMetadata(
     False
 )
 TEMPLATE_WORD_SPOKEN_RECORD = dict(map(
-    lambda (word, val): (word.replace('_report', ''), val),
+    lambda x: (x[0].replace('_report', ''), x[1]),
     TEMPLATE_WORD_SPOKEN_VALUES.items()
 ))
 TESTING_SNAPSHOT_CONTENT = collections.namedtuple('TestSnapshotContent',
@@ -281,10 +279,9 @@ TWO_WORD_KNOWN_SNAPSHOT_CONTENTS = [
 ]
 
 
-class TestEditParentControllers(mox.MoxTestBase):
+class TestEditParentControllers(unittest.TestCase):
 
     def setUp(self):
-        mox.MoxTestBase.setUp(self)
         self.app = daxlabbase.app
         self.app.debug = True
 
@@ -298,7 +295,7 @@ class TestEditParentControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -306,7 +303,7 @@ class TestEditParentControllers(mox.MoxTestBase):
             data['global_id'] = ''
             data['study_id'] = ''
             client.post('/base/parent_accounts', data=data)
-            
+
             with client.session_transaction() as sess:
                 self.assertTrue(constants.ERROR_ATTR in sess)
                 self.assertNotEqual(constants.ERROR_ATTR, '')
@@ -317,7 +314,7 @@ class TestEditParentControllers(mox.MoxTestBase):
             data['global_id'] = ''
             data['study'] = ''
             client.post('/base/parent_accounts', data=data)
-            
+
             with client.session_transaction() as sess:
                 self.assertTrue(constants.ERROR_ATTR in sess)
                 self.assertNotEqual(constants.ERROR_ATTR, '')
@@ -363,7 +360,7 @@ class TestEditParentControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -826,18 +823,18 @@ class TestEditParentControllers(mox.MoxTestBase):
             TEST_PERCENTILE_TABLE)
 
         interp_util.monthdelta(TEST_BIRTHDAY_DATE, TODAY).AndReturn(TEST_AGE)
-        
+
         math_util.find_percentile(
             'test details',
             TEST_WORDS_SPOKEN,
             TEST_AGE,
             6
         ).AndReturn(TEST_PERCENTILE)
-        
+
         filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn([])
 
         word_values = dict(map(
-            lambda (word, val): (word.replace('_report', ''), val),
+            lambda x: (x[0].replace('_report', ''), x[1]),
             TEMPLATE_WORD_SPOKEN_VALUES.items()
         ))
         db_util.insert_snapshot(EXPECTED_SNAPSHOT, mox.IsA(dict))
@@ -879,18 +876,18 @@ class TestEditParentControllers(mox.MoxTestBase):
 
         interp_util.monthdelta(TEST_BIRTHDAY_DATE_MOD, TODAY).AndReturn(
             TEST_AGE)
-        
+
         math_util.find_percentile(
             'test details',
             TEST_WORDS_SPOKEN,
             TEST_AGE,
             6
         ).AndReturn(TEST_PERCENTILE)
-        
+
         filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn([])
 
         word_values = dict(map(
-            lambda (word, val): (word.replace('_report', ''), val),
+            lambda x: (x[0].replace('_report', ''), x[1]),
             TEMPLATE_WORD_SPOKEN_VALUES.items()
         ))
         db_util.insert_snapshot(EXPECTED_SNAPSHOT_MOD, mox.IsA(dict))
@@ -905,7 +902,7 @@ class TestEditParentControllers(mox.MoxTestBase):
         data['parent_email'] = TEST_PARENT_EMAIL_MOD
         data['birthday'] = TEST_BIRTHDAY_MOD
         TEMPLATE_WORD_SPOKEN_VALUES
-        
+
         with self.app.test_client() as client:
             client.post(PARENT_MCDI_FORM_URL, data=data)
 
@@ -938,14 +935,14 @@ class TestEditParentControllers(mox.MoxTestBase):
 
         interp_util.monthdelta(TEST_BIRTHDAY_DATE, TODAY).AndReturn(
             TEST_AGE)
-        
+
         math_util.find_percentile(
             'test details',
             TEST_WORDS_SPOKEN,
             TEST_AGE,
             6
         ).AndReturn(TEST_PERCENTILE)
-        
+
         filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn([])
 
         db_util.insert_snapshot(EXPECTED_SNAPSHOT, TEMPLATE_WORD_SPOKEN_RECORD)
@@ -959,7 +956,7 @@ class TestEditParentControllers(mox.MoxTestBase):
         data['child_name'] = TEST_CHILD_NAME
         data['parent_email'] = TEST_PARENT_EMAIL
         data['birthday'] = TEST_BIRTHDAY_MOD
-        
+
         with self.app.test_client() as client:
             client.post(PARENT_MCDI_FORM_URL, data=data)
 

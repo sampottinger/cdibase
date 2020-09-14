@@ -15,15 +15,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import re
+import unittest
 
-import mox
-
-import file_util
+import prog_code.util.file_util as file_util
 
 
-class FileUtilTests(mox.MoxTestBase):
+class FileUtilTests(unittest.TestCase):
 
     def test_generate_filename(self):
         filename = file_util.generate_filename(

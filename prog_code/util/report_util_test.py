@@ -15,14 +15,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
-import mox
+import unittest
 
 from ..struct import models
 from ..util import constants
 
-import db_util
-import report_util
+import prog_code.util.db_util as db_util
+import prog_code.util.report_util as report_util
 
 TEST_SNAPSHOT_ID = 789
 TEST_DB_ID = 123
@@ -64,7 +63,7 @@ class TestMCDIFormat:
         self.details = details
 
 
-class ReportUtilTest(mox.MoxTestBase):
+class ReportUtilTest(unittest.TestCase):
 
     def test_sort_by_study_order(self):
         test_rows = [[0]]* 20 + [['word1'], ['word3'], ['word2'], ['word4']]
@@ -84,17 +83,17 @@ class ReportUtilTest(mox.MoxTestBase):
         test_snap_1 = TEST_SNAPSHOT.clone()
         test_snap_1.mcdi_type = 'mcdi_type_1'
         test_snap_1.session_date = '2015/01/01'
-        
+
         test_snap_2 = TEST_SNAPSHOT.clone()
         test_snap_2.mcdi_type = 'mcdi_type_1'
         test_snap_2.session_date = '2015/02/01'
-        
+
         test_snap_3 = TEST_SNAPSHOT.clone()
         test_snap_3.mcdi_type = 'mcdi_type_2'
         test_snap_3.session_date = '2015/03/01'
-        
+
         test_metadata = [test_snap_1, test_snap_2, test_snap_3]
-        
+
         test_contents_1 = [
             models.SnapshotContent(0, 'word1', 1, 1),
             models.SnapshotContent(0, 'word2', 0, 1),

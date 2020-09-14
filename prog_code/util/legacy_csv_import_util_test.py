@@ -15,14 +15,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import unittest
 
-import mox
-
-import constants
-import legacy_csv_import_util
-import math_util
+import prog_code.util.constants as constants
+import prog_code.util.legacy_csv_import_util as legacy_csv_import_util
+import prog_code.util.math_util as math_util
 
 
 class FakePercentileTable:
@@ -31,16 +28,15 @@ class FakePercentileTable:
         self.details = details
 
 
-class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
+class LegacyUploadParserAutomatonTests(unittest.TestCase):
 
     def setUp(self):
-        mox.MoxTestBase.setUp(self)
         self.__test_automaton = legacy_csv_import_util.UploadParserAutomaton({
             constants.MALE: FakePercentileTable([-1]),
             constants.FEMALE: FakePercentileTable([-2]),
             constants.OTHER_GENDER: FakePercentileTable([-3])
         })
-    
+
     def test_enter_error_state(self):
         self.__test_automaton.enter_error_state('test error')
         self.assertEqual(
@@ -169,7 +165,7 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
             ['', 'Child\'s ID (from database)', '123', '456', '789'],
             1
         )
-        
+
         prototypes = self.__test_automaton.get_prototypes()
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
@@ -212,7 +208,7 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
             ['', 'Name / Number', '02', '46', '80'],
             1
         )
-        
+
         prototypes = self.__test_automaton.get_prototypes()
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
@@ -247,7 +243,7 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
             ['', 'Study / Source', 'Study1', 'Study2', 'Study3'],
             1
         )
-        
+
         prototypes = self.__test_automaton.get_prototypes()
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
@@ -282,7 +278,7 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
             ['', 'Gender', 'M', 'F', 'O'],
             1
         )
-        
+
         prototypes = self.__test_automaton.get_prototypes()
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
@@ -329,7 +325,7 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
             ['', 'Age (months)', '123.1', '456.2', '789.3'],
             1
         )
-        
+
         prototypes = self.__test_automaton.get_prototypes()
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
@@ -359,7 +355,7 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
         self.__test_automaton.parse_age(
             ['', 'Age', '123.1', '456.2', '789.3'],
             1
-        ) 
+        )
         self.assertEqual(
             self.__test_automaton.get_state(),
             legacy_csv_import_util.STATE_FOUND_ERROR
@@ -374,7 +370,7 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
             ['', 'Date of Birth', '01/02/2013', '02/03/2013', '04/05/2013'],
             1
         )
-        
+
         prototypes = self.__test_automaton.get_prototypes()
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
@@ -423,7 +419,7 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
             ['', 'Date of Session', '01/02/2013', '02/03/2013', '04/05/2013'],
             1
         )
-        
+
         prototypes = self.__test_automaton.get_prototypes()
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
@@ -470,7 +466,7 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
             ['', 'Session #', '123', '456', '789'],
             1
         )
-        
+
         prototypes = self.__test_automaton.get_prototypes()
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
@@ -490,7 +486,7 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
             ['', 'Total # of Sessions', '123', '456', '789'],
             1
         )
-        
+
         prototypes = self.__test_automaton.get_prototypes()
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
@@ -510,7 +506,7 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
             ['', 'Words Spoken', '123', '456', '789'],
             1
         )
-        
+
         prototypes = self.__test_automaton.get_prototypes()
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
@@ -530,7 +526,7 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
             ['', 'Items Excluded', '123', '456', '789'],
             1
         )
-        
+
         prototypes = self.__test_automaton.get_prototypes()
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
@@ -549,7 +545,7 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
             ['', 'Percentile', '80.1', '90.2', 'calculate'],
             1
         )
-        
+
         prototypes = self.__test_automaton.get_prototypes()
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
@@ -571,7 +567,7 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
             ['', 'Percentile', '80.1', '90.2', ''],
             1
         )
-        
+
         prototypes = self.__test_automaton.get_prototypes()
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
@@ -599,7 +595,7 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
             ['', 'Extra Categories?', 'Y', 'N', 'Y'],
             1
         )
-        
+
         prototypes = self.__test_automaton.get_prototypes()
         self.assertEqual(len(prototypes), 3)
         self.assertEqual(
@@ -659,15 +655,15 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
 
         prototypes = self.__test_automaton.get_prototypes()
         self.assertEqual(len(prototypes[0]['words']), 1)
-        
+
         self.assertEqual(prototypes[0]['words'][0]['word'], 'test')
         self.assertEqual(prototypes[0]['words'][0]['val'],
             constants.EXPLICIT_TRUE)
-        
+
         self.assertEqual(prototypes[1]['words'][0]['word'], 'test')
         self.assertEqual(prototypes[1]['words'][0]['val'],
             constants.EXPLICIT_FALSE)
-        
+
         self.assertEqual(prototypes[2]['words'][0]['word'], 'test')
         self.assertEqual(prototypes[2]['words'][0]['val'],
             constants.NO_DATA)
@@ -676,11 +672,11 @@ class LegacyUploadParserAutomatonTests(mox.MoxTestBase):
         self.assertEqual(prototypes[0]['words'][1]['word'], 'again')
         self.assertEqual(prototypes[0]['words'][1]['val'],
             constants.EXPLICIT_FALSE)
-        
+
         self.assertEqual(prototypes[1]['words'][1]['word'], 'again')
         self.assertEqual(prototypes[1]['words'][1]['val'],
             2)
-        
+
         self.assertEqual(prototypes[2]['words'][1]['word'], 'again')
         self.assertEqual(prototypes[2]['words'][1]['val'],
             constants.EXPLICIT_FALSE)

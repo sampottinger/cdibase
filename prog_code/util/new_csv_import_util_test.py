@@ -15,18 +15,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import unittest
-
-import mox
 
 from ..struct import models
 
-import constants
-import db_util
-import new_csv_import_util
-import math_util
-import recalc_util
+import prog_code.util.constants as constants
+import prog_code.util.db_util as db_util
+import prog_code.util.new_csv_import_util as new_csv_import_util
+import prog_code.util.math_util as math_util
+import prog_code.util.recalc_util as recalc_util
 
 
 CORRECT_TEST_HEADER_VALUES = [
@@ -63,11 +60,9 @@ class FakePercentileTable:
         self.details = details
 
 
-class NewUploadParserAutomatonTests(mox.MoxTestBase):
+class NewUploadParserAutomatonTests(unittest.TestCase):
 
     def setUp(self):
-        mox.MoxTestBase.setUp(self)
-
         self.__adapter = recalc_util.CachedMCDIAdapter()
 
         self.__test_automaton = new_csv_import_util.UploadParserAutomaton(
@@ -76,7 +71,7 @@ class NewUploadParserAutomatonTests(mox.MoxTestBase):
 
     def __setup_test_cdi(self, run_automaton_actions=True):
         self.mox.StubOutWithMock(db_util, "load_mcdi_model")
-        
+
         db_util.load_mcdi_model("test_mcdi_type").AndReturn(models.MCDIFormat(
             "test MCDI type",
             "test_mcdi_type",
@@ -809,7 +804,7 @@ class NewUploadParserAutomatonTests(mox.MoxTestBase):
 
     def test_state_parse_mcdi_type_invalid(self):
         self.mox.StubOutWithMock(db_util, "load_mcdi_model")
-        
+
         db_util.load_mcdi_model("other_test_mcdi_type").AndReturn(None)
 
         self.mox.ReplayAll()
@@ -824,7 +819,7 @@ class NewUploadParserAutomatonTests(mox.MoxTestBase):
 
     def test_state_parse_mcdi_type_incorrect_words(self):
         self.mox.StubOutWithMock(db_util, "load_mcdi_model")
-        
+
         db_util.load_mcdi_model("test_mcdi_type").AndReturn(models.MCDIFormat(
             "test MCDI type",
             "test_mcdi_type",
@@ -841,7 +836,7 @@ class NewUploadParserAutomatonTests(mox.MoxTestBase):
                 "count_as_spoken": [1]
             }
         ))
-        
+
         self.mox.ReplayAll()
 
         self.__test_automaton.parse_header([

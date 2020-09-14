@@ -15,10 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import json
-
-import mox
+import unittest
 
 import daxlabbase
 from ..struct import models
@@ -59,10 +57,9 @@ TARGET_USER = models.User(
 NEW_EMAIL = 'new_email@example.com'
 
 
-class TestEditUserControllers(mox.MoxTestBase):
+class TestEditUserControllers(unittest.TestCase):
 
     def setUp(self):
-        mox.MoxTestBase.setUp(self)
         self.app = daxlabbase.app
         self.app.debug = True
 
@@ -81,14 +78,14 @@ class TestEditUserControllers(mox.MoxTestBase):
         )
 
         user_util.delete_user(TARGET_EMAIL)
-       
+
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         user_util.get_user(TARGET_EMAIL).AndReturn(None)
 
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -112,7 +109,7 @@ class TestEditUserControllers(mox.MoxTestBase):
         self.mox.StubOutWithMock(user_util, 'delete_user')
         self.mox.StubOutWithMock(user_util, 'update_user')
         self.mox.StubOutWithMock(db_util, 'report_usage')
-        
+
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         user_util.get_user(TARGET_EMAIL).AndReturn(None)
 
@@ -182,12 +179,12 @@ class TestEditUserControllers(mox.MoxTestBase):
         self.mox.StubOutWithMock(user_util, 'get_user')
         self.mox.StubOutWithMock(user_util, 'create_new_user')
         self.mox.StubOutWithMock(db_util, 'report_usage')
-        
+
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         user_util.get_user(TARGET_EMAIL).AndReturn(TARGET_USER)
-        
+
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
         user_util.get_user(NEW_EMAIL).AndReturn(None)
 
@@ -212,7 +209,7 @@ class TestEditUserControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 

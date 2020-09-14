@@ -15,11 +15,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import unittest
 
-
-import mox
-
-import math_util
+import prog_code.util.math_util as math_util
 
 TEST_PERCENTILE_TABLE = [
     [None,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30],
@@ -46,7 +44,7 @@ TEST_PERCENTILE_TABLE = [
 ]
 
 
-class MathUtilTests(mox.MoxTestBase):
+class MathUtilTests(unittest.TestCase):
 
     def test_get_with_end_max(self):
         test_list = [1, 2, 3]

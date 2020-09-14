@@ -15,15 +15,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import re
-
-import mox
+import unittest
 
 from ..struct import models
 
-import constants
-import db_util
+import prog_code.util.constants as constants
+import prog_code.util.db_util as db_util
 
 TEST_SNAPSHOT_ID = 789
 TEST_DB_ID = 123
@@ -83,8 +81,8 @@ class FakeConnection:
         self.cursor = cursor
 
 
-class DBUtilTests(mox.MoxTestBase):
-    
+class DBUtilTests(unittest.TestCase):
+
     def test_clean_up_date(self):
         self.assertEqual(db_util.clean_up_date('1992/1/10'), '1992/01/10')
         self.assertEqual(db_util.clean_up_date('1992/01/10'), '1992/01/10')

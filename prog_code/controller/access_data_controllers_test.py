@@ -15,11 +15,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import json
+import unittest
 
 import flask
-import mox
 
 import daxlabbase
 from ..controller import access_data_controllers
@@ -59,10 +58,9 @@ class TestCSVFile:
         return 'test CSV file contents'
 
 
-class TestAccessDataControllers(mox.MoxTestBase):
+class TestAccessDataControllers(unittest.TestCase):
 
     def setUp(self):
-        mox.MoxTestBase.setUp(self)
         self.app = daxlabbase.app
         self.app.debug = True
 
@@ -89,7 +87,7 @@ class TestAccessDataControllers(mox.MoxTestBase):
         expected_url_combined = '/access_data/download_mcdi_results.csv'
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -114,7 +112,7 @@ class TestAccessDataControllers(mox.MoxTestBase):
         expected_url_combined = '/access_data/download_mcdi_results.csv'
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -143,7 +141,7 @@ class TestAccessDataControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
                 session_util.set_waiting_on_download(False, sess)
@@ -171,7 +169,7 @@ class TestAccessDataControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
                 session_util.set_waiting_on_download(True, sess)
@@ -186,7 +184,7 @@ class TestAccessDataControllers(mox.MoxTestBase):
             resp = client.get('/base/access_data/is_waiting')
             self.assertFalse(json.loads(resp.data)['is_waiting'])
             client.get('/base/access_data/abort')
-            
+
             resp = client.get('/base/access_data/is_waiting')
             self.assertFalse(json.loads(resp.data)['is_waiting'])
 
@@ -199,7 +197,7 @@ class TestAccessDataControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -241,7 +239,7 @@ class TestAccessDataControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -270,7 +268,7 @@ class TestAccessDataControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
                 session_util.add_filter(
@@ -374,7 +372,7 @@ class TestAccessDataControllers(mox.MoxTestBase):
 
         # Third request
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        
+
         db_util.report_usage(
             'test_mail',
             'Download Data as CSV',
@@ -390,7 +388,7 @@ class TestAccessDataControllers(mox.MoxTestBase):
 
         # Final request
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        
+
         db_util.report_usage(
             'test_mail',
             'Download Data as zip',
@@ -404,11 +402,11 @@ class TestAccessDataControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
                 sess['format'] = 'test_format'
-                
+
                 session_util.add_filter(
                     models.Filter('val1', 'val2', 'val3'),
                     sess

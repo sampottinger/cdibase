@@ -15,14 +15,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import collections
+import unittest
 
-import mox
-
-import db_util
-import mail_util
-import parent_account_util
+import prog_code.util.db_util as db_util
+import prog_code.util.mail_util as mail_util
+import prog_code.util.parent_account_util as parent_account_util
 
 TEST_PARENT_FORM = collections.namedtuple(
     'TestParentForm',
@@ -30,7 +28,7 @@ TEST_PARENT_FORM = collections.namedtuple(
 )
 
 
-class ParentAccountUtilTests(mox.MoxTestBase):
+class ParentAccountUtilTests(unittest.TestCase):
 
     def test_is_likely_email_address(self):
         test_email = 'Test Parent at somewhere.com'
@@ -68,4 +66,3 @@ class ParentAccountUtilTests(mox.MoxTestBase):
 
         test_form = TEST_PARENT_FORM('child', 'url', 'test email')
         parent_account_util.send_mcdi_email(test_form)
-

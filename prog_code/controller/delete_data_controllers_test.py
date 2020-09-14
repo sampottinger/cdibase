@@ -15,11 +15,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import json
+import unittest
 
 import flask
-import mox
 
 import daxlabbase
 from ..controller import delete_data_controllers
@@ -56,10 +55,9 @@ SNAPSHOTS_DB_TABLE = constants.SNAPSHOTS_DB_TABLE
 DELETE_OPERATION = delete_data_controllers.DELETE_OPERATION
 
 
-class TestDeleteDataControllers(mox.MoxTestBase):
+class TestDeleteDataControllers(unittest.TestCase):
 
     def setUp(self):
-        mox.MoxTestBase.setUp(self)
         self.app = daxlabbase.app
         self.app.debug = True
 
@@ -134,7 +132,7 @@ class TestDeleteDataControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
                 session_util.set_waiting_on_delete(False, sess)
@@ -161,7 +159,7 @@ class TestDeleteDataControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -203,7 +201,7 @@ class TestDeleteDataControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
 
@@ -232,7 +230,7 @@ class TestDeleteDataControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
                 session_util.add_filter(
@@ -298,7 +296,7 @@ class TestDeleteDataControllers(mox.MoxTestBase):
         self.mox.StubOutWithMock(db_util, 'report_usage')
         self.mox.StubOutWithMock(filter_util, 'run_delete_query')
         self.mox.StubOutWithMock(user_util, 'get_user')
-        
+
         user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
 
         db_util.report_usage(
@@ -316,11 +314,11 @@ class TestDeleteDataControllers(mox.MoxTestBase):
         self.mox.ReplayAll()
 
         with self.app.test_client() as client:
-            
+
             with client.session_transaction() as sess:
                 sess['email'] = TEST_EMAIL
                 sess['format'] = 'test_format'
-                
+
                 session_util.add_filter(
                     models.Filter('val1', 'val2', 'val3'),
                     sess

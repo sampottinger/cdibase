@@ -15,15 +15,16 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import unittest
+import unittest.mock
 
-import mox
+import prog_code.util.api_key_util as api_key_util
+import prog_code.util.db_util as db_util
+import prog_code.util.injection_util as injection_util
+import prog_code.util.user_util as user_util
 
-import api_key_util
-import user_util
-import db_util
 
-
-class APIKeyUtilTests(mox.MoxTestBase):
+class APIKeyUtilTests(unittest.TestCase):
 
     def test_interp_csv_field(self):
         result = api_key_util.interp_csv_field('')
@@ -46,29 +47,24 @@ class APIKeyUtilTests(mox.MoxTestBase):
         self.assertEqual(result, 'DEFAULT')
 
     def test_generate_new_api_key(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
+        with unittest.mock.patch('prog_code.util.db_util.get_api_key') as mock:
+            mock.side_effect = [None, True, True, None]
 
-        db_util.get_api_key(mox.IsA(basestring)).AndReturn(None)
-        db_util.get_api_key(mox.IsA(basestring)).AndReturn(True)
-        db_util.get_api_key(mox.IsA(basestring)).AndReturn(True)
-        db_util.get_api_key(mox.IsA(basestring)).AndReturn(None)
+            api_key_util.generate_new_api_key()
+            api_key_util.generate_new_api_key()
 
-        self.mox.ReplayAll()
-
-        api_key_util.generate_new_api_key()
-        api_key_util.generate_new_api_key()
+            self.assertEqual(len(mock.mock_calls), 4)
 
 
     def test_create_new_api_key(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
-        self.mox.StubOutWithMock(db_util, 'delete_api_key')
-        self.mox.StubOutWithMock(db_util, 'create_new_api_key')
+        with unittest.mock.patch('prog_code.util.api_key_util.db_util') as mock:
+            mock.get_api_key = unittest.mock.MagicMock(side_effect=[True, None])
+            mock.delete_api_key = unittest.mock.MagicMock()
+            mock.create_new_api_key = unittest.mock.MagicMock()
 
-        db_util.get_api_key('123').AndReturn(True)
-        db_util.delete_api_key('123')
-        db_util.get_api_key(mox.IsA(basestring)).AndReturn(None)
-        db_util.create_new_api_key('123', mox.IsA(basestring))
+            api_key_util.create_new_api_key('123')
 
-        self.mox.ReplayAll()
-
-        api_key_util.create_new_api_key('123')
+            self.assertEqual(len(mock.get_api_key.mock_calls), 2)
+            mock.delete_api_key.assert_called_with('123')
+            self.assertEqual(len(mock.create_new_api_key.mock_calls), 1)
+            self.assertEqual(mock.create_new_api_key.call_args[0][0], '123')

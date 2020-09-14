@@ -633,7 +633,7 @@ def get_api_key(identifier):
         API key, or the key could not be found in the database.
     @rtype: models.APIKey
     """
-    if isinstance(identifier, basestring):
+    if isinstance(identifier, str):
         return get_api_key_by_key(identifier)
     else:
         return get_api_key_by_user(identifier)

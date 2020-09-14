@@ -66,7 +66,7 @@ def generate_password(pass_len=10):
     @keyword pass_len: The length in characters of the password to generate.
     @type pass_len: int
     """
-    chars = string.letters + string.digits
+    chars = string.ascii_letters + string.digits
     return ''.join([random.choice(chars) for i in range(pass_len)])
 
 

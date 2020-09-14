@@ -15,15 +15,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import re
-
-import mox
+import unittest
 
 from ..struct import models
 
-import db_util
-import filter_util
+import prog_code.util.db_util as db_util
+import prog_code.util.filter_util as filter_util
 
 
 class TestDBCursor:
@@ -57,8 +55,8 @@ class TestDBConnection:
         pass
 
 
-class FilterUtilTests(mox.MoxTestBase):
-    
+class FilterUtilTests(unittest.TestCase):
+
     def test_run_search_query(self):
         fake_cursor = TestDBCursor()
         fake_connection = TestDBConnection(fake_cursor)

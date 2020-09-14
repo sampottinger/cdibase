@@ -15,10 +15,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import unittest
 
-import mox
-
-import mail_util
+import prog_code.util.mail_util as mail_util
 
 
 class TestMailInstance:
@@ -40,7 +39,7 @@ class TestMailKeeper:
 TEST_MAIL_KEEPER = TestMailKeeper()
 
 
-class MailUtilTests(mox.MoxTestBase):
+class MailUtilTests(unittest.TestCase):
 
     def test_send_mail_no_keeper(self):
         self.mox.StubOutWithMock(mail_util, 'get_mail_keeper')

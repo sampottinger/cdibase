@@ -15,16 +15,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import copy
-
-import mox
+import unittest
 
 from ..struct import models
 
-import constants
-import db_util
-import recalc_util
+import prog_code.util.constants as constants
+import prog_code.util.db_util as db_util
+import prog_code.util.recalc_util as recalc_util
 
 
 TEST_SNAPSHOT_ID = 789
@@ -93,7 +91,7 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
 )
 
 
-class RecalcPercentilesTest(mox.MoxTestBase):
+class RecalcPercentilesTest(unittest.TestCase):
 
     def test_load_mcdi_model(self):
         self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
