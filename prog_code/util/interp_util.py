@@ -25,7 +25,7 @@ DAYS_PER_MONTH = 30.42
 
 
 def interpret_date(target_val):
-    parts = map(lambda x: int(x), target_val.split('/'))
+    parts = list(map(lambda x: int(x), target_val.split('/')))
     return date(parts[0], parts[1], parts[2])
 
 

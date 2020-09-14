@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v3
 """
-
 import csv
 import collections
 import datetime
+import functools
 
 import prog_code.util.constants as constants
 import prog_code.util.recalc_util as recalc_util
@@ -369,10 +369,10 @@ class UploadParserAutomaton:
             return self.__num_words_spoken
 
     def __calculate_words_spoken(self):
-        return len(filter(
+        return len(list(filter(
             lambda x: x in self.__count_as_spoken_values,
             self.__word_values.values()
-        ))
+        )))
 
     def __get_age(self):
         if self.__age_deferred:
@@ -429,7 +429,7 @@ class UploadParserAutomaton:
         self.__error = error_message
 
     def parse_header(self, header_column_cased):
-        header_column = map(lambda x: x.lower(), header_column_cased)
+        header_column = list(map(lambda x: x.lower(), header_column_cased))
 
         # Check minimum length
         if len(header_column) < 19:
@@ -448,7 +448,7 @@ class UploadParserAutomaton:
             EXPECTED_HEADER_FIELDS
         )
 
-        meta_checks_successful = reduce(
+        meta_checks_successful = functools.reduce(
             lambda last, next: next(last, row_counter(), header_column),
             meta_checks,
             True
@@ -699,7 +699,7 @@ class UploadParserAutomaton:
             self.enter_error_state(msg)
             return
 
-        self.__languages = map(lambda x: x.strip(), input_val.split(","))
+        self.__languages = list(map(lambda x: x.strip(), input_val.split(",")))
         self.__state = STATE_PARSE_NUM_LANGUAGES
 
     def parse_num_languages(self, input_val):
@@ -735,7 +735,7 @@ class UploadParserAutomaton:
             return
 
         # Check words were present
-        required_words = set(reduce(
+        required_words = set(functools.reduce(
             lambda last, cur: last + cur["words"],
             mcdi_model.details["categories"],
             []
@@ -752,7 +752,7 @@ class UploadParserAutomaton:
             mcdi_model.details["options"]
         ))
 
-        prefill_values = set(reduce(
+        prefill_values = set(functools.reduce(
             lambda prev, cur: extend_list(prev, cur.get("prefill_value", [])),
             mcdi_model.details["options"],
             []
