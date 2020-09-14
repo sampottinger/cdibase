@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import unittest
+import unittest.mock
 
 import prog_code.util.mail_util as mail_util
 
@@ -42,21 +43,21 @@ TEST_MAIL_KEEPER = TestMailKeeper()
 class MailUtilTests(unittest.TestCase):
 
     def test_send_mail_no_keeper(self):
-        self.mox.StubOutWithMock(mail_util, 'get_mail_keeper')
-        mail_util.get_mail_keeper().AndReturn(None)
-        self.mox.ReplayAll()
-
-        mail_util.send_msg('test address', 'test subject', 'test message')
+        with unittest.mock.patch('prog_code.util.mail_util.get_mail_keeper') as mock:
+            mock.return_value = None
+            mail_util.send_msg('test address', 'test subject', 'test message')
+            mock.assert_called()
 
     def test_send_mail_with_keeper(self):
-        self.mox.StubOutWithMock(mail_util, 'get_mail_keeper')
-        mail_util.get_mail_keeper().AndReturn(TEST_MAIL_KEEPER)
-        self.mox.ReplayAll()
+        with unittest.mock.patch('prog_code.util.mail_util.get_mail_keeper') as mock:
+            mock.return_value = TEST_MAIL_KEEPER
 
-        mail_util.send_msg('test address', 'test subject', 'test message')
+            mail_util.send_msg('test address', 'test subject', 'test message')
 
-        last_message = TEST_MAIL_INSTANCE.last_message
-        self.assertEqual(last_message.subject, 'test subject')
-        self.assertEqual(last_message.sender, 'from addr')
-        self.assertEqual(last_message.body, 'test message')
-        self.assertEqual(last_message.recipients, ['testaddress'])
+            last_message = TEST_MAIL_INSTANCE.last_message
+            self.assertEqual(last_message.subject, 'test subject')
+            self.assertEqual(last_message.sender, 'from addr')
+            self.assertEqual(last_message.body, 'test message')
+            self.assertEqual(last_message.recipients, ['testaddress'])
+
+            mock.assert_called()
