@@ -422,7 +422,7 @@ def load_user_model(identifier):
     """
     connection = get_db_connection()
     cursor = connection.cursor()
-    if isinstance(identifier, basestring):
+    if isinstance(identifier, str):
         cursor.execute(
             '''SELECT id,email,password_hash,can_enter_data,can_delete_data,
             can_import_data,can_edit_parents,can_access_data,can_change_formats,
@@ -769,7 +769,7 @@ def update_snapshot(snapshot_metadata, cursor=None):
     snapshot_metadata.session_date = clean_up_date(
         snapshot_metadata.session_date)
 
-    if isinstance(snapshot_metadata.languages, basestring):
+    if isinstance(snapshot_metadata.languages, str):
         languages_val = snapshot_metadata.languages
     else:
         languages_val = ','.join(snapshot_metadata.languages)
