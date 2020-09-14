@@ -48,7 +48,7 @@ class FieldInfo(object):
         return self.__field_name
 
     def interpret_value(self, val):
-        if isinstance(val, basestring):
+        if isinstance(val, str):
             return val.split(',')
         else:
             return [val]
@@ -125,7 +125,7 @@ class GenderField(FieldInfo):
 
         ret_vals = []
         for val in vals:
-            if not isinstance(val, basestring):
+            if not isinstance(val, str):
                 ret_vals.append(val)
             else:
                 val = val.lower()

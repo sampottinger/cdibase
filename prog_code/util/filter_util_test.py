@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import re
 import unittest
+import unittest.mock
 
 from ..struct import models
 
@@ -58,47 +59,47 @@ class TestDBConnection:
 class FilterUtilTests(unittest.TestCase):
 
     def test_run_search_query(self):
-        fake_cursor = TestDBCursor()
-        fake_connection = TestDBConnection(fake_cursor)
+        with unittest.mock.patch('prog_code.util.db_util.get_db_connection') as mock:
+            fake_cursor = TestDBCursor()
+            fake_connection = TestDBConnection(fake_cursor)
+            mock.return_value = fake_connection
 
-        self.mox.StubOutWithMock(db_util, 'get_db_connection')
-        db_util.get_db_connection().AndReturn(fake_connection)
-        self.mox.ReplayAll()
+            filters = [
+                models.Filter('study', 'eq', 'study1,study2')
+            ]
+            filter_util.run_search_query(filters, 'test')
 
-        filters = [
-            models.Filter('study', 'eq', 'study1,study2')
-        ]
-        filter_util.run_search_query(filters, 'test')
+            query = fake_cursor.queries[0]
+            query_str ='SELECT * FROM test WHERE (study == ? OR study == ?) AND '\
+                '(deleted == ?)'
+            self.assertEqual(query, query_str)
 
-        query = fake_cursor.queries[0]
-        query_str ='SELECT * FROM test WHERE (study == ? OR study == ?) AND '\
-            '(deleted == ?)'
-        self.assertEqual(query, query_str)
+            operands = fake_cursor.operands[0]
+            self.assertEqual(len(operands), 3)
+            self.assertEqual(operands[0], 'study1')
+            self.assertEqual(operands[1], 'study2')
+            self.assertEqual(operands[2], 0)
 
-        operands = fake_cursor.operands[0]
-        self.assertEqual(len(operands), 3)
-        self.assertEqual(operands[0], 'study1')
-        self.assertEqual(operands[1], 'study2')
-        self.assertEqual(operands[2], 0)
+            mock.assert_called()
 
     def test_delete_search_query(self):
-        fake_cursor = TestDBCursor()
-        fake_connection = TestDBConnection(fake_cursor)
+        with unittest.mock.patch('prog_code.util.db_util.get_db_connection') as mock:
+            fake_cursor = TestDBCursor()
+            fake_connection = TestDBConnection(fake_cursor)
+            mock.return_value = fake_connection
 
-        self.mox.StubOutWithMock(db_util, 'get_db_connection')
-        db_util.get_db_connection().AndReturn(fake_connection)
-        self.mox.ReplayAll()
+            filters = [
+                models.Filter('study', 'eq', 'study1,study2')
+            ]
+            filter_util.run_delete_query(filters, 'test', True)
 
-        filters = [
-            models.Filter('study', 'eq', 'study1,study2')
-        ]
-        filter_util.run_delete_query(filters, 'test', True)
+            query = fake_cursor.queries[0]
+            query_str ='UPDATE test SET deleted=0 WHERE (study == ? OR study == ?)'
+            self.assertEqual(query, query_str)
 
-        query = fake_cursor.queries[0]
-        query_str ='UPDATE test SET deleted=0 WHERE (study == ? OR study == ?)'
-        self.assertEqual(query, query_str)
+            operands = fake_cursor.operands[0]
+            self.assertEqual(len(operands), 2)
+            self.assertEqual(operands[0], 'study1')
+            self.assertEqual(operands[1], 'study2')
 
-        operands = fake_cursor.operands[0]
-        self.assertEqual(len(operands), 2)
-        self.assertEqual(operands[0], 'study1')
-        self.assertEqual(operands[1], 'study2')
+            mock.assert_called()

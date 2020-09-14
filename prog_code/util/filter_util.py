@@ -75,7 +75,7 @@ class QueryInfo:
 
 
 def build_query_component(field, operator, operand):
-    if isinstance(operand, basestring):
+    if isinstance(operand, str):
         operands = operand.split(',')
     else:
         operands = [operand]
@@ -91,17 +91,19 @@ def build_query_component(field, operator, operand):
 
 
 def build_query(filters, table, statement_template):
-    filter_fields = map(lambda x: x.field, filters)
-    # TODO: might want to catch this as a security exception
+    filters_realized = list(filters)
+
+    filter_fields = map(lambda x: x.field, filters_realized)
+    # TODO: might want to log this
     filter_fields = filter(lambda x: x in FIELD_MAP, filter_fields)
-    filter_fields = map(lambda x: FIELD_MAP[x], filter_fields)
+    filter_fields = list(map(lambda x: FIELD_MAP[x], filter_fields))
 
-    operators = map(lambda x: x.operator, filters)
-    operators = map(lambda x: x.encode('utf8'), operators)
+    operators = map(lambda x: x.operator, filters_realized)
+    operators = map(lambda x: str(x), operators)
     operators = filter(lambda x: x in OPERATOR_MAP, operators)
-    operators = map(lambda x: OPERATOR_MAP[x], operators)
+    operators = list(map(lambda x: OPERATOR_MAP[x], operators))
 
-    operands = map(lambda x: x.operand, filters)
+    operands = list(map(lambda x: x.operand, filters_realized))
 
     fields_and_extraneous = zip(filter_fields, operators, operands)
 
@@ -115,7 +117,7 @@ def build_query(filters, table, statement_template):
     )
 
     filter_fields_str = map(
-        lambda : build_query_component(
+        lambda x: build_query_component(
             x['field'],
             x['operator'],
             x['operands']
