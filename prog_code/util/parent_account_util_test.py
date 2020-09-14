@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import collections
 import unittest
+import unittest.mock
 
 import prog_code.util.db_util as db_util
 import prog_code.util.mail_util as mail_util
@@ -40,29 +41,21 @@ class ParentAccountUtilTests(unittest.TestCase):
         self.assertTrue(test_result)
 
     def test_generate_unique_mcdi_form_id(self):
-        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
-
-        db_util.get_parent_form_by_id(mox.IsA(basestring)).AndReturn(True)
-        db_util.get_parent_form_by_id(mox.IsA(basestring)).AndReturn(True)
-        db_util.get_parent_form_by_id(mox.IsA(basestring)).AndReturn(None)
-
-        self.mox.ReplayAll()
-
-        parent_account_util.generate_unique_mcdi_form_id()
+        with unittest.mock.patch('prog_code.util.db_util.get_parent_form_by_id') as mock:
+            mock.side_effect = [True, True, None]
+            parent_account_util.generate_unique_mcdi_form_id()
+            self.assertEqual(len(mock.mock_calls), 3)
 
     def test_send_mcdi_email(self):
-        self.mox.StubOutWithMock(mail_util, 'send_msg')
+        with unittest.mock.patch('prog_code.util.mail_util.send_msg') as mock:
+            form_url = parent_account_util.URL_TEMPLATE % 'url'
+            msg = parent_account_util.MCDI_EMAIL_TEMPLATE % ('child', form_url)
 
-        form_url = parent_account_util.URL_TEMPLATE % 'url'
-        msg = parent_account_util.MCDI_EMAIL_TEMPLATE % ('child', form_url)
+            test_form = TEST_PARENT_FORM('child', 'url', 'test email')
+            parent_account_util.send_mcdi_email(test_form)
 
-        mail_util.send_msg(
-            'test email',
-            parent_account_util.MCDI_EMAIL_SUBJECT,
-            msg
-        )
-
-        self.mox.ReplayAll()
-
-        test_form = TEST_PARENT_FORM('child', 'url', 'test email')
-        parent_account_util.send_mcdi_email(test_form)
+            mock.assert_called_with(
+                'test email',
+                parent_account_util.MCDI_EMAIL_SUBJECT,
+                msg
+            )
