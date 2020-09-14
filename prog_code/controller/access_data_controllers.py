@@ -71,7 +71,7 @@ HTML_CHECKBOX_SELECTED = 'on'
 def access_data():
     """Index page for building database queries.
 
-    @return: Listing of available CSV rendering "formats" 
+    @return: Listing of available CSV rendering "formats"
     @rtype: flask.Response
     """
     formats = list(db_util.load_presentation_model_listing())
@@ -93,7 +93,7 @@ def execute_access_request():
 
     Execute an MCDI database query queued in a user's session and return the
     results in either a single "consolidated" CSV or a zip archive of CSVs. The
-    request should include format as an argument indicating the presentation 
+    request should include format as an argument indicating the presentation
     format that the MCDIs should be provided in (name of a presentation format
     provided via configuration file) as it will be saved to the session and
     used by execute_zip_access_request. The request should also include
@@ -116,7 +116,7 @@ def execute_access_request():
         'deleted',
         'ignore'
     )
-    
+
     if use_consolidated == HTML_CHECKBOX_SELECTED:
         return flask.redirect(CONSOLIDATED_FILE_URL % include_deleted_str)
     else:
@@ -226,7 +226,7 @@ def delete_filter(filter_index):
     Controller that removes an AND clause from the query the user is currently
     building against the database. Will set either an error or a conformation
     message in the user session.
-    
+
     @param filter_index: The numerical index of filter to be deleted. Index goes
         to element in list of filters for user's current query.
     @type filter_index: int

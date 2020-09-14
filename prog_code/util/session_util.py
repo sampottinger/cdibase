@@ -261,7 +261,7 @@ def get_filters(session=None):
     filters = get_filters_serialized(session)
     if not filters:
         return []
-    return map(unserialize_filter, filters)
+    return list(map(unserialize_filter, filters))
 
 
 def add_filter(new_filter, sess=None):
@@ -277,7 +277,7 @@ def add_filter(new_filter, sess=None):
     if not filters:
         filters = []
     filters.append(new_filter)
-    sess['filters'] = map(serialize_filter, filters)
+    sess['filters'] = list(map(serialize_filter, filters))
 
 
 def delete_filter(index):
