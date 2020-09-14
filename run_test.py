@@ -29,7 +29,7 @@ import daxlabbase
 #from prog_code.controller.enter_data_controllers_test import *
 
 from prog_code.util.api_key_util_test import *
-#from prog_code.util.legacy_csv_import_util_test import *
+from prog_code.util.legacy_csv_import_util_test import *
 #from prog_code.util.new_csv_import_util_test import *
 #from prog_code.util.db_util_test import *
 #from prog_code.util.file_util_test import *

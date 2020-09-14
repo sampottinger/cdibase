@@ -363,14 +363,14 @@ class UploadParserAutomaton:
 
         for child_index in self.get_list_needing_precentile():
             target_prototype = self.__prototypes[child_index]
-            known_words = filter(
+            known_words = list(filter(
                 lambda x: x['val'] == constants.EXPLICIT_TRUE,
                 target_prototype['words']
-            )
-            all_words = filter(
+            ))
+            all_words = list(filter(
                 lambda x: x['val'] != constants.NO_DATA,
                 target_prototype['words']
-            )
+            ))
 
             known_words_count = len(known_words)
             all_words_count = len(all_words)

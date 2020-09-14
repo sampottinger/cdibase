@@ -688,38 +688,41 @@ class LegacyUploadParserAutomatonTests(unittest.TestCase):
         )
 
     def test_finish_without_error(self):
-        self.mox.StubOutWithMock(math_util, 'find_percentile')
-        math_util.find_percentile([-3], 2, 789.3, 3).AndReturn(50)
-        self.mox.ReplayAll()
+        with unittest.mock.patch('prog_code.util.legacy_csv_import_util.math_util') as mock:
+            mock.find_percentile = unittest.mock.MagicMock(
+                return_value = 50
+            )
 
-        self.__test_automaton.set_prototypes([
-            {'words': []}, {'words': []}, {'words': []}
-        ])
+            self.__test_automaton.set_prototypes([
+                {'words': []}, {'words': []}, {'words': []}
+            ])
 
-        self.__test_automaton.parse_percentile(
-            ['', 'Percentile', '80.1', '90.2', 'calculate'],
-            1
-        )
+            self.__test_automaton.parse_percentile(
+                ['', 'Percentile', '80.1', '90.2', 'calculate'],
+                1
+            )
 
-        self.__test_automaton.parse_age(
-            ['', 'Age (months)', '123.1', '456.2', '789.3'],
-            1
-        )
+            self.__test_automaton.parse_age(
+                ['', 'Age (months)', '123.1', '456.2', '789.3'],
+                1
+            )
 
-        self.__test_automaton.parse_gender(
-            ['', 'Gender', 'M', 'F', 'O'],
-            1
-        )
+            self.__test_automaton.parse_gender(
+                ['', 'Gender', 'M', 'F', 'O'],
+                1
+            )
 
-        self.__test_automaton.parse_words(['1', 'test', '1', '0', 'na'], 1)
-        self.__test_automaton.parse_words(['1', 'test', '1', '0', '0'], 2)
-        self.__test_automaton.parse_words(['1', 'test', '1', '0', '1'], 3)
-        self.__test_automaton.parse_words(['1', 'test', '1', '0', '1'], 4)
+            self.__test_automaton.parse_words(['1', 'test', '1', '0', 'na'], 1)
+            self.__test_automaton.parse_words(['1', 'test', '1', '0', '0'], 2)
+            self.__test_automaton.parse_words(['1', 'test', '1', '0', '1'], 3)
+            self.__test_automaton.parse_words(['1', 'test', '1', '0', '1'], 4)
 
-        target_prototype = self.__test_automaton.get_prototypes()[2]
-        self.assertEqual(target_prototype['percentile'], -1)
+            target_prototype = self.__test_automaton.get_prototypes()[2]
+            self.assertEqual(target_prototype['percentile'], -1)
 
-        self.__test_automaton.finish()
+            self.__test_automaton.finish()
+
+            mock.find_percentile.assert_called_with([-3], 2, 789.3, 3)
 
         target_prototype = self.__test_automaton.get_prototypes()[2]
         self.assertEqual(target_prototype['percentile'], 50)
