@@ -312,7 +312,7 @@ def sort_by_study_order(rows, mcdi_format):
         rows[20:]
     )
     rows_content_sorted = sorted(rows_content_indexed, key=lambda x: x[0])
-    rows_content_sorted = map(lambda x: x[1], rows_content_sorted)
+    rows_content_sorted = list(map(lambda x: x[1], rows_content_sorted))
     return rows_header + rows_content_sorted
 
 

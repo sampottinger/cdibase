@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import unittest
+import unittest.mock
 
 from ..struct import models
 from ..util import constants
@@ -80,63 +81,62 @@ class ReportUtilTest(unittest.TestCase):
         self.assertEqual(sorted_rows[23][0], 'word4')
 
     def test_summarize_snapshots(self):
-        test_snap_1 = TEST_SNAPSHOT.clone()
-        test_snap_1.mcdi_type = 'mcdi_type_1'
-        test_snap_1.session_date = '2015/01/01'
+        with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock_mcdi:
+            with unittest.mock.patch('prog_code.util.db_util.load_snapshot_contents') as mock_snapshot:
+                test_snap_1 = TEST_SNAPSHOT.clone()
+                test_snap_1.mcdi_type = 'mcdi_type_1'
+                test_snap_1.session_date = '2015/01/01'
 
-        test_snap_2 = TEST_SNAPSHOT.clone()
-        test_snap_2.mcdi_type = 'mcdi_type_1'
-        test_snap_2.session_date = '2015/02/01'
+                test_snap_2 = TEST_SNAPSHOT.clone()
+                test_snap_2.mcdi_type = 'mcdi_type_1'
+                test_snap_2.session_date = '2015/02/01'
 
-        test_snap_3 = TEST_SNAPSHOT.clone()
-        test_snap_3.mcdi_type = 'mcdi_type_2'
-        test_snap_3.session_date = '2015/03/01'
+                test_snap_3 = TEST_SNAPSHOT.clone()
+                test_snap_3.mcdi_type = 'mcdi_type_2'
+                test_snap_3.session_date = '2015/03/01'
 
-        test_metadata = [test_snap_1, test_snap_2, test_snap_3]
+                test_metadata = [test_snap_1, test_snap_2, test_snap_3]
 
-        test_contents_1 = [
-            models.SnapshotContent(0, 'word1', 1, 1),
-            models.SnapshotContent(0, 'word2', 0, 1),
-            models.SnapshotContent(0, 'word3', 0, 1)
-        ]
-        test_contents_2 = [
-            models.SnapshotContent(0, 'word1', 1, 1),
-            models.SnapshotContent(0, 'word2', 2, 1),
-            models.SnapshotContent(0, 'word3', 0, 1)
-        ]
-        test_contents_3 = [
-            models.SnapshotContent(0, 'word1', 1, 1),
-            models.SnapshotContent(0, 'word2', 1, 1),
-            models.SnapshotContent(0, 'word3', 1, 1),
-            models.SnapshotContent(0, 'word4', 2, 1)
-        ]
+                test_contents_1 = [
+                    models.SnapshotContent(0, 'word1', 1, 1),
+                    models.SnapshotContent(0, 'word2', 0, 1),
+                    models.SnapshotContent(0, 'word3', 0, 1)
+                ]
+                test_contents_2 = [
+                    models.SnapshotContent(0, 'word1', 1, 1),
+                    models.SnapshotContent(0, 'word2', 2, 1),
+                    models.SnapshotContent(0, 'word3', 0, 1)
+                ]
+                test_contents_3 = [
+                    models.SnapshotContent(0, 'word1', 1, 1),
+                    models.SnapshotContent(0, 'word2', 1, 1),
+                    models.SnapshotContent(0, 'word3', 1, 1),
+                    models.SnapshotContent(0, 'word4', 2, 1)
+                ]
 
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'load_snapshot_contents')
+                mock_mcdi.side_effect = [
+                    models.MCDIFormat('', '', '', {'count_as_spoken': [1, 2]}),
+                    models.MCDIFormat('', '', '', {'count_as_spoken': [1]})
+                ]
 
-        db_util.load_mcdi_model('mcdi_type_1').AndReturn(
-            models.MCDIFormat('', '', '', {'count_as_spoken': [1, 2]})
-        )
-        db_util.load_snapshot_contents(test_metadata[0]).AndReturn(
-            test_contents_1
-        )
+                mock_snapshot.side_effect = [
+                    test_contents_1,
+                    test_contents_2,
+                    test_contents_3
+                ]
 
-        db_util.load_snapshot_contents(test_metadata[1]).AndReturn(
-            test_contents_2
-        )
+                serialization = report_util.summarize_snapshots(test_metadata)
 
-        db_util.load_mcdi_model('mcdi_type_2').AndReturn(
-            models.MCDIFormat('', '', '', {'count_as_spoken': [1]})
-        )
-        db_util.load_snapshot_contents(test_metadata[2]).AndReturn(
-            test_contents_3
-        )
+                self.assertEqual(serialization['word1'], '2015/01/01')
+                self.assertEqual(serialization['word2'], '2015/02/01')
+                self.assertEqual(serialization['word3'], '2015/03/01')
+                self.assertEqual(serialization['word4'], None)
 
-        self.mox.ReplayAll()
+                self.assertEqual(len(mock_mcdi.mock_calls), 2)
+                mock_mcdi.assert_any_call('mcdi_type_1')
+                mock_mcdi.assert_any_call('mcdi_type_2')
 
-        serialization = report_util.summarize_snapshots(test_metadata)
-
-        self.assertEqual(serialization['word1'], '2015/01/01')
-        self.assertEqual(serialization['word2'], '2015/02/01')
-        self.assertEqual(serialization['word3'], '2015/03/01')
-        self.assertEqual(serialization['word4'], None)
+                self.assertEqual(len(mock_snapshot.mock_calls), 3)
+                mock_snapshot.assert_any_call(test_metadata[0])
+                mock_snapshot.assert_any_call(test_metadata[1])
+                mock_snapshot.assert_any_call(test_metadata[2])
