@@ -23,9 +23,9 @@ import flask
 
 from ..struct import models
 
-import constants
-import user_util
-import db_util
+import prog_code.util.constants as constants
+import prog_code.util.user_util as user_util
+import prog_code.util.db_util as db_util
 
 LOGIN_AGAIN_MSG = 'Whoops! For security, please log in again.'
 NOT_AUTHORIZED_ACCESS_DATA_MSG = 'You are not authorized to access data.'

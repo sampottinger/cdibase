@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @license GNU GPL v3
 """
 
-import constants
-import db_util
-import filter_util
-import interp_util
-import math_util
+import prog_code.util.constants as constants
+import prog_code.util.db_util as db_util
+import prog_code.util.filter_util as filter_util
+import prog_code.util.interp_util as interp_util
+import prog_code.util.math_util as math_util
 
 from ..struct import models
 

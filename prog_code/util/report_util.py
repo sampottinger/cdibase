@@ -20,12 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import csv
-import StringIO as string_io
+import io
 import urllib
 import zipfile
 
-import constants
-import db_util
+import prog_code.util.constants as constants
+import prog_code.util.db_util as db_util
 
 PRESENTATION_VALUE_NAME_MAP = {
     constants.NO_DATA: 'no_data',
@@ -91,7 +91,7 @@ def summarize_snapshots(snapshot_metas):
     ret_serialization = {}
 
     for meta in snapshot_metas:
-        
+
         # Get the values that count as "spoken"
         mcdi_name = meta.mcdi_type
         cdi_date = meta.session_date
@@ -107,7 +107,7 @@ def summarize_snapshots(snapshot_metas):
         for word_info in contents:
             word = word_info.word
             value = word_info.value
-            
+
             # Replace existing if this snapshot is earlier
             if value in words_spoken_set:
                 to_enter = not word in ret_serialization
@@ -251,7 +251,7 @@ def generate_study_report_rows(snapshots_from_study, presentation_format):
         lambda x: serialize_snapshot(x, presentation_format, word_listing),
         snapshots_from_study
     )
-    
+
     header_col = [
         'database id',
         'child id',
@@ -289,7 +289,7 @@ def sort_by_study_order(rows, mcdi_format):
     by the word value rows in the same order as they appear in the original
     MCDI.
 
-    @param rows: The rows to sort including both the 20 header rows and the 
+    @param rows: The rows to sort including both the 20 header rows and the
         word value rows.
     @type rows: iterable over iterable over primitive
     @param mcdi_format: Information about the presentation format whose
@@ -327,7 +327,7 @@ def generate_study_report_csv(snapshots_from_study, presentation_format):
     @return: Contents of the CSV file.
     @rtype: StringIO.StringIO
     """
-    faux_file = string_io.StringIO()
+    faux_file = io.StringIO()
     csv_writer = csv.writer(faux_file)
     mcdi_type_name = snapshots_from_study[0].mcdi_type
     safe_mcdi_name = mcdi_type_name.replace(' ', '')
@@ -393,7 +393,7 @@ def generate_study_report(snapshots, presentation_format):
         )
         faux_files['%s.csv' % study_name] = report
 
-    faux_zip_file = string_io.StringIO()
+    faux_zip_file = io.StringIO()
     zip_file = zipfile.ZipFile(faux_zip_file, mode='w')
     for (filename, faux_file) in faux_files.items():
         zip_file.writestr(filename, faux_file.getvalue())

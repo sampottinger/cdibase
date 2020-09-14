@@ -46,7 +46,7 @@ def upload_exists(filename):
         return False
 
 
-def generate_filename(format, length=8, chars=string.letters):
+def generate_filename(format, length=8, chars=string.ascii_letters):
     """Generate a random filename.
 
     @param format: The file extension to use (ex. ".yaml")
@@ -62,7 +62,7 @@ def generate_filename(format, length=8, chars=string.letters):
     return ''.join([random.choice(chars) for i in range(length)]) + format
 
 
-def generate_unique_filename(format, length=8, chars=string.letters):
+def generate_unique_filename(format, length=8, chars=string.ascii_letters):
     """Generate a random filename that no other existing file uploads have.
 
     Generate a filename such that no file in the uploads directory exists with

@@ -25,10 +25,10 @@ import dateutil.parser as dateutil_parser
 
 from ..struct import models
 
-import db_util
-import filter_util
-import mail_util
-import user_util
+import prog_code.util.db_util as db_util
+import prog_code.util.filter_util as filter_util
+import prog_code.util.mail_util as mail_util
+import prog_code.util.user_util as user_util
 
 MCDI_EMAIL_SUBJECT = 'CU Language Project'
 
@@ -158,7 +158,7 @@ class AttributeResolutionResolver:
             parent_form.database_id,
             'child_id'
         )
-        
+
         parent_form.study = self.fill_field(
             parent_form.study,
             'study'

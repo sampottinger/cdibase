@@ -1,9 +1,30 @@
+"""Strategies for interpreting CSV imports.
+
+Copyright (C) 2014 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+@author: Sam Pottinger
+@license: GNU GPL v3
+"""
+
 import csv
 import collections
 import datetime
 
-import constants
-import recalc_util
+import prog_code.util.constants as constants
+import prog_code.util.recalc_util as recalc_util
 
 from ..struct import models
 
@@ -199,7 +220,7 @@ class UploadParserAutomaton:
     def process_column(self, input_vals):
         if self.is_in_error():
             return
-        
+
         if self.waiting_for_header():
             self.parse_header(input_vals)
         else:
@@ -207,7 +228,7 @@ class UploadParserAutomaton:
 
     def __process_non_header_col(self, input_vals):
         for input_val in input_vals:
-            
+
             if not self.__state in self.__step_handlers:
                 self.enter_error_state("Automaton reached unexpected state.")
                 self.__columns_processed += 1
@@ -309,9 +330,21 @@ class UploadParserAutomaton:
         )
 
     def __create_words(self):
-        return map(
-            lambda (word, value): models.SnapshotContent(None, word, value, 0),
+        named_items = map(
+            lambda x: {
+                'word': x[0],
+                'value': x[1]
+            },
             self.__word_values.items()
+        )
+        return map(
+            lambda x: models.SnapshotContent(
+                None,
+                x['word'],
+                x['value'],
+                0
+            ),
+            named_items
         )
 
     def __get_percentile(self):
@@ -928,4 +961,3 @@ def is_iterable(target):
         return True
     except TypeError:
         return False
-

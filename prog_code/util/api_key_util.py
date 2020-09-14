@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @license: GNU GPL v3
 """
 
-import db_util
-import user_util
+import prog_code.util.db_util as db_util
+import prog_code.util.user_util as user_util
 
 
 def interp_csv_field(target):
@@ -68,7 +68,7 @@ def generate_new_api_key():
     found = False
     new_key = None
 
-    while not found: 
+    while not found:
         new_key = user_util.generate_password(pass_len=20).lower()
         found = db_util.get_api_key(new_key) == None
 

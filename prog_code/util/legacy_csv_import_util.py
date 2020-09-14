@@ -1,4 +1,4 @@
-"""Utility to import a CSV file into the lab database.
+"""Utility to import a legacy format CSV file into the lab database.
 
 Copyright (C) 2014 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
 
@@ -49,14 +49,14 @@ INVALID_PERCENT_ERR = 'Invalid percent (%s) found on row %d.'
 INVALID_WORD_VAL_ERROR = 'Invalid word value (%s) found on row %d.'
 
 import csv
-import cStringIO as stringIO
 import datetime
+import io
 
 from ..struct import models
 
-import constants
-import db_util
-import math_util
+import prog_code.util.constants as constants
+import prog_code.util.db_util as db_util
+import prog_code.util.math_util as math_util
 
 
 class UploadParserAutomaton:
@@ -156,7 +156,7 @@ class UploadParserAutomaton:
 
         if not passed_sanity_check:
             return
-        
+
         for val in step_val[2:]:
             converted_val = self.safe_parse_int(val, row_num)
             if converted_val == None: return
@@ -332,7 +332,7 @@ class UploadParserAutomaton:
         word = step_val[1]
 
         for (val, prototype) in zip(step_val[2:], self.__prototypes):
-            
+
             converted_val = None
             if val == 'na':
                 converted_val = constants.NO_DATA
@@ -345,7 +345,7 @@ class UploadParserAutomaton:
                     converted_val = int(val)
                 except ValueError:
                     converted_val = None
-            
+
             if converted_val == None:
                 self.enter_error_state(
                     INVALID_WORD_VAL_ERROR % (step_val, row_num)
@@ -409,8 +409,8 @@ def parse_csv_prototypes(contents, percentile_table, act_as_file=False):
     if act_as_file:
         targetBuffer = contents
     else:
-        targetBuffer = stringIO.StringIO(contents)
-    
+        targetBuffer = io.StringIO(contents)
+
     reader = csv.reader(targetBuffer)
 
     automaton = UploadParserAutomaton(percentile_table)
@@ -465,7 +465,7 @@ def parse_csv(contents, mcdi_type, languages, hard_of_hearing,
 
     mcdi_model = db_util.load_mcdi_model(mcdi_type)
     percentile_names = mcdi_model.details['percentiles']
-    
+
     male_percentiles_name = percentile_names['male']
     female_percentiles_name = percentile_names['female']
     other_percentiles_name = percentile_names['other']
@@ -473,7 +473,7 @@ def parse_csv(contents, mcdi_type, languages, hard_of_hearing,
     male_percentiles = db_util.load_percentile_model(male_percentiles_name)
     female_percentiles = db_util.load_percentile_model(female_percentiles_name)
     other_percentiles = db_util.load_percentile_model(other_percentiles_name)
-    
+
     percentile_tables = {
         constants.MALE: male_percentiles,
         constants.FEMALE: female_percentiles,

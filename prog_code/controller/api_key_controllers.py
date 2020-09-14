@@ -280,7 +280,7 @@ def send_parent_form():
     SUPPORTED METHODS: GET, POST
 
     RESPONSE: JSON-encoded object with a message field. Objects representing an
-        error have that message in an "error" attribute. 
+        error have that message in an "error" attribute.
 
     All of the following additional query parameters are required:
      - api_key
@@ -329,7 +329,7 @@ def send_parent_form():
     """
     request = flask.request
     api_key = request.args.get(API_KEY_FIELD, None)
-    
+
     # Ensure that the current user has premissions necessary to send parent MCDI
     # through the API layer.
     problem = verify_api_key_for_parent_forms(api_key)
@@ -380,7 +380,7 @@ def send_parent_form():
         msg = INVALID_MCDI_TYPE_MSG % mcdi_type
         return generate_invalid_request_error(msg)
 
-    # Ensure that either a global ID or both a study and study ID were provided. 
+    # Ensure that either a global ID or both a study and study ID were provided.
     global_id_missing = global_id == None or global_id == ''
     study_id_missing = study_id == None or study_id == ''
     study_missing = study == None or study == ''
@@ -531,7 +531,7 @@ def send_parent_forms():
     """
     request = flask.request
     api_key = request.args.get(API_KEY_FIELD, None)
-    
+
     # Ensure that the current user has premissions necessary to send parent MCDI
     # through the API layer.
     problem = verify_api_key_for_parent_forms(api_key)
@@ -604,7 +604,7 @@ def send_parent_forms():
 
     length_set = set(lengths)
     length_set.remove(0)
-    
+
     if len(length_set) > 1:
         return generate_invalid_request_error(MISMATCHED_CSV_LENGTHS_MSG)
     num_records = list(length_set)[0]
@@ -644,7 +644,7 @@ def send_parent_forms():
         if mcdi_type == None or mcdi_type == '':
             return generate_invalid_request_error(MISSING_MCDI_TYPE_MSG)
 
-        # Ensure that the name of the desired MCDI format has been specified / 
+        # Ensure that the name of the desired MCDI format has been specified /
         # the MCDI format is in the application's database.
         if db_util.load_mcdi_model(mcdi_type) == None:
             msg = INVALID_MCDI_TYPE_MSG % mcdi_type
@@ -712,7 +712,7 @@ def send_parent_forms():
                 return generate_invalid_request_error(
                     INVALID_HARD_OF_HEARING_MSG)
 
-        # Create a new parent form model but wait to save it until resolving 
+        # Create a new parent form model but wait to save it until resolving
         # missing values by using a previous entry for the specified child.
         new_form = models.ParentForm(
             form_id,
@@ -771,7 +771,7 @@ def get_child_info_by_api():
     OPTIONAL PARAMETERS:
      - format
        // The format to return responses in. Recommended: "standard" (without
-       // quotes). 
+       // quotes).
      - child_id
        // Kelp Child ID.
      - min_percentile
@@ -842,14 +842,16 @@ def get_child_info_by_api():
     if not user.can_access_data:
         return generate_unauthorized_error(USER_NOT_DB_AUTHORIZED_MSG)
 
-    fields = filter(lambda (name, value): name not in INGORE_FIELDS,
-        flask.request.args.items())
+    fields = filter(
+        lambda x: x[0] not in INGORE_FIELDS,
+        flask.request.args.items()
+    )
     db_filters = map(lambda x: make_filter(*x), fields)
 
     present_format = flask.request.args.get(FORMAT_ATTR, None)
     if present_format:
         present_format = db_util.load_presentation_model(present_format)
-    
+
     matching_snapshots = filter_util.run_search_query(
         db_filters,
         SNAPSHOTS_DB_TABLE,
@@ -859,17 +861,17 @@ def get_child_info_by_api():
 
     for snapshot in matching_snapshots:
         child_id = snapshot.child_id
-        
+
         if not child_id in serialized_snapshots_by_child_id:
             serialized_snapshots_by_child_id[child_id] = []
-        
+
         snapshot_serialized = report_util.serialize_snapshot(
             snapshot,
             presentation_format=present_format,
             report_dict=True,
             include_words=False
         )
-        
+
         serialized_snapshots_by_child_id[child_id].append(snapshot_serialized)
 
     return json.dumps(serialized_snapshots_by_child_id)

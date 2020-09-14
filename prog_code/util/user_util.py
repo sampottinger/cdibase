@@ -26,8 +26,8 @@ import werkzeug
 
 from ..struct import models
 
-import db_util
-import mail_util
+import prog_code.util.db_util as db_util
+import prog_code.util.mail_util as mail_util
 
 SIGN_UP_MSG = '''Hello!
 

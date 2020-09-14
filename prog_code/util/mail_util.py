@@ -104,9 +104,9 @@ def send_msg(email, subject, message):
     @type message: flaskext.mail.Message
     """
     with mail_lock:
-        
+
         mail_keeper = get_mail_keeper()
-        
+
         if mail_keeper:
             flask_message = flask_mail.Message(
                 subject,
@@ -115,7 +115,7 @@ def send_msg(email, subject, message):
                 body=message
             )
             mail_keeper.get_mail_instance().send(flask_message)
-        
+
         else:
             if DEBUG_PRINT_EMAIL:
-                print message
+                print(message)

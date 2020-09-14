@@ -21,9 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from ..struct import models
 
-import constants
-import db_util
-import oper_interp
+import prog_code.util.constants as constants
+import prog_code.util.db_util as db_util
+import prog_code.util.oper_interp as oper_interp
 
 
 FIELD_MAP = {
@@ -105,13 +105,22 @@ def build_query(filters, table, statement_template):
 
     fields_and_extraneous = zip(filter_fields, operators, operands)
 
-    filter_fields_str = map(
-        lambda (field, operator, operands): build_query_component(
-            field,
-            operator,
-            operands
-        ),
+    fields_and_extraneous_named = map(
+        lambda x: {
+            'field': x[0],
+            'operator': x[1],
+            'operands': x[2]
+        },
         fields_and_extraneous
+    )
+
+    filter_fields_str = map(
+        lambda : build_query_component(
+            x['field'],
+            x['operator'],
+            x['operands']
+        ),
+        fields_and_extraneous_named
     )
     clause = ' AND '.join(filter_fields_str)
 
@@ -159,10 +168,20 @@ def run_search_query(filters, table, exclude_deleted=True):
 
     query_info = build_search_query(filters, table)
     raw_operands = map(lambda x: x.operand, filters)
+
     filter_fields_and_operands = zip(query_info.filter_fields, raw_operands)
-    operands = map(
-        lambda (field, operand): field.interpret_value(operand),
+
+    filter_fields_and_operands_named = map(
+        lambda x: {
+            'field': x[0],
+            'operand': x[1]
+        },
         filter_fields_and_operands
+    )
+
+    operands = map(
+        lambda x: x['field'].interpret_value(x['operand']),
+        filter_fields_and_operands_named
     )
 
     operands_flat = []
@@ -192,12 +211,22 @@ def run_delete_query(filters, table, restore):
 
     query_info = build_delete_query(filters, table, restore)
     raw_operands = map(lambda x: x.operand, filters)
+
     filter_fields_and_operands = zip(query_info.filter_fields, raw_operands)
-    operands = map(
-        lambda (field, operand): field.interpret_value(operand),
+
+    filter_fields_and_operands_named = map(
+        lambda x: {
+            'field': x[0],
+            'operand': x[1]
+        },
         filter_fields_and_operands
     )
-    
+
+    operands = map(
+        lambda x: x['field'].interpret_value(x['operand']),
+        filter_fields_and_operands_named
+    )
+
     operands_flat = []
     for operand in operands:
         operands_flat.extend(operand)

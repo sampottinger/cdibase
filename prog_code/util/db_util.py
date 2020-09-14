@@ -30,7 +30,7 @@ import yaml
 
 from ..struct import models
 
-import file_util
+import prog_code.util.file_util as file_util
 
 SNAPSHOT_METADATA_COLS = [
     'id',
@@ -561,7 +561,7 @@ def lookup_global_participant_id(study, participant_study_id):
     )
     ret_values = cursor.fetchone()
     connection.close()
-    
+
     if ret_values == None:
         return None
 
@@ -979,7 +979,7 @@ def get_counts():
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute('SELECT study,child_id FROM snapshots WHERE deleted=0')
-    
+
     metadata = cursor.fetchone()
     while metadata != None:
 
@@ -995,7 +995,7 @@ def get_counts():
         study_info[child_id] = study_info[child_id] + 1
 
         metadata = cursor.fetchone()
-    
+
     connection.close()
 
     return by_study

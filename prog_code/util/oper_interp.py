@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @license: GNU GPL v3
 """
 
-import constants
+import prog_code.util.constants as constants
 
 
 class FieldInfo(object):
