@@ -36,7 +36,7 @@ TEST_EXTRA_CATEGORIES = 4
 TEST_NUM_LANGUAGES = 2
 TEST_HARD_OF_HEARING = constants.EXPLICIT_FALSE
 
-TEST_MCDI_MODEL = models.MCDIFormat(
+TEST_CDI_MODEL = models.CDIFormat(
     'human_name',
     'safe_name',
     'filename',
@@ -94,39 +94,39 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
 
 class RecalcPercentilesTest(unittest.TestCase):
 
-    def test_load_mcdi_model(self):
-        with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock:
-            mock.return_value = TEST_MCDI_MODEL
+    def test_load_cdi_model(self):
+        with unittest.mock.patch('prog_code.util.db_util.load_cdi_model') as mock:
+            mock.return_value = TEST_CDI_MODEL
 
-            adapter = recalc_util.CachedMCDIAdapter()
-            result_1 = adapter.load_mcdi_model('test_format')
-            result_2 = adapter.load_mcdi_model('test_format')
+            adapter = recalc_util.CachedCDIAdapter()
+            result_1 = adapter.load_cdi_model('test_format')
+            result_2 = adapter.load_cdi_model('test_format')
 
-            self.assertEqual(result_1, TEST_MCDI_MODEL)
-            self.assertEqual(result_2, TEST_MCDI_MODEL)
+            self.assertEqual(result_1, TEST_CDI_MODEL)
+            self.assertEqual(result_2, TEST_CDI_MODEL)
 
             mock.assert_called_with('test_format')
 
     def test_load_percentile_model(self):
         with unittest.mock.patch('prog_code.util.db_util.load_percentile_model') as mock:
-            mock.return_value = TEST_MCDI_MODEL
+            mock.return_value = TEST_CDI_MODEL
 
-            adapter = recalc_util.CachedMCDIAdapter()
+            adapter = recalc_util.CachedCDIAdapter()
             result_1 = adapter.load_percentile_model('test_format')
             result_2 = adapter.load_percentile_model('test_format')
 
-            self.assertEqual(result_1, TEST_MCDI_MODEL)
-            self.assertEqual(result_2, TEST_MCDI_MODEL)
+            self.assertEqual(result_1, TEST_CDI_MODEL)
+            self.assertEqual(result_2, TEST_CDI_MODEL)
 
             mock.assert_called_with('test_format')
 
-    def test_get_max_mcdi_words(self):
-        with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock:
-            mock.return_value = TEST_MCDI_MODEL
+    def test_get_max_cdi_words(self):
+        with unittest.mock.patch('prog_code.util.db_util.load_cdi_model') as mock:
+            mock.return_value = TEST_CDI_MODEL
 
-            adapter = recalc_util.CachedMCDIAdapter()
-            result_1 = adapter.get_max_mcdi_words('test_format')
-            result_2 = adapter.get_max_mcdi_words('test_format')
+            adapter = recalc_util.CachedCDIAdapter()
+            result_1 = adapter.get_max_cdi_words('test_format')
+            result_2 = adapter.get_max_cdi_words('test_format')
 
             self.assertEqual(result_1, 5)
             self.assertEqual(result_2, 5)
@@ -139,11 +139,11 @@ class RecalcPercentilesTest(unittest.TestCase):
         self.assertTrue(abs(test_snapshot.age - 17.71) < 0.01)
 
     def test_recalculate_percentile(self):
-        with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock_mcdi:
+        with unittest.mock.patch('prog_code.util.db_util.load_cdi_model') as mock_cdi:
             with unittest.mock.patch('prog_code.util.db_util.load_snapshot_contents') as mock_snap:
-                adapter = recalc_util.CachedMCDIAdapter()
+                adapter = recalc_util.CachedCDIAdapter()
                 adapter.max_word_counts['standard'] = 681
-                adapter.mcdi_models['standard'] = TEST_MCDI_MODEL
+                adapter.cdi_models['standard'] = TEST_CDI_MODEL
                 adapter.percentiles['typical-male'] = TEST_PERCENTILES_MODEL
                 test_snapshot = copy.deepcopy(TEST_SNAPSHOT)
 
@@ -162,4 +162,4 @@ class RecalcPercentilesTest(unittest.TestCase):
                 self.assertEqual(test_snapshot.percentile, 14)
 
                 mock_snap.assert_called_with(test_snapshot)
-                self.assertEqual(len(mock_mcdi.mock_calls), 0)
+                self.assertEqual(len(mock_cdi.mock_calls), 0)

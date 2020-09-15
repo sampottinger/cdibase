@@ -20,7 +20,7 @@ This web (public Internet or private Intranet) application allows lab members to
 * Remotely enter CDI data directly into a centralized database.
 * Send forms to parents over email and automatically collect responses to CDIs securely over the Internet.
 * Download existing CDI data in CSV files using different "presentation formats" that, to support lab members' various custom and commercial software solutions, specifies how standard values like true, false, male, and female are reported in the resulting download.
-* Download CDI data from multiple studies even if different MCDI forms were used. The application allows the user to specify if the application should combine all results in a single CSV or if Cdibase should render a ZIP archive with a CSV file for each type of CDI used.
+* Download CDI data from multiple studies even if different CDI forms were used. The application allows the user to specify if the application should combine all results in a single CSV or if Cdibase should render a ZIP archive with a CSV file for each type of CDI used.
 * Fine tune user access control, specifying which lab members should have access to what functionality of the web application.
 * Automatically control and integrate with other lab software through a programmatically accesible API.
 
@@ -124,7 +124,7 @@ $ sqlite3 cdi.db < create_test_user.sql
 
 Use the forgot password feature to get a temporary password for that new user. Please be aware that ```create_test_user.sql``` gives test@example.com full permissions.
 
-Finally, before some features of the application can be used, you will also need to provide YAML descriptions of MCDI forms, a CSV of percentile information, and a YAML specification of a presentation format. Examples are available in a [private gist](https://gist.github.com/Samnsparky/db2ac1b742b98f954245).
+Finally, before some features of the application can be used, you will also need to provide YAML descriptions of CDI forms, a CSV of percentile information, and a YAML specification of a presentation format. Examples are available in a [private gist](https://gist.github.com/Samnsparky/db2ac1b742b98f954245).
 
 These can be provided through the edit formats tab or at ```http://127.0.0.1:5000/base/edit_formats```.
 

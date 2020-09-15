@@ -40,7 +40,7 @@ FIELD_MAP = {
     'total_num_sessions': oper_interp.NumericalField('total_num_sessions'),
     'percentile': oper_interp.NumericalField('percentile'),
     'extra_categories': oper_interp.NumericalField('extra_categories'),
-    'MCDI_type': oper_interp.RawInterpretField('mcdi_type'),
+    'CDI_type': oper_interp.RawInterpretField('cdi_type'),
     'specific_language': oper_interp.RawInterpretField('languages'),
     'num_languages': oper_interp.NumericalField('num_languages'),
     'hard_of_hearing': oper_interp.BooleanField('hard_of_hearing'),

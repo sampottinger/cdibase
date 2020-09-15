@@ -47,7 +47,7 @@ PRESENTATION_VALUE_NAME_MAP = {
     constants.ELEVEN_PRESUMED_TRUE: 'explicit_true'
 }
 
-DEFAULT_MCDI = 'fullenglishmcdi'
+DEFAULT_CDI = 'fullenglishcdi'
 
 
 class NotFoundSnapshotContent:
@@ -93,14 +93,14 @@ def summarize_snapshots(snapshot_metas):
     for meta in snapshot_metas:
 
         # Get the values that count as "spoken"
-        mcdi_name = meta.mcdi_type
+        cdi_name = meta.cdi_type
         cdi_date = meta.session_date
-        if not mcdi_name in cdi_spoken_set:
-            mcdi_info = db_util.load_mcdi_model(mcdi_name)
-            words_spoken_set = mcdi_info.details['count_as_spoken']
-            cdi_spoken_set[mcdi_name] = words_spoken_set
+        if not cdi_name in cdi_spoken_set:
+            cdi_info = db_util.load_cdi_model(cdi_name)
+            words_spoken_set = cdi_info.details['count_as_spoken']
+            cdi_spoken_set[cdi_name] = words_spoken_set
         else:
-            words_spoken_set = cdi_spoken_set[mcdi_name]
+            words_spoken_set = cdi_spoken_set[cdi_name]
 
         # Parse the words
         contents = db_util.load_snapshot_contents(meta)
@@ -178,7 +178,7 @@ def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
             'revision': snapshot.revision,
             'languages': snapshot.languages,
             'num_languages': snapshot.num_languages,
-            'mcdi_type': snapshot.mcdi_type,
+            'cdi_type': snapshot.cdi_type,
             'hard_of_hearing': snapshot.hard_of_hearing,
             'deleted': snapshot.deleted
         }
@@ -207,7 +207,7 @@ def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
             snapshot.revision,
             snapshot.languages,
             snapshot.num_languages,
-            snapshot.mcdi_type,
+            snapshot.cdi_type,
             snapshot.hard_of_hearing,
             snapshot.deleted
         ]
@@ -270,7 +270,7 @@ def generate_study_report_rows(snapshots_from_study, presentation_format):
         'revision',
         'languages',
         'num languages',
-        'mcdi type',
+        'cdi type',
         'hard of hearing',
         'deleted'
     ]
@@ -282,23 +282,23 @@ def generate_study_report_rows(snapshots_from_study, presentation_format):
     return zip(*cols)
 
 
-def sort_by_study_order(rows, mcdi_format):
-    """Sort report output rows such that they are in the same order as the MCDI.
+def sort_by_study_order(rows, cdi_format):
+    """Sort report output rows such that they are in the same order as the CDI.
 
     Sort the reourt output rows such that the header rows come first followed
     by the word value rows in the same order as they appear in the original
-    MCDI.
+    CDI.
 
     @param rows: The rows to sort including both the 20 header rows and the
         word value rows.
     @type rows: iterable over iterable over primitive
-    @param mcdi_format: Information about the presentation format whose
-        MCDI format should be sorted against.
-    @type mcdi_format: models.MCDIFormat
+    @param cdi_format: Information about the presentation format whose
+        CDI format should be sorted against.
+    @type cdi_format: models.CDIFormat
     @return: Rows sorted acording to the presentation format.
     @rtype: iterable over iterable over primitive
     """
-    categories = mcdi_format.details['categories']
+    categories = cdi_format.details['categories']
     word_index = {}
     i = 0
     for category in categories:
@@ -317,7 +317,7 @@ def sort_by_study_order(rows, mcdi_format):
 
 
 def generate_study_report_csv(snapshots_from_study, presentation_format):
-    """Generate a CSV file for a set of snapshots with the same MCDI format.
+    """Generate a CSV file for a set of snapshots with the same CDI format.
 
     @param snapshots_from_study: The snapshots to create a CSV report for.
     @type snapshots_from_study: Iterable over models.SnapshotMetadata
@@ -329,14 +329,14 @@ def generate_study_report_csv(snapshots_from_study, presentation_format):
     """
     faux_file = io.StringIO()
     csv_writer = csv.writer(faux_file)
-    mcdi_type_name = snapshots_from_study[0].mcdi_type
-    safe_mcdi_name = mcdi_type_name.replace(' ', '')
-    safe_mcdi_name = urllib.quote_plus(safe_mcdi_name).lower()
-    mcdi_format = db_util.load_mcdi_model(safe_mcdi_name)
-    if mcdi_format == None:
-        mcdi_format = db_util.load_mcdi_model(DEFAULT_MCDI)
+    cdi_type_name = snapshots_from_study[0].cdi_type
+    safe_cdi_name = cdi_type_name.replace(' ', '')
+    safe_cdi_name = urllib.quote_plus(safe_cdi_name).lower()
+    cdi_format = db_util.load_cdi_model(safe_cdi_name)
+    if cdi_format == None:
+        cdi_format = db_util.load_cdi_model(DEFAULT_CDI)
     rows = generate_study_report_rows(snapshots_from_study, presentation_format)
-    rows = sort_by_study_order(rows, mcdi_format)
+    rows = sort_by_study_order(rows, cdi_format)
     csv_writer.writerows(
         [[unicode(val).encode('ascii', 'ignore') for val in row] for row in rows]
     )

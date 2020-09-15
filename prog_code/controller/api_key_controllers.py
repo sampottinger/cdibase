@@ -85,8 +85,8 @@ USER_NOT_DB_AUTHORIZED_MSG = 'User not authorized to use access database.'
 MISMATCHED_CSV_LENGTHS_MSG = 'Mismatched CSV list lengths.'
 MISSING_PARENT_EMAIL_MSG = 'Parent email required.'
 NEW_API_KEY_MSG = 'New API key generated.'
-MISSING_MCDI_TYPE_MSG = 'Must specify mcdi_type.'
-INVALID_MCDI_TYPE_MSG = '%s not a valid mcdi_type.'
+MISSING_CDI_TYPE_MSG = 'Must specify cdi_type.'
+INVALID_CDI_TYPE_MSG = '%s not a valid cdi_type.'
 ISO_DATE_INVALID_MSG = 'Must provide ISO8601 date for birthday.'
 INVALID_GENDER_VALUE_MSG = 'The provided gender value is invalid for the ' \
     'selected presentation format.'
@@ -231,7 +231,7 @@ def create_api_key():
 
 
 def verify_api_key_for_parent_forms(api_key):
-    """Verify that the user with the given API key can send parent MCDI forms.
+    """Verify that the user with the given API key can send parent CDI forms.
 
     Check that the given API is valid, active (belongs to a user), that user
     is still authorized to use the API, and that the user has the ability to
@@ -266,16 +266,16 @@ def verify_api_key_for_parent_forms(api_key):
 
 @app.route('/base/api/v0/send_parent_form', methods=['GET', 'POST'])
 def send_parent_form():
-    """API controller that allows external applications to send an MCDI form.
+    """API controller that allows external applications to send an CDI form.
 
     API controller that allows external applications and services to send a
-    single MCDI form to many parents. All parameters should be provided as form-
+    single CDI form to many parents. All parameters should be provided as form-
     encoded body parameters except for the API key which should be specified in
     the URL as a query string.
 
     ENDPOINT: /base/api/v0/send_parent_form
 
-    DESCRIPTION: Send a single MCDI form to many parents.
+    DESCRIPTION: Send a single CDI form to many parents.
 
     SUPPORTED METHODS: GET, POST
 
@@ -286,9 +286,9 @@ def send_parent_form():
      - api_key
        // Executes this request on behalf of the user account with this API key.
      - &child_name={{child name}}
-       // note that this is never stored in the application or into the MCDI db.
-     - &mcdi_type={{type of MCDI form to send}}
-       // "fullenglishmcdi" without quotes is suggested if uncertain
+       // note that this is never stored in the application or into the CDI db.
+     - &cdi_type={{type of CDI form to send}}
+       // "fullenglishcdi" without quotes is suggested if uncertain
      - &parent_email={{parent's email address}}
 
     One of the following is required:
@@ -320,7 +320,7 @@ def send_parent_form():
        // Defaults to "standard" if not provided.
 
     If any of these fields are not provided, missing values will be loaded from
-    the most recent MCDI available for the child or, if there are no prior MCDIs
+    the most recent CDI available for the child or, if there are no prior CDIs
     available within the DB, the parent will be asked for this information
     within the form GUI.
 
@@ -330,7 +330,7 @@ def send_parent_form():
     request = flask.request
     api_key = request.args.get(API_KEY_FIELD, None)
 
-    # Ensure that the current user has premissions necessary to send parent MCDI
+    # Ensure that the current user has premissions necessary to send parent CDI
     # through the API layer.
     problem = verify_api_key_for_parent_forms(api_key)
     if problem != None:
@@ -350,7 +350,7 @@ def send_parent_form():
         return generate_invalid_request_error(INVALID_INTERPRETATION_MSG)
 
     # Parse the rest of user input.
-    form_id = parent_account_util.generate_unique_mcdi_form_id()
+    form_id = parent_account_util.generate_unique_cdi_form_id()
     global_id = interp_util.safe_int_interpret(
         request.args.get('database_id', ''))
     study_id = request.args.get('study_id', '')
@@ -368,16 +368,16 @@ def send_parent_form():
     hard_of_hearing = request.args.get('hard_of_hearing')
     child_name = request.args.get('child_name', '')
     parent_email = request.args.get('parent_email', '')
-    mcdi_type = request.args.get('mcdi_type', None)
+    cdi_type = request.args.get('cdi_type', None)
 
-    # Check that an MCDI type was provided
-    if mcdi_type == None or mcdi_type == '':
-        return generate_invalid_request_error(MISSING_MCDI_TYPE_MSG)
+    # Check that an CDI type was provided
+    if cdi_type == None or cdi_type == '':
+        return generate_invalid_request_error(MISSING_CDI_TYPE_MSG)
 
-    # Ensure that the name of the desired MCDI format is specified / exists in
+    # Ensure that the name of the desired CDI format is specified / exists in
     # the application database.
-    if db_util.load_mcdi_model(mcdi_type) == None:
-        msg = INVALID_MCDI_TYPE_MSG % mcdi_type
+    if db_util.load_cdi_model(cdi_type) == None:
+        msg = INVALID_CDI_TYPE_MSG % cdi_type
         return generate_invalid_request_error(msg)
 
     # Ensure that either a global ID or both a study and study ID were provided.
@@ -442,7 +442,7 @@ def send_parent_form():
         form_id,
         child_name,
         parent_email,
-        mcdi_type,
+        cdi_type,
         global_id,
         study_id,
         study,
@@ -457,24 +457,24 @@ def send_parent_form():
     )
 
     # If a parent form model is missing information about a child, load the rest
-    # of the missing information from a previous MCDI snapshot for the child.
+    # of the missing information from a previous CDI snapshot for the child.
     resolver = parent_account_util.AttributeResolutionResolver()
     resolver.fill_parent_form_defaults(new_form)
 
     # Save the filled parent form to the database and send a link for filling
     # out that form to the specified parent email address.
     db_util.insert_parent_form(new_form)
-    parent_account_util.send_mcdi_email(new_form)
+    parent_account_util.send_cdi_email(new_form)
 
     return SUCCESS_JSON_MSG
 
 
 @app.route('/base/api/v0/send_parent_forms', methods=['GET', 'POST'])
 def send_parent_forms():
-    """API controller that allows external applications to send many MCDI forms.
+    """API controller that allows external applications to send many CDI forms.
 
     API controller that allows external applications and services to send many
-    MCDI forms to many parents. All parameters should be provided as form-
+    CDI forms to many parents. All parameters should be provided as form-
     encoded body parameters except for the API key which should be specified in
     the URL as a query string.
 
@@ -482,9 +482,9 @@ def send_parent_forms():
      - api_key
        // Executes this request on behalf of the user account with this API key.
      - &child_name={{child name}}
-       // note that this is never stored in the application or into the MCDI db.
-     - &mcdi_type={{type of MCDI form to send}}
-       // "fullenglishmcdi" without quotes is suggested if uncertain
+       // note that this is never stored in the application or into the CDI db.
+     - &cdi_type={{type of CDI form to send}}
+       // "fullenglishcdi" without quotes is suggested if uncertain
      - &parent_email={{parent's email address}}
 
     One of the following is required:
@@ -517,12 +517,12 @@ def send_parent_forms():
 
     All fields (except api_key) take a CSV string (no quotes). Elements are
     zipped together so that the first child_name will be paired with the first
-    mcdi_type, parent_email, etc. while the second child_name will be paired
-    with the second mcdi_type and so on. This allows API clients to send many
+    cdi_type, parent_email, etc. while the second child_name will be paired
+    with the second cdi_type and so on. This allows API clients to send many
     emails with only one API call.
 
     If any of these fields are not provided, missing values will be loaded from
-    the most recent MCDI available for the child or, if there are no prior MCDIs
+    the most recent CDI available for the child or, if there are no prior CDIs
     available within the DB, the parent will be asked for this information
     within the form GUI.
 
@@ -532,7 +532,7 @@ def send_parent_forms():
     request = flask.request
     api_key = request.args.get(API_KEY_FIELD, None)
 
-    # Ensure that the current user has premissions necessary to send parent MCDI
+    # Ensure that the current user has premissions necessary to send parent CDI
     # through the API layer.
     problem = verify_api_key_for_parent_forms(api_key)
     if problem != None:
@@ -551,7 +551,7 @@ def send_parent_forms():
     hard_of_hearing_str = request.args.get('hard_of_hearing', '')
     child_name_str = request.args.get('child_name', '')
     parent_email = request.args.get('parent_email', '')
-    mcdi_type_str = request.args.get('mcdi_type', '')
+    cdi_type_str = request.args.get('cdi_type', '')
 
     # Parse user provided information about the interpretation / presentation
     # format, mapping necessary to interpreting user input for this API
@@ -566,7 +566,7 @@ def send_parent_forms():
     if interpretation_format == None:
         return generate_invalid_request_error(INVALID_INTERPRETATION_MSG)
 
-    # To support sending multiple MCDI forms in a single API call, split
+    # To support sending multiple CDI forms in a single API call, split
     # specified values by comma. Note that this API version does not allow for
     # commas in the strings provided to this call unless they demark one input
     # value from another.
@@ -582,7 +582,7 @@ def send_parent_forms():
     hard_of_hearing_vals = api_key_util.interp_csv_field(hard_of_hearing_str)
     child_name_vals = api_key_util.interp_csv_field(child_name_str)
     parent_email_vals = api_key_util.interp_csv_field(parent_email)
-    mcdi_type_vals = api_key_util.interp_csv_field(mcdi_type_str)
+    cdi_type_vals = api_key_util.interp_csv_field(cdi_type_str)
 
     # Ensure that the same number of values were provided for each API
     # parameter for this call.
@@ -598,7 +598,7 @@ def send_parent_forms():
         len(hard_of_hearing_vals),
         len(child_name_vals),
         len(parent_email_vals),
-        len(mcdi_type_vals),
+        len(cdi_type_vals),
         len(total_num_sessions_vals)
     ]
 
@@ -635,19 +635,19 @@ def send_parent_forms():
         hard_of_hearing = api_key_util.get_if_avail(hard_of_hearing_vals, i)
         child_name = api_key_util.get_if_avail(child_name_vals, i)
         parent_email = api_key_util.get_if_avail(parent_email_vals, i)
-        mcdi_type = api_key_util.get_if_avail(mcdi_type_vals, i)
+        cdi_type = api_key_util.get_if_avail(cdi_type_vals, i)
 
         # Generate a new unique randomly generated ID for this new parent form.
-        form_id = parent_account_util.generate_unique_mcdi_form_id()
+        form_id = parent_account_util.generate_unique_cdi_form_id()
 
-        # Ensure the desired type of MCDI form  was specified.
-        if mcdi_type == None or mcdi_type == '':
-            return generate_invalid_request_error(MISSING_MCDI_TYPE_MSG)
+        # Ensure the desired type of CDI form  was specified.
+        if cdi_type == None or cdi_type == '':
+            return generate_invalid_request_error(MISSING_CDI_TYPE_MSG)
 
-        # Ensure that the name of the desired MCDI format has been specified /
-        # the MCDI format is in the application's database.
-        if db_util.load_mcdi_model(mcdi_type) == None:
-            msg = INVALID_MCDI_TYPE_MSG % mcdi_type
+        # Ensure that the name of the desired CDI format has been specified /
+        # the CDI format is in the application's database.
+        if db_util.load_cdi_model(cdi_type) == None:
+            msg = INVALID_CDI_TYPE_MSG % cdi_type
             return generate_invalid_request_error(msg)
 
         # Ensure that the API client provided either a global ID or both a study
@@ -718,7 +718,7 @@ def send_parent_forms():
             form_id,
             child_name,
             parent_email,
-            mcdi_type,
+            cdi_type,
             global_id,
             study_id,
             study,
@@ -733,7 +733,7 @@ def send_parent_forms():
         )
 
         # If a parent form model is missing information about a child, load the
-        # rest of the missing information from a previous MCDI snapshot for the
+        # rest of the missing information from a previous CDI snapshot for the
         # child.
         resolver = parent_account_util.AttributeResolutionResolver()
         resolver.fill_parent_form_defaults(new_form)
@@ -745,21 +745,21 @@ def send_parent_forms():
         # Save the filled parent form to the database and send a link for
         # filling out that form to the specified parent email address.
         db_util.insert_parent_form(new_form)
-        parent_account_util.send_mcdi_email(new_form)
+        parent_account_util.send_cdi_email(new_form)
 
     return SUCCESS_JSON_MSG
 
 
-@app.route("/base/api/v0/mcdi_metadata.json")
+@app.route("/base/api/v0/cdi_metadata.json")
 def get_child_info_by_api():
-    """Get information about a child in the MCDI database.
+    """Get information about a child in the CDI database.
 
-    Controller that allows other applications and services to look up MCDI
+    Controller that allows other applications and services to look up CDI
     metadata and information about available results for a chid.
 
-    DESCRIPTION: Get information about children and the MCDIs they have
-                 completed. Note that this call provides summaries of MCDIs and
-                 does not return the complete MCDIs with their full word
+    DESCRIPTION: Get information about children and the CDIs they have
+                 completed. Note that this call provides summaries of CDIs and
+                 does not return the complete CDIs with their full word
                  listings.
 
     SUPPORTED METHODS: GET
@@ -787,40 +787,40 @@ def get_child_info_by_api():
        // ISO 8601 date. Only children born before this date will be returned.
        // (ex: 2010/12/30)
      - min_session_date
-       // ISO 8601 date. Only MCDIs taken after this date will be returned.
+       // ISO 8601 date. Only CDIs taken after this date will be returned.
        // (ex: 2010/12/30)
      - max_session_date
-       // ISO 8601 date. Only MCDIs taken before this date will be returned.
+       // ISO 8601 date. Only CDIs taken before this date will be returned.
        // (ex: 2010/12/30)
      - gender
        // Only return children of this gender. (Should be "male" or "female" or
        // "other" without quotes).
      - session_num
-       // Children may have many sessions and MCDIs. Only return MCDIs from the
+       // Children may have many sessions and CDIs. Only return CDIs from the
        // nth session where n = the provided session_num.
      - total_num_sessions
-       // Children may have many sessions. Only provide MCDIs for those that had
+       // Children may have many sessions. Only provide CDIs for those that had
        // exactly this many sessions.
      - words_spoken
-       // The raw number of words reported as spoken on the child's MCDI.
+       // The raw number of words reported as spoken on the child's CDI.
      - items_excluded
-       // Only return MCDIs that had this many items excluded while taking the
-       // MCDI.
+       // Only return CDIs that had this many items excluded while taking the
+       // CDI.
      - extra_categories
-       // Only return MCDIs with this many additional categories included.
+       // Only return CDIs with this many additional categories included.
      - num_languages
        // Only return children that speak this many languages.
      - hard_of_hearing
        // Only return children that are or are not hard of hearing. (Should be
        // "1" or "0" without quotes).
      - study_id
-       // Only return MCDIs from the study with this ID.
+       // Only return CDIs from the study with this ID.
      - study
-       // Only return MCDIs from the study by this name.
+       // Only return CDIs from the study by this name.
      - age
-       // Only return MCDIs taken from children of this age in months.
-     - mcdi_type
-       // Only return MCDIs of this type.
+       // Only return CDIs taken from children of this age in months.
+     - cdi_type
+       // Only return CDIs of this type.
 
     All parameters should be provided as a URI query component.
     """

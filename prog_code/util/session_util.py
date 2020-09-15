@@ -80,7 +80,7 @@ def require_login(access_data=False, admin=False, enter_data=False,
         access enter new data into the database. Defaults to False.
     @type enter_data: bool
     @keyword change_formats: If True, require that the user have permission to
-        access / edit MCDI forms, CSV presentation formats, and percentile
+        access / edit CDI forms, CSV presentation formats, and percentile
         tables. Defaults to False.
     @type access_data: bool
     @keyword use_api_key: If True, require that the user has permission to use

@@ -101,7 +101,7 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
     TEST_HARD_OF_HEARING,
     False
 )
-TEST_FORMAT = models.MCDIFormat(
+TEST_FORMAT = models.CDIFormat(
     'standard',
     'standard',
     'standard.yaml',
@@ -173,9 +173,9 @@ class TestAPIKeyControllers(unittest.TestCase):
             with unittest.mock.patch('prog_code.util.session_util.get_user_id') as mock_get_user_id:
                 with unittest.mock.patch('prog_code.util.api_key_util.create_new_api_key') as mock_create_new_api_key:
                     with unittest.mock.patch('prog_code.util.db_util.get_api_key') as mock_get_api_key:
-                        with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock_load_mcdi_model:
+                        with unittest.mock.patch('prog_code.util.db_util.load_cdi_model') as mock_load_cdi_model:
                             with unittest.mock.patch('prog_code.util.db_util.load_presentation_model') as mock_load_presentation_model:
-                                with unittest.mock.patch('prog_code.util.parent_account_util.generate_unique_mcdi_form_id') as mock_generate_unique_mcdi_form_id:
+                                with unittest.mock.patch('prog_code.util.parent_account_util.generate_unique_cdi_form_id') as mock_generate_unique_cdi_form_id:
                                     with unittest.mock.patch('prog_code.util.filter_util.run_search_query') as mock_run_search_query:
                                         with unittest.mock.patch('prog_code.util.db_util.insert_parent_form') as mock_insert_parent_form:
                                             with unittest.mock.patch('prog_code.util.report_util.summarize_snapshots') as mock_summarize_snapshots:
@@ -184,9 +184,9 @@ class TestAPIKeyControllers(unittest.TestCase):
                                                     'get_user_id': mock_get_user_id,
                                                     'create_new_api_key': mock_create_new_api_key,
                                                     'get_api_key': mock_get_api_key,
-                                                    'load_mcdi_model': mock_load_mcdi_model,
+                                                    'load_cdi_model': mock_load_cdi_model,
                                                     'load_presentation_model': mock_load_presentation_model,
-                                                    'generate_unique_mcdi_form_id': mock_generate_unique_mcdi_form_id,
+                                                    'generate_unique_cdi_form_id': mock_generate_unique_cdi_form_id,
                                                     'run_search_query': mock_run_search_query,
                                                     'insert_parent_form': mock_insert_parent_form,
                                                     'summarize_snapshots': mock_summarize_snapshots
@@ -358,7 +358,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard'
+                        'cdi_type': 'standard'
                     })
                 )
                 self.assertTrue('error' in json.loads(resp.data))
@@ -367,7 +367,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': 'test parent'
                     })
                 )
@@ -396,7 +396,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'invalid_format',
+                        'cdi_type': 'invalid_format',
                         'parent_email': TEST_PARENT_EMAIL,
                         'database_id': TEST_DB_ID
                     })
@@ -407,7 +407,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'format': 'invalid_format',
                         'parent_email': TEST_PARENT_EMAIL,
                         'database_id': TEST_DB_ID
@@ -419,7 +419,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': TEST_PARENT_EMAIL,
                         'database_id': 'invalid type'
                     })
@@ -430,7 +430,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': 'test',
                         'database_id': TEST_DB_ID
                     })
@@ -441,7 +441,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': TEST_PARENT_EMAIL,
                         'database_id': str(TEST_DB_ID),
                         'gender': 'invalid'
@@ -453,7 +453,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': TEST_PARENT_EMAIL,
                         'database_id': str(TEST_DB_ID),
                         'hard_of_hearing': 'invalid'
@@ -465,7 +465,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': TEST_PARENT_EMAIL,
                         'database_id': str(TEST_DB_ID),
                         'birthday': 'invalid'
@@ -477,7 +477,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': 'test email',
                         'database_id': str(TEST_DB_ID)
                     })
@@ -487,7 +487,7 @@ class TestAPIKeyControllers(unittest.TestCase):
         def on_start(mocks):
             mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
             mocks['get_user'].return_value = TEST_USER
-            mocks['generate_unique_mcdi_form_id'].return_value = TEST_PARENT_FORM_ID
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID
             mocks['load_presentation_model'].side_effect = [
                 TEST_PRESENTATION_FORMAT_METADATA,
                 None,
@@ -498,7 +498,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                 TEST_PRESENTATION_FORMAT_METADATA,
                 TEST_PRESENTATION_FORMAT_METADATA
             ]
-            mocks['load_mcdi_model'].side_effect = [
+            mocks['load_cdi_model'].side_effect = [
                 None,
                 None,
                 TEST_FORMAT,
@@ -520,7 +520,7 @@ class TestAPIKeyControllers(unittest.TestCase):
             mocks['load_presentation_model'].assert_any_call('invalid_format')
 
             self.assertEqual(
-                len(mocks['load_mcdi_model'].mock_calls),
+                len(mocks['load_cdi_model'].mock_calls),
                 7
             )
             mocks['load_presentation_model'].assert_any_call('standard')
@@ -540,7 +540,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': TEST_CHILD_NAME,
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': TEST_PARENT_EMAIL,
                         'database_id': TEST_DB_ID
                     })
@@ -550,17 +550,17 @@ class TestAPIKeyControllers(unittest.TestCase):
         def on_start(mocks):
             mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
             mocks['get_user'].return_value = TEST_USER
-            mocks['generate_unique_mcdi_form_id'].return_value = TEST_PARENT_FORM_ID
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID
             mocks['load_presentation_model'].return_value = TEST_PRESENTATION_FORMAT_METADATA
-            mocks['load_mcdi_model'].return_value = TEST_FORMAT
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
             mocks['run_search_query'].return_value = [TEST_SNAPSHOT]
 
         def on_end(mocks):
             mocks['get_api_key'].assert_called_with(TEST_API_KEY)
             mocks['get_user'].assert_called_with(TEST_EMAIL)
-            mocks['generate_unique_mcdi_form_id'].assert_called()
+            mocks['generate_unique_cdi_form_id'].assert_called()
             mocks['load_presentation_model'].assert_called_with('standard')
-            mocks['load_mcdi_model'].assert_called_with('standard')
+            mocks['load_cdi_model'].assert_called_with('standard')
             mocks['run_search_query'].assert_called_with(
                 unittest.mock.ANY,
                 'snapshots'
@@ -581,7 +581,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': TEST_CHILD_NAME_MOD,
-                        'mcdi_type': 'standard_mod',
+                        'cdi_type': 'standard_mod',
                         'parent_email': TEST_PARENT_EMAIL_MOD,
                         'study': TEST_STUDY_MOD,
                         'study_id': TEST_STUDY_ID_MOD,
@@ -600,17 +600,17 @@ class TestAPIKeyControllers(unittest.TestCase):
         def on_start(mocks):
             mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
             mocks['get_user'].return_value = TEST_USER
-            mocks['generate_unique_mcdi_form_id'].return_value = TEST_PARENT_FORM_ID_MOD
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID_MOD
             mocks['load_presentation_model'].return_value = TEST_PRESENTATION_FORMAT_METADATA
-            mocks['load_mcdi_model'].return_value = TEST_FORMAT
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
             mocks['run_search_query'].return_value = [TEST_SNAPSHOT]
 
         def on_end(mocks):
             mocks['get_api_key'].assert_called_with(TEST_API_KEY)
             mocks['get_user'].assert_called_with(TEST_EMAIL)
-            mocks['generate_unique_mcdi_form_id'].assert_called()
+            mocks['generate_unique_cdi_form_id'].assert_called()
             mocks['load_presentation_model'].assert_called_with('standard_mod')
-            mocks['load_mcdi_model'].assert_called_with('standard_mod')
+            mocks['load_cdi_model'].assert_called_with('standard_mod')
             mocks['run_search_query'].assert_called_with(
                 unittest.mock.ANY,
                 'snapshots'
@@ -651,7 +651,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard'
+                        'cdi_type': 'standard'
                     })
                 )
                 self.assertTrue('error' in json.loads(resp.data))
@@ -660,7 +660,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': 'test parent'
                     })
                 )
@@ -688,7 +688,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'invalid_format',
+                        'cdi_type': 'invalid_format',
                         'parent_email': TEST_PARENT_EMAIL,
                         'database_id': TEST_DB_ID
                     })
@@ -699,7 +699,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'format': 'invalid_format',
                         'parent_email': TEST_PARENT_EMAIL,
                         'database_id': TEST_DB_ID
@@ -711,7 +711,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': TEST_PARENT_EMAIL,
                         'database_id': 'invalid type'
                     })
@@ -722,7 +722,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': 'test wrong email',
                         'database_id': str(TEST_DB_ID)
                     })
@@ -733,7 +733,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': TEST_PARENT_EMAIL,
                         'database_id': str(TEST_DB_ID),
                         'gender': 'invalid'
@@ -745,7 +745,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': TEST_PARENT_EMAIL,
                         'database_id': str(TEST_DB_ID),
                         'hard_of_hearing': 'invalid'
@@ -757,7 +757,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': TEST_PARENT_EMAIL,
                         'database_id': str(TEST_DB_ID),
                         'birthday': 'invalid'
@@ -769,7 +769,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': 'test name',
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': 'test email',
                         'database_id': str(TEST_DB_ID)
                     })
@@ -779,7 +779,7 @@ class TestAPIKeyControllers(unittest.TestCase):
         def on_start(mocks):
             mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
             mocks['get_user'].return_value = TEST_USER
-            mocks['generate_unique_mcdi_form_id'].return_value = TEST_PARENT_FORM_ID
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID
             mocks['load_presentation_model'].side_effect = [
                 TEST_PRESENTATION_FORMAT_METADATA,
                 None,
@@ -790,7 +790,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                 TEST_PRESENTATION_FORMAT_METADATA,
                 TEST_PRESENTATION_FORMAT_METADATA
             ]
-            mocks['load_mcdi_model'].side_effect = [
+            mocks['load_cdi_model'].side_effect = [
                 None,
                 TEST_FORMAT,
                 TEST_FORMAT,
@@ -803,11 +803,11 @@ class TestAPIKeyControllers(unittest.TestCase):
         def on_end(mocks):
             mocks['get_api_key'].assert_called_with(TEST_API_KEY)
             mocks['get_user'].assert_called_with(TEST_EMAIL)
-            mocks['generate_unique_mcdi_form_id'].assert_called()
+            mocks['generate_unique_cdi_form_id'].assert_called()
             mocks['load_presentation_model'].assert_any_call('standard')
             mocks['load_presentation_model'].assert_any_call('invalid_format')
-            mocks['load_mcdi_model'].assert_any_call('invalid_format')
-            mocks['load_mcdi_model'].assert_any_call('standard')
+            mocks['load_cdi_model'].assert_any_call('invalid_format')
+            mocks['load_cdi_model'].assert_any_call('standard')
 
         self.__run_with_mocks(on_start, body, on_end)
         self.__assert_callback()
@@ -823,7 +823,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': TEST_CHILD_NAME,
-                        'mcdi_type': 'standard',
+                        'cdi_type': 'standard',
                         'parent_email': TEST_PARENT_EMAIL,
                         'database_id': TEST_DB_ID
                     })
@@ -833,17 +833,17 @@ class TestAPIKeyControllers(unittest.TestCase):
         def on_start(mocks):
             mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
             mocks['get_user'].return_value = TEST_USER
-            mocks['generate_unique_mcdi_form_id'].return_value = TEST_PARENT_FORM_ID
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID
             mocks['load_presentation_model'].return_value = TEST_PRESENTATION_FORMAT_METADATA
-            mocks['load_mcdi_model'].return_value = TEST_FORMAT
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
             mocks['run_search_query'].return_value = [TEST_SNAPSHOT]
 
         def on_end(mocks):
             mocks['get_api_key'].assert_called_with(TEST_API_KEY)
             mocks['get_user'].assert_called_with(TEST_EMAIL)
-            mocks['generate_unique_mcdi_form_id'].assert_called()
+            mocks['generate_unique_cdi_form_id'].assert_called()
             mocks['load_presentation_model'].assert_called_with('standard')
-            mocks['load_mcdi_model'].assert_called_with('standard')
+            mocks['load_cdi_model'].assert_called_with('standard')
             mocks['run_search_query'].assert_called_with(
                 unittest.mock.ANY,
                 'snapshots'
@@ -864,7 +864,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': ','.join(['name1','name2']),
-                        'mcdi_type': 'standard,standard',
+                        'cdi_type': 'standard,standard',
                         'parent_email': ','.join([TEST_PARENT_EMAIL, 'fail']),
                         'database_id': ','.join(
                             [str(TEST_DB_ID), str(TEST_DB_ID_MOD)]
@@ -876,23 +876,23 @@ class TestAPIKeyControllers(unittest.TestCase):
         def on_start(mocks):
             mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
             mocks['get_user'].return_value = TEST_USER
-            mocks['generate_unique_mcdi_form_id'].return_value = TEST_PARENT_FORM_ID
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID
             mocks['load_presentation_model'].return_value = TEST_PRESENTATION_FORMAT_METADATA
-            mocks['load_mcdi_model'].return_value = TEST_FORMAT
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
             mocks['run_search_query'].return_value = [TEST_SNAPSHOT]
-            mocks['generate_unique_mcdi_form_id'].return_value = TEST_PARENT_FORM_ID
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID
 
         def on_end(mocks):
             mocks['get_api_key'].assert_called_with(TEST_API_KEY)
             mocks['get_user'].assert_called_with(TEST_EMAIL)
-            mocks['generate_unique_mcdi_form_id'].assert_called()
+            mocks['generate_unique_cdi_form_id'].assert_called()
             mocks['load_presentation_model'].assert_called_with('standard')
-            mocks['load_mcdi_model'].assert_called_with('standard')
+            mocks['load_cdi_model'].assert_called_with('standard')
             mocks['run_search_query'].assert_called_with(
                 unittest.mock.ANY,
                 'snapshots'
             )
-            mocks['generate_unique_mcdi_form_id'].assert_called()
+            mocks['generate_unique_cdi_form_id'].assert_called()
 
         self.__run_with_mocks(on_start, body, on_end)
         self.__assert_callback()
@@ -905,7 +905,7 @@ class TestAPIKeyControllers(unittest.TestCase):
                     urllib.parse.urlencode({
                         'api_key': TEST_API_KEY,
                         'child_name': TEST_CHILD_NAME_MOD,
-                        'mcdi_type': 'standard_mod',
+                        'cdi_type': 'standard_mod',
                         'parent_email': TEST_PARENT_EMAIL_MOD,
                         'study': TEST_STUDY_MOD,
                         'study_id': TEST_STUDY_ID_MOD,
@@ -923,17 +923,17 @@ class TestAPIKeyControllers(unittest.TestCase):
         def on_start(mocks):
             mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
             mocks['get_user'].return_value = TEST_USER
-            mocks['generate_unique_mcdi_form_id'].return_value = TEST_PARENT_FORM_ID_MOD
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID_MOD
             mocks['load_presentation_model'].return_value = TEST_PRESENTATION_FORMAT_METADATA
-            mocks['load_mcdi_model'].return_value = TEST_FORMAT
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
             mocks['run_search_query'].return_value = [TEST_SNAPSHOT]
 
         def on_end(mocks):
             mocks['get_api_key'].assert_called_with(TEST_API_KEY)
             mocks['get_user'].assert_called_with(TEST_EMAIL)
-            mocks['generate_unique_mcdi_form_id'].assert_called()
+            mocks['generate_unique_cdi_form_id'].assert_called()
             mocks['load_presentation_model'].assert_called_with('standard_mod')
-            mocks['load_mcdi_model'].assert_called_with('standard_mod')
+            mocks['load_cdi_model'].assert_called_with('standard_mod')
             mocks['run_search_query'].assert_called_with(
                 unittest.mock.ANY,
                 'snapshots'

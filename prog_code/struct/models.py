@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @license: GNU GPL v2
 """
 
-class MCDIFormatMetadata:
-    """Information about an MCDI format without the format itself."""
+class CDIFormatMetadata:
+    """Information about an CDI format without the format itself."""
 
     def __init__(self, human_name, safe_name, filename):
         """Create a new metadata record.
@@ -30,7 +30,7 @@ class MCDIFormatMetadata:
         @param safe_name: The name of this format safe for use in URLs and
             lookup / unique identification.
         @type safe_name: str
-        @param filename: The name of the file that contains the actual MCDI
+        @param filename: The name of the file that contains the actual CDI
             format specification.
         @type filename: str
         """
@@ -39,8 +39,8 @@ class MCDIFormatMetadata:
         self.filename = filename
 
 
-class MCDIFormat(MCDIFormatMetadata):
-    """A complete MCDI format specification with metadata."""
+class CDIFormat(CDIFormatMetadata):
+    """A complete CDI format specification with metadata."""
 
     def __init__(self, human_name, safe_name, filename, details):
         """Create a new specification record.
@@ -50,13 +50,13 @@ class MCDIFormat(MCDIFormatMetadata):
         @param safe_name: The name of this format safe for use in URLs and
             lookup / unique identification.
         @type safe_name: str
-        @param filename: The name of the file that contains the actual MCDI
+        @param filename: The name of the file that contains the actual CDI
             format specification.
         @type filename: str
         @param details: Dictionary like object with specification contents.
         @type: dict or dict-like object
         """
-        MCDIFormatMetadata.__init__(self, human_name, safe_name, filename)
+        CDIFormatMetadata.__init__(self, human_name, safe_name, filename)
         self.details = details
 
 
@@ -90,7 +90,7 @@ class PresentationFormatMetadata:
         @param safe_name: The name of this format safe for use in URLs and
             lookup / unique identification.
         @type safe_name: str
-        @param filename: The name of the file that contains the actual MCDI
+        @param filename: The name of the file that contains the actual CDI
             format specification.
         @type filename: str
         """
@@ -110,7 +110,7 @@ class PresentationFormat(PresentationFormatMetadata):
         @param safe_name: The name of this format safe for use in URLs and
             lookup / unique identification.
         @type safe_name: str
-        @param filename: The name of the file that contains the actual MCDI
+        @param filename: The name of the file that contains the actual CDI
             format specification.
         @type filename: str
         @param details: Dictionary like object with specification contents.
@@ -124,7 +124,7 @@ class PresentationFormat(PresentationFormatMetadata):
 class PercentileTableMetadata:
     """Information about a precentile table without the table itself.
 
-    Information about a table of values needed to calculate a child's MCDI
+    Information about a table of values needed to calculate a child's CDI
     percentile without the table itself.
     """
 
@@ -136,7 +136,7 @@ class PercentileTableMetadata:
         @param safe_name: The name of this table safe for use in URLs and
             lookup / unique identification.
         @type safe_name: str
-        @param filename: The name of the file that contains the actual MCDI
+        @param filename: The name of the file that contains the actual CDI
             table specification.
         @type filename: str
         """
@@ -148,7 +148,7 @@ class PercentileTableMetadata:
 class PercentileTable(PercentileTableMetadata):
     """Percentile table with metadata information.
 
-    Table of values needed to calculate a child's MCDI percentile along with
+    Table of values needed to calculate a child's CDI percentile along with
     metadata about that table.
     """
 
@@ -160,7 +160,7 @@ class PercentileTable(PercentileTableMetadata):
         @param safe_name: The name of this table safe for use in URLs and
             lookup / unique identification.
         @type safe_name: str
-        @param filename: The name of the file that contains the actual MCDI
+        @param filename: The name of the file that contains the actual CDI
             table specification.
         @type filename: str
         @param details: List of lists with table contents.
@@ -171,7 +171,7 @@ class PercentileTable(PercentileTableMetadata):
 
 
 class SnapshotMetadata:
-    """Information about a snapshot of a child's vocabulary (filled out MCDI)
+    """Information about a snapshot of a child's vocabulary (filled out CDI)
 
     Metadata about an inventory of a child's vocabulary according to macarthur
     child development inventory.
@@ -180,7 +180,7 @@ class SnapshotMetadata:
     def __init__(self, database_id, child_id, study_id, study, gender, age,
         birthday, session_date, session_num, total_num_sessions, words_spoken,
         items_excluded, percentile, extra_categories, revision, languages,
-        num_languages, mcdi_type, hard_of_hearing, deleted):
+        num_languages, cdi_type, hard_of_hearing, deleted):
         """Create a new snapshot metadata record.
 
         @param database_id: The ID for this snapshot.
@@ -209,29 +209,29 @@ class SnapshotMetadata:
         @param total_num_sessions: The total number of sessions this participant
             is expected to have as of this snapshot as part of this study.
         @type total_num_sessions: int
-        @param words_spoken: The number of MCDI words recorded as "spoken"
-            (exact definition depends on MCDI format) at the time of this
+        @param words_spoken: The number of CDI words recorded as "spoken"
+            (exact definition depends on CDI format) at the time of this
             snapshot.
         @type words_spoken: int
         @param items_excluded: The number of items execluded during the
-            administration of the MCDI for this snapshot.
+            administration of the CDI for this snapshot.
         @type items_excluded: int
-        @param percentile: The MCDI percentile of this child as measured by this
+        @param percentile: The CDI percentile of this child as measured by this
             snapshot.
         @type percentile: float
-        @param extra_categories: The number of extra MCDI categories
-            included during administeration of MCDI for this snapshot.
+        @param extra_categories: The number of extra CDI categories
+            included during administeration of CDI for this snapshot.
         @type extra_categories: int
         @param revision: The number of versions of this snapshot before this
             one.
         @type revision: int
-        @param languages: CSV field of languages included in this MCDI.
+        @param languages: CSV field of languages included in this CDI.
         @type languages: str
-        @param num_languages: The number of languages included in this MCDI.
+        @param num_languages: The number of languages included in this CDI.
         @type num_languages: int
-        @param mcdi_type: The safe name of the MCDI format used for this
+        @param cdi_type: The safe name of the CDI format used for this
             snapshot.
-        @type mcdi_type: str
+        @type cdi_type: str
         @param hard_of_hearing: Indicates if this child was indicated as hard
             of hearing at the time of this snapshot. This should be a value from
             constants.
@@ -257,7 +257,7 @@ class SnapshotMetadata:
         self.revision = revision
         self.languages = languages
         self.num_languages = num_languages
-        self.mcdi_type = mcdi_type
+        self.cdi_type = cdi_type
         self.hard_of_hearing = hard_of_hearing
         self.deleted = deleted
 
@@ -292,7 +292,7 @@ class SnapshotMetadata:
         same = self.revision == other.revision and same
         same = self.languages == other.languages and same
         same = self.num_languages == other.num_languages and same
-        same = self.mcdi_type == other.mcdi_type and same
+        same = self.cdi_type == other.cdi_type and same
         same = self.hard_of_hearing == other.hard_of_hearing and same
         same = self.deleted == other.deleted and same
         return same
@@ -316,14 +316,14 @@ class SnapshotMetadata:
             self.revision, 
             self.languages,
             self.num_languages, 
-            self.mcdi_type, 
+            self.cdi_type, 
             self.hard_of_hearing, 
             self.deleted
         )
 
 
 class SnapshotContent:
-    """Record of a single MCDI word as part of a snapshot."""
+    """Record of a single CDI word as part of a snapshot."""
 
     def __init__(self, snapshot_id, word, value, revision):
         """Creates a new SnapshotContent instance.
@@ -356,7 +356,7 @@ class Filter:
     def __init__(self, field, operator, operand):
         """Creates a new Filter record of the form field operator operand.
 
-        @param field: The field (safe name) of MCDI snapshot to filter data on.
+        @param field: The field (safe name) of CDI snapshot to filter data on.
         @type field: str
         @param operator: The equality operator to use.
         @type operator: str. Should be a key in filter_util.OPERATOR_MAP
@@ -413,7 +413,7 @@ class User:
         @param can_access_data: Indicates if this user can download data from
             the database.
         @type can_access_data: bool
-        @param can_change_formats: Inidicates if this user can edit MCDI
+        @param can_change_formats: Inidicates if this user can edit CDI
             formats, percentile tables, and CSV presentation settings.
         @type can_change_formats: bool
         @param can_use_api_key: Indicates if this user can use an API key.
@@ -436,9 +436,9 @@ class User:
 
 
 class ParentForm:
-    """Record of a parent MCDI form that can be filled out online."""
+    """Record of a parent CDI form that can be filled out online."""
 
-    def __init__(self, form_id, child_name, parent_email, mcdi_type,
+    def __init__(self, form_id, child_name, parent_email, cdi_type,
         database_id, study_id, study, gender, birthday, items_excluded,
         extra_categories, languages, num_languages, hard_of_hearing,
         total_num_sessions):
@@ -447,24 +447,24 @@ class ParentForm:
         Create a new parent form record. Note that this constructor does not
         persist this new record to the database.
 
-        @param form_id: The unique ID to assign to this parent MCDI form.
+        @param form_id: The unique ID to assign to this parent CDI form.
         @type form_id: str
-        @param child_name: The name of the child for which the MCDI report will
+        @param child_name: The name of the child for which the CDI report will
             be recorded.
         @type child_name: str
         @param parent_email: The email address of the parent who should recieve
             a link to this form by email.
         @type parent_email: str
-        @param mcdi_type: The name of the MCDI format to present to the parent.
-        @type mcdi_type: str
-        @param database_id: The global ID of the child for which an MCDI form
+        @param cdi_type: The name of the CDI format to present to the parent.
+        @type cdi_type: str
+        @param database_id: The global ID of the child for which an CDI form
             should be recorded.
         @type database_id: int
-        @param study_id: The MCDI report resulting from this parent form will be
+        @param study_id: The CDI report resulting from this parent form will be
             associated with a study. This argument is the ID of the child within
             that study.
         @type study_id: str
-        @param study: The MCDI report resulting from this parent form will be
+        @param study: The CDI report resulting from this parent form will be
             associated with a study. This argument is the name of the study that
             should be associated.
         @type study: str
@@ -475,18 +475,18 @@ class ParentForm:
             format YYYY/MM/DD
         @type birthday: str
         @param items_excluded: The number of items execluded during the
-            administration of the MCDI for this snapshot.
+            administration of the CDI for this snapshot.
         @type items_excluded: int
-        @param extra_categories: The number of extra MCDI categories
-            included during administeration of MCDI for this snapshot.
+        @param extra_categories: The number of extra CDI categories
+            included during administeration of CDI for this snapshot.
         @type extra_categories: int
-        @param languages: CSV field of languages included in this MCDI.
+        @param languages: CSV field of languages included in this CDI.
         @type languages: str
-        @param num_languages: The number of languages included in this MCDI.
+        @param num_languages: The number of languages included in this CDI.
         @type num_languages: int
-        @param mcdi_type: The safe name of the MCDI format used for this
+        @param cdi_type: The safe name of the CDI format used for this
             snapshot.
-        @type mcdi_type: str
+        @type cdi_type: str
         @param hard_of_hearing: Indicates if this child was indicated as hard
             of hearing at the time of this snapshot. This should be a value from
             constants.
@@ -495,7 +495,7 @@ class ParentForm:
         self.form_id = form_id
         self.child_name = child_name
         self.parent_email = parent_email
-        self.mcdi_type = mcdi_type
+        self.cdi_type = cdi_type
         self.database_id = database_id
         self.study_id = study_id
         self.study = study
@@ -523,7 +523,7 @@ class ParentForm:
         same = self.form_id == other.form_id
         same = same and self.child_name == other.child_name
         same = same and self.parent_email == other.parent_email
-        same = same and self.mcdi_type == other.mcdi_type
+        same = same and self.cdi_type == other.cdi_type
         same = same and self.database_id == other.database_id
         same = same and str(self.study_id) == str(other.study_id)
         same = same and self.study == other.study

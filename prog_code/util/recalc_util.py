@@ -28,20 +28,20 @@ import prog_code.util.math_util as math_util
 from ..struct import models
 
 
-class CachedMCDIAdapter:
+class CachedCDIAdapter:
 
     def __init__(self):
         self.percentiles = {}
-        self.mcdi_models = {}
+        self.cdi_models = {}
         self.max_word_counts = {}
 
-    def load_mcdi_model(self, type_name):
-        if type_name in self.mcdi_models:
-            return self.mcdi_models[type_name]
+    def load_cdi_model(self, type_name):
+        if type_name in self.cdi_models:
+            return self.cdi_models[type_name]
 
-        mcdi_model = db_util.load_mcdi_model(type_name)
-        self.mcdi_models[type_name] = mcdi_model
-        return mcdi_model
+        cdi_model = db_util.load_cdi_model(type_name)
+        self.cdi_models[type_name] = cdi_model
+        return cdi_model
 
     def load_percentile_model(self, type_name):
         if type_name in self.percentiles:
@@ -51,16 +51,16 @@ class CachedMCDIAdapter:
         self.percentiles[type_name] = percentile_model
         return percentile_model
 
-    def get_max_mcdi_words(self, type_name):
+    def get_max_cdi_words(self, type_name):
         if type_name in self.max_word_counts:
             return self.max_word_counts[type_name]
 
         words = 0
-        mcdi_model = self.load_mcdi_model(type_name)
-        if mcdi_model == None:
-            mcdi_model = self.load_mcdi_model('fullenglishmcdi')
+        cdi_model = self.load_cdi_model(type_name)
+        if cdi_model == None:
+            cdi_model = self.load_cdi_model('fullenglishcdi')
 
-        categories = mcdi_model.details['categories']
+        categories = cdi_model.details['categories']
         category_num_words = map(lambda x: len(x['words']), categories)
         total_words = sum(category_num_words)
         self.max_word_counts[type_name] = total_words
@@ -84,35 +84,35 @@ def recalculate_percentile(snapshot, cached_adapter):
     """
     @type snapshot: SnapshotMetadata
     """
-    mcdi_type = snapshot.mcdi_type
+    cdi_type = snapshot.cdi_type
     gender = snapshot.gender
     individual_words = db_util.load_snapshot_contents(snapshot)
 
     snapshot.words_spoken = get_words_spoken(
         cached_adapter,
-        mcdi_type,
+        cdi_type,
         individual_words
     )
 
     snapshot.percentile = recalculate_percentile_raw(
         cached_adapter,
-        mcdi_type,
+        cdi_type,
         gender,
         snapshot.words_spoken,
         snapshot.age
     )
 
 
-def recalculate_percentile_raw(cached_adapter, mcdi_type, gender,
+def recalculate_percentile_raw(cached_adapter, cdi_type, gender,
     words_spoken, age):
 
     # Load CDI information
-    mcdi_model = cached_adapter.load_mcdi_model(mcdi_type)
-    if mcdi_model == None:
-        mcdi_model = cached_adapter.load_mcdi_model('fullenglishmcdi')
+    cdi_model = cached_adapter.load_cdi_model(cdi_type)
+    if cdi_model == None:
+        cdi_model = cached_adapter.load_cdi_model('fullenglishcdi')
 
     # Get percentile information
-    meta_percentile_info = mcdi_model.details['percentiles']
+    meta_percentile_info = cdi_model.details['percentiles']
 
     percentiles_name = None
     if gender == constants.MALE or gender == constants.OTHER_GENDER:
@@ -127,15 +127,15 @@ def recalculate_percentile_raw(cached_adapter, mcdi_type, gender,
         percentiles.details,
         words_spoken,
         age,
-        cached_adapter.get_max_mcdi_words(mcdi_type)
+        cached_adapter.get_max_cdi_words(cdi_type)
     )
 
-def get_words_spoken(cached_adapter, mcdi_type, individual_words):
-    mcdi_model = cached_adapter.load_mcdi_model(mcdi_type)
-    if mcdi_model == None:
-        mcdi_model = cached_adapter.load_mcdi_model('fullenglishmcdi')
+def get_words_spoken(cached_adapter, cdi_type, individual_words):
+    cdi_model = cached_adapter.load_cdi_model(cdi_type)
+    if cdi_model == None:
+        cdi_model = cached_adapter.load_cdi_model('fullenglishcdi')
 
-    count_as_spoken_vals = mcdi_model.details['count_as_spoken']
+    count_as_spoken_vals = cdi_model.details['count_as_spoken']
 
     words_spoken = 0
     for word in individual_words:
@@ -150,7 +150,7 @@ def recalculate_ages(snapshots):
 
 
 def recalculate_percentiles(snapshots):
-    adapter = CachedMCDIAdapter()
+    adapter = CachedCDIAdapter()
     for snapshot in snapshots:
         recalculate_percentile(snapshot, adapter)
 

@@ -87,7 +87,7 @@ class TestDeleteDataControllers(unittest.TestCase):
                     sess['email'] = TEST_EMAIL
 
                 resp = client.post(
-                    '/base/delete_data/delete_mcdi_results',
+                    '/base/delete_data/delete_cdi_results',
                     data={
                         PASSWORD_ATTR: '1234',
                         OPERATION_ATTR: DELETE_OPERATION
@@ -106,7 +106,7 @@ class TestDeleteDataControllers(unittest.TestCase):
                     sess['email'] = TEST_EMAIL
 
                 resp = client.post(
-                    '/base/delete_data/delete_mcdi_results',
+                    '/base/delete_data/delete_cdi_results',
                     data={
                         PASSWORD_ATTR: '1234',
                         OPERATION_ATTR: DELETE_OPERATION
@@ -125,7 +125,7 @@ class TestDeleteDataControllers(unittest.TestCase):
                     sess['email'] = TEST_EMAIL
 
                 resp = client.post(
-                    '/base/delete_data/delete_mcdi_results',
+                    '/base/delete_data/delete_cdi_results',
                     data={
                         PASSWORD_ATTR: '1234',
                         OPERATION_ATTR: 'bad'
@@ -294,7 +294,7 @@ class TestDeleteDataControllers(unittest.TestCase):
             'revision',
             'languages',
             'num_languages',
-            'mcdi_type',
+            'cdi_type',
             'hard_of_hearing',
             False
         )]

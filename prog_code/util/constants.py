@@ -1,4 +1,4 @@
-"""Listing of special values encoded in the database for MCDI information.
+"""Listing of special values encoded in the database for CDI information.
 
 Copyright (C) 2014 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
 

@@ -32,17 +32,17 @@ def get_with_end_max(collection, index):
 
 
 def find_percentile(table_entries, target_num_words, age_months, max_words):
-    """Find the MCDI perentile for a child.
+    """Find the CDI perentile for a child.
 
     @param table_entries: The percentile table to use to calculate the
-        child MCDI percentile.
+        child CDI percentile.
     @type table_entries: 2D float array (list of list of numbers)
     @param target_num_words: The number of words reported as spoken by the
-        child for which an MCDI percentile is desired.
+        child for which an CDI percentile is desired.
     @type target_num_words: int
     @param age_months: The age of the child in months.
     @type age_months: int
-    @param max_words: The number of words from the MCDI format that the child
+    @param max_words: The number of words from the CDI format that the child
         could know.
     @type max_words: int
     """

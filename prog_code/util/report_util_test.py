@@ -58,7 +58,7 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
 )
 
 
-class TestMCDIFormat:
+class TestCDIFormat:
 
     def __init__(self, details):
         self.details = details
@@ -68,7 +68,7 @@ class ReportUtilTest(unittest.TestCase):
 
     def test_sort_by_study_order(self):
         test_rows = [[0]]* 20 + [['word1'], ['word3'], ['word2'], ['word4']]
-        test_format = TestMCDIFormat(
+        test_format = TestCDIFormat(
             {'categories': [
                 {'words': ['word1', 'word2']},
                 {'words': ['word3', 'word4']}
@@ -81,18 +81,18 @@ class ReportUtilTest(unittest.TestCase):
         self.assertEqual(sorted_rows[23][0], 'word4')
 
     def test_summarize_snapshots(self):
-        with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock_mcdi:
+        with unittest.mock.patch('prog_code.util.db_util.load_cdi_model') as mock_cdi:
             with unittest.mock.patch('prog_code.util.db_util.load_snapshot_contents') as mock_snapshot:
                 test_snap_1 = TEST_SNAPSHOT.clone()
-                test_snap_1.mcdi_type = 'mcdi_type_1'
+                test_snap_1.cdi_type = 'cdi_type_1'
                 test_snap_1.session_date = '2015/01/01'
 
                 test_snap_2 = TEST_SNAPSHOT.clone()
-                test_snap_2.mcdi_type = 'mcdi_type_1'
+                test_snap_2.cdi_type = 'cdi_type_1'
                 test_snap_2.session_date = '2015/02/01'
 
                 test_snap_3 = TEST_SNAPSHOT.clone()
-                test_snap_3.mcdi_type = 'mcdi_type_2'
+                test_snap_3.cdi_type = 'cdi_type_2'
                 test_snap_3.session_date = '2015/03/01'
 
                 test_metadata = [test_snap_1, test_snap_2, test_snap_3]
@@ -114,9 +114,9 @@ class ReportUtilTest(unittest.TestCase):
                     models.SnapshotContent(0, 'word4', 2, 1)
                 ]
 
-                mock_mcdi.side_effect = [
-                    models.MCDIFormat('', '', '', {'count_as_spoken': [1, 2]}),
-                    models.MCDIFormat('', '', '', {'count_as_spoken': [1]})
+                mock_cdi.side_effect = [
+                    models.CDIFormat('', '', '', {'count_as_spoken': [1, 2]}),
+                    models.CDIFormat('', '', '', {'count_as_spoken': [1]})
                 ]
 
                 mock_snapshot.side_effect = [
@@ -132,9 +132,9 @@ class ReportUtilTest(unittest.TestCase):
                 self.assertEqual(serialization['word3'], '2015/03/01')
                 self.assertEqual(serialization['word4'], None)
 
-                self.assertEqual(len(mock_mcdi.mock_calls), 2)
-                mock_mcdi.assert_any_call('mcdi_type_1')
-                mock_mcdi.assert_any_call('mcdi_type_2')
+                self.assertEqual(len(mock_cdi.mock_calls), 2)
+                mock_cdi.assert_any_call('cdi_type_1')
+                mock_cdi.assert_any_call('cdi_type_2')
 
                 self.assertEqual(len(mock_snapshot.mock_calls), 3)
                 mock_snapshot.assert_any_call(test_metadata[0])

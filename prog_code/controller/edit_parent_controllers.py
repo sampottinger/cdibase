@@ -1,7 +1,7 @@
-"""Logic for managing parent accounts and parent MCDI forms.
+"""Logic for managing parent accounts and parent CDI forms.
 
-Loginc for managing parent accounts, sending parent MCDI forms, and processing
-MCDI parent form responses.
+Loginc for managing parent accounts, sending parent CDI forms, and processing
+CDI parent form responses.
 
 Copyright (C) 2014 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
 
@@ -43,10 +43,10 @@ from cdibase import app
 
 VALID_GENDER_VALUES = [constants.MALE, constants.FEMALE, constants.OTHER_GENDER]
 
-MCDI_TYPE_NOT_GIVEN_MSG = 'MCDI type required.'
+CDI_TYPE_NOT_GIVEN_MSG = 'CDI type required.'
 PARENT_EMAIL_NOT_GIVEN_MSG = 'Provided parent email appears not to be a ' \
     'valid email address.'
-PARENT_FORM_SENT_MSG = 'MCDI form sent.'
+PARENT_FORM_SENT_MSG = 'CDI form sent.'
 NO_ID_MSG = 'Must provide an integer global ID or both a study ID and study ' \
     'name.'
 GLOBAL_ID_MUST_BE_INT_MSG = 'The global database ID for a child must be an ' \
@@ -68,14 +68,14 @@ WORD_VALUE_MISSING_MSG = 'Whoops! You seemed to have forgotten to provide a '\
 WORD_VALUE_INVALID_MSG = 'Whoops! You seemed to have forgotten to provide a '\
     'value for %s.'
 NO_GLOBAL_ID_MSG = 'No global ID specified.'
-THANK_YOU_MSG_URL = '/base/parent_mcdi/_thanks'
+THANK_YOU_MSG_URL = '/base/parent_cdi/_thanks'
 
 @app.route('/base/parent_accounts', methods=['GET', 'POST'])
 @session_util.require_login(edit_parents=True)
-def send_mcdi_form():
-    """Create and send a parent MCDI form.
+def send_cdi_form():
+    """Create and send a parent CDI form.
 
-    Controller that, on GET, displays controls to send MCDI parent forms by
+    Controller that, on GET, displays controls to send CDI parent forms by
     email and, on POST, actually sends those emails by coordinating various
     utility modules.
 
@@ -88,7 +88,7 @@ def send_mcdi_form():
     if request.method == 'POST':
 
         # Read user provided values
-        form_id = parent_account_util.generate_unique_mcdi_form_id()
+        form_id = parent_account_util.generate_unique_cdi_form_id()
         global_id = request.form.get('global_id')
         gender = request.form.get('gender')
         items_excluded = request.form.get('items_excluded')
@@ -102,7 +102,7 @@ def send_mcdi_form():
         hard_of_hearing = hard_of_hearing == constants.FORM_SELECTED_VALUE
         child_name = request.form.get('child_name')
         parent_email = request.form.get('parent_email')
-        mcdi_type = request.form.get('mcdi_type')
+        cdi_type = request.form.get('cdi_type')
 
         # Save for future send
         flask.session['LAST_PARENT_PARAMS'] = {
@@ -118,14 +118,14 @@ def send_mcdi_form():
             'hard_of_hearing': hard_of_hearing,
             'child_name': child_name,
             'parent_email': parent_email,
-            'mcdi_type': mcdi_type
+            'cdi_type': cdi_type
         }
 
-        # Check that the MCDI type provided has been defined and can be found
+        # Check that the CDI type provided has been defined and can be found
         # in the application database.
-        mcdi_model = db_util.load_mcdi_model(mcdi_type)
-        if mcdi_type == None or mcdi_type == '' or mcdi_model == None:
-            flask.session[constants.ERROR_ATTR] = MCDI_TYPE_NOT_GIVEN_MSG
+        cdi_model = db_util.load_cdi_model(cdi_type)
+        if cdi_type == None or cdi_type == '' or cdi_model == None:
+            flask.session[constants.ERROR_ATTR] = CDI_TYPE_NOT_GIVEN_MSG
             return flask.redirect(PARENT_ACCOUNT_CONTROLS_URL)
 
         # Ensure either a global child ID was provided or that both a global
@@ -205,7 +205,7 @@ def send_mcdi_form():
             form_id,
             child_name,
             parent_email,
-            mcdi_type,
+            cdi_type,
             global_id,
             study_id,
             study,
@@ -220,7 +220,7 @@ def send_mcdi_form():
         )
 
         # If a parent form model is missing information about a child, load the
-        # rest of the missing information from a previous MCDI snapshot for the
+        # rest of the missing information from a previous CDI snapshot for the
         # child.
         resolver = parent_account_util.AttributeResolutionResolver()
         resolver.fill_parent_form_defaults(new_form)
@@ -238,7 +238,7 @@ def send_mcdi_form():
         # Save the filled parent form to the database and send a link for
         # filling out that form to the specified parent email address.
         db_util.insert_parent_form(new_form)
-        parent_account_util.send_mcdi_email(new_form)
+        parent_account_util.send_cdi_email(new_form)
 
         last_parms_dict = flask.session['LAST_PARENT_PARAMS']
         last_parms_dict['global_id'] = ''
@@ -266,7 +266,7 @@ def send_mcdi_form():
                 'hard_of_hearing': '',
                 'child_name': '',
                 'parent_email': '',
-                'mcdi_type': '',
+                'cdi_type': '',
                 'total_num_sessions': ''
             }
 
@@ -274,7 +274,7 @@ def send_mcdi_form():
             'parent_accounts.html',
             cur_page='edit_parents',
             users=user_util.get_all_users(),
-            mcdi_formats=db_util.load_mcdi_model_listing(),
+            cdi_formats=db_util.load_cdi_model_listing(),
             gender_male_constant=constants.MALE,
             gender_female_constant=constants.FEMALE,
             gender_other_constant=constants.OTHER_GENDER,
@@ -283,12 +283,12 @@ def send_mcdi_form():
         )
 
 
-@app.route('/base/parent_mcdi/_thanks')
+@app.route('/base/parent_cdi/_thanks')
 def thank_parent_form():
     """Display a landing page thanking a parent for thier input.
 
     @return: Static HTML page rendering thanking a user for filling out a
-        parent MCDI form.
+        parent CDI form.
     @rtype: str
     """
     return flask.render_template(
@@ -297,17 +297,17 @@ def thank_parent_form():
     )
 
 
-@app.route('/base/parent_mcdi/<form_id>', methods=['GET', 'POST'])
-def handle_parent_mcdi_form(form_id):
-    """Controller to display and handle a parent MCDI form.
+@app.route('/base/parent_cdi/<form_id>', methods=['GET', 'POST'])
+def handle_parent_cdi_form(form_id):
+    """Controller to display and handle a parent CDI form.
 
-    Controller to render a parent MCDI form on a GET request and logic to handle
-    a completed MCDI form on a POST. This will create a new MCDI snapshot on
+    Controller to render a parent CDI form on a GET request and logic to handle
+    a completed CDI form on a POST. This will create a new CDI snapshot on
     POST in addition to preventing duplicate submissions of the same form.
 
     @param form_id: The ID of the parent form to render or to process.
     @type form_id: str
-    @return: Static HTML page rendering with a parent MCDI form or a redirect
+    @return: Static HTML page rendering with a parent CDI form or a redirect
         after a successful submission.
     @rtype: Flask response
     """
@@ -337,7 +337,7 @@ def handle_parent_mcdi_form(form_id):
         ), 404
 
     # Ensure that the selected format is valid and is specified in the databse.
-    selected_format = db_util.load_mcdi_model(parent_form.mcdi_type)
+    selected_format = db_util.load_cdi_model(parent_form.cdi_type)
     if selected_format == None:
         return flask.render_template(
             'end_parent_form_404.html',
@@ -561,7 +561,7 @@ def handle_parent_mcdi_form(form_id):
             0,
             languages,
             len(languages),
-            selected_format.details['meta']['mcdi_type'],
+            selected_format.details['meta']['cdi_type'],
             hard_of_hearing,
             False
         )

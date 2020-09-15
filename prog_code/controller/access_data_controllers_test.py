@@ -78,13 +78,13 @@ class TestAccessDataControllers(unittest.TestCase):
 
     def test_execute_access_request(self):
         def callback():
-            expected_url_archive = '/access_data/download_mcdi_results.zip'
+            expected_url_archive = '/access_data/download_cdi_results.zip'
 
             with self.app.test_client() as client:
                 with client.session_transaction() as sess:
                     sess['email'] = TEST_EMAIL
 
-                resp = client.post('/base/access_data/download_mcdi_results')
+                resp = client.post('/base/access_data/download_cdi_results')
 
                 self.assertTrue(session_util.is_waiting_on_download())
 
@@ -93,7 +93,7 @@ class TestAccessDataControllers(unittest.TestCase):
 
     def test_execute_access_request_consolidated(self):
         def callback():
-            expected_url_combined = '/access_data/download_mcdi_results.csv'
+            expected_url_combined = '/access_data/download_cdi_results.csv'
 
             with self.app.test_client() as client:
 
@@ -102,7 +102,7 @@ class TestAccessDataControllers(unittest.TestCase):
 
                 attr_name = 'consolidated_csv'
                 attr_value = access_data_controllers.HTML_CHECKBOX_SELECTED
-                url = '/base/access_data/download_mcdi_results?%s=%s' % (
+                url = '/base/access_data/download_cdi_results?%s=%s' % (
                     attr_name, attr_value)
                 resp = client.post(url)
 
@@ -118,7 +118,7 @@ class TestAccessDataControllers(unittest.TestCase):
 
     def test_execute_access_request_format(self):
         def callback():
-            expected_url_combined = '/access_data/download_mcdi_results.csv'
+            expected_url_combined = '/access_data/download_cdi_results.csv'
 
             with self.app.test_client() as client:
 
@@ -129,7 +129,7 @@ class TestAccessDataControllers(unittest.TestCase):
                 cons_value = access_data_controllers.HTML_CHECKBOX_SELECTED
                 fmt_name = access_data_controllers.FORMAT_SESSION_ATTR
                 fmt_value = 'testFormat'
-                url = '/base/access_data/download_mcdi_results?'
+                url = '/base/access_data/download_cdi_results?'
                 resp = client.post(url, data={
                     cons_name: cons_value,
                     fmt_name: fmt_value
@@ -329,7 +329,7 @@ class TestAccessDataControllers(unittest.TestCase):
             'revision',
             'languages',
             'num_languages',
-            'mcdi_type',
+            'cdi_type',
             'hard_of_hearing',
             False
         )]
@@ -418,7 +418,7 @@ class TestAccessDataControllers(unittest.TestCase):
 
                     session_util.set_waiting_on_download(True, sess)
 
-                resp = client.get('/base/access_data/download_mcdi_results.zip')
+                resp = client.get('/base/access_data/download_cdi_results.zip')
                 self.assertEqual(
                     resp.headers['Content-Type'],
                     access_data_controllers.OCTET_MIME_TYPE
@@ -447,7 +447,7 @@ class TestAccessDataControllers(unittest.TestCase):
                 with client.session_transaction() as sess:
                     sess['format'] = 'test_format_2'
 
-                resp = client.get('/base/access_data/download_mcdi_results.zip')
+                resp = client.get('/base/access_data/download_cdi_results.zip')
                 self.assertEqual(resp.status_code, 302)
 
                 with client.session_transaction() as sess:
@@ -456,7 +456,7 @@ class TestAccessDataControllers(unittest.TestCase):
                     sess['format'] = 'test_format'
                     session_util.set_waiting_on_download(True, sess)
 
-                resp = client.get('/base/access_data/download_mcdi_results.csv')
+                resp = client.get('/base/access_data/download_cdi_results.csv')
                 self.assertEqual(
                     resp.headers['Content-Type'],
                     access_data_controllers.CSV_MIME_TYPE
@@ -485,7 +485,7 @@ class TestAccessDataControllers(unittest.TestCase):
                 with client.session_transaction() as sess:
                     sess['format'] = 'test_format_2'
 
-                resp = client.get('/base/access_data/download_mcdi_results.zip')
+                resp = client.get('/base/access_data/download_cdi_results.zip')
                 self.assertEqual(resp.status_code, 302)
 
                 with client.session_transaction() as sess:

@@ -44,7 +44,7 @@ CORRECT_TEST_HEADER_VALUES = [
     'revision',
     'languages',
     'num languages',
-    'mcdi type',
+    'cdi type',
     'hard of hearing',
     'deleted',
     'word1',
@@ -63,7 +63,7 @@ class FakePercentileTable:
 class NewUploadParserAutomatonTests(unittest.TestCase):
 
     def setUp(self):
-        self.__adapter = recalc_util.CachedMCDIAdapter()
+        self.__adapter = recalc_util.CachedCDIAdapter()
 
         self.__test_automaton = new_csv_import_util.UploadParserAutomaton(
             self.__adapter
@@ -72,11 +72,11 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
         self.__callback_called = False
 
     def __setup_test_cdi(self, callback=None, run_automaton_actions=True):
-        with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock:
-            mock.return_value = models.MCDIFormat(
-                'test MCDI type',
-                'test_mcdi_type',
-                'test_mcdi_type.yaml',
+        with unittest.mock.patch('prog_code.util.db_util.load_cdi_model') as mock:
+            mock.return_value = models.CDIFormat(
+                'test CDI type',
+                'test_cdi_type',
+                'test_cdi_type.yaml',
                 {
                     'options': [
                         {'value': 0},
@@ -92,12 +92,12 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
 
             if run_automaton_actions:
                 self.__test_automaton.parse_header(CORRECT_TEST_HEADER_VALUES)
-                self.__test_automaton.parse_cdi_type('test_mcdi_type')
+                self.__test_automaton.parse_cdi_type('test_cdi_type')
 
             if callback:
                 callback()
 
-            mock.assert_called_with('test_mcdi_type')
+            mock.assert_called_with('test_cdi_type')
 
     def __setup_for_parse_with_percentile(self, callback, expect_percent_calc=True):
         with unittest.mock.patch('prog_code.util.recalc_util.recalculate_percentile_raw') as mock:
@@ -113,7 +113,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             if expect_percent_calc:
                 mock.assert_called_with(
                     self.__adapter,
-                    'test_mcdi_type',
+                    'test_cdi_type',
                     constants.MALE,
                     3,
                     unittest.mock.ANY
@@ -157,7 +157,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             'revision',
             'languages',
             'num languages',
-            'mcdi type',
+            'cdi type',
             'hard of hearing',
             'deleted',
             'word1',
@@ -193,7 +193,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             'revision',
             'languages',
             'num languages',
-            'mcdi type',
+            'cdi type',
             'hard of hearing',
             'deleted',
             'word1',
@@ -767,7 +767,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
 
         self.assertEqual(
             self.__test_automaton.get_state(),
-            new_csv_import_util.STATE_PARSE_MCDI_TYPE
+            new_csv_import_util.STATE_PARSE_CDI_TYPE
         )
 
     def test_state_parse_num_languages_valid_empty(self):
@@ -775,7 +775,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
 
         self.assertEqual(
             self.__test_automaton.get_state(),
-            new_csv_import_util.STATE_PARSE_MCDI_TYPE
+            new_csv_import_util.STATE_PARSE_CDI_TYPE
         )
 
     def test_state_parse_num_languages_invalid_type(self):
@@ -802,7 +802,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             new_csv_import_util.STATE_FOUND_ERROR
         )
 
-    def test_state_parse_mcdi_type_valid(self):
+    def test_state_parse_cdi_type_valid(self):
         def callback():
             self.__callback_called = True
             self.assertEqual(
@@ -813,27 +813,27 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
         self.__setup_test_cdi(callback)
         self.assertTrue(self.__callback_called)
 
-    def test_state_parse_mcdi_type_invalid(self):
-        with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock:
+    def test_state_parse_cdi_type_invalid(self):
+        with unittest.mock.patch('prog_code.util.db_util.load_cdi_model') as mock:
             mock.return_value = None
 
             self.__test_automaton.parse_header(CORRECT_TEST_HEADER_VALUES)
-            self.__test_automaton.parse_cdi_type('other_test_mcdi_type')
+            self.__test_automaton.parse_cdi_type('other_test_cdi_type')
 
             self.assertEqual(
                 self.__test_automaton.get_state(),
                 new_csv_import_util.STATE_FOUND_ERROR
             )
 
-            mock.assert_called_with('other_test_mcdi_type')
+            mock.assert_called_with('other_test_cdi_type')
 
-    def test_state_parse_mcdi_type_incorrect_words(self):
-        with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock:
+    def test_state_parse_cdi_type_incorrect_words(self):
+        with unittest.mock.patch('prog_code.util.db_util.load_cdi_model') as mock:
 
-            mock.return_value = models.MCDIFormat(
-                'test MCDI type',
-                'test_mcdi_type',
-                'test_mcdi_type.yaml',
+            mock.return_value = models.CDIFormat(
+                'test CDI type',
+                'test_cdi_type',
+                'test_cdi_type.yaml',
                 {
                     'options': [
                         {'value': 0},
@@ -865,7 +865,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 'revision',
                 'languages',
                 'num languages',
-                'mcdi type',
+                'cdi type',
                 'hard of hearing',
                 'deleted',
                 'word1',
@@ -874,14 +874,14 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 'wor5'
             ])
 
-            self.__test_automaton.parse_cdi_type('test_mcdi_type')
+            self.__test_automaton.parse_cdi_type('test_cdi_type')
 
             self.assertEqual(
                 self.__test_automaton.get_state(),
                 new_csv_import_util.STATE_FOUND_ERROR
             )
 
-            mock.assert_called_with('test_mcdi_type')
+            mock.assert_called_with('test_cdi_type')
 
     def test_state_parse_hard_of_hearing_valid_number(self):
         self.__test_automaton.parse_hard_of_hearing('1')
@@ -1080,7 +1080,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 '0',
                 'english,spanish',
                 '2',
-                'test_mcdi_type',
+                'test_cdi_type',
                 '0',
                 '0',
                 '1',
@@ -1110,7 +1110,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             self.assertEqual(metadata.revision, 0)
             self.assertEqual(','.join(metadata.languages), 'english,spanish')
             self.assertEqual(metadata.num_languages, 2)
-            self.assertEqual(metadata.mcdi_type, 'test_mcdi_type')
+            self.assertEqual(metadata.cdi_type, 'test_cdi_type')
             self.assertEqual(metadata.hard_of_hearing, constants.EXPLICIT_FALSE)
             self.assertEqual(metadata.deleted, constants.EXPLICIT_FALSE)
 
@@ -1168,7 +1168,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                     '0',
                     'english,spanish',
                     '2',
-                    'test_mcdi_type',
+                    'test_cdi_type',
                     '0',
                     '0',
                     '1',
@@ -1186,7 +1186,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
 
                 mock.assert_called_with(
                     self.__adapter,
-                    'test_mcdi_type',
+                    'test_cdi_type',
                     constants.MALE,
                     3,
                     24
@@ -1218,7 +1218,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 '0',
                 'english,spanish',
                 '2',
-                'test_mcdi_type',
+                'test_cdi_type',
                 '0',
                 '0',
                 '1',
@@ -1260,7 +1260,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 '0',
                 'english,spanish',
                 '',
-                'test_mcdi_type',
+                'test_cdi_type',
                 '0',
                 '0',
                 '1',
@@ -1302,7 +1302,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 '0',
                 'english,spanish',
                 '3',
-                'test_mcdi_type',
+                'test_cdi_type',
                 '0',
                 '0',
                 '1',
@@ -1345,7 +1345,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 '0',
                 'english,spanish',
                 '2',
-                'test_mcdi_type',
+                'test_cdi_type',
                 '0',
                 '0',
                 '1',
@@ -1388,7 +1388,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 '0',
                 'english,spanish',
                 '2',
-                'test_mcdi_type',
+                'test_cdi_type',
                 '0',
                 '0',
                 '1',
@@ -1431,7 +1431,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 '0',
                 'english,spanish',
                 '2',
-                'test_mcdi_type',
+                'test_cdi_type',
                 '0',
                 '0',
                 '1',
@@ -1474,7 +1474,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 '0',
                 'english,spanish',
                 '2',
-                'test_mcdi_type',
+                'test_cdi_type',
                 '0',
                 '0',
                 '1',
@@ -1515,7 +1515,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             '0',
             'english,spanish',
             '2',
-            'test_mcdi_type',
+            'test_cdi_type',
             '0',
             '0',
             '1',
@@ -1555,7 +1555,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 '0',
                 'english,spanish',
                 '2',
-                'test_mcdi_type',
+                'test_cdi_type',
                 '0',
                 '0',
                 '1',
@@ -1598,7 +1598,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 '0',
                 'english,spanish',
                 '2',
-                'test_mcdi_type',
+                'test_cdi_type',
                 '0',
                 '0',
                 '1',
@@ -1641,7 +1641,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 '0',
                 'english,spanish',
                 '2',
-                'test_mcdi_type',
+                'test_cdi_type',
                 '0',
                 '0',
                 '1',
@@ -1689,7 +1689,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 '0',
                 'english,spanish',
                 '2',
-                'test_mcdi_type',
+                'test_cdi_type',
                 '0',
                 '0',
                 '1',
@@ -1731,7 +1731,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 '0',
                 'english,spanish',
                 '2',
-                'test_mcdi_type',
+                'test_cdi_type',
                 '0',
                 '0',
                 '1',

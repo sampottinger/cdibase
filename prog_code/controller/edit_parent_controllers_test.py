@@ -31,7 +31,7 @@ from ..util import parent_account_util
 from ..util import user_util
 from ..struct import models
 
-TEST_MCDI_TYPE = 'standard'
+TEST_CDI_TYPE = 'standard'
 TEST_PARENT_FORM_ID = 20
 TEST_CHILD_NAME = 'Test Child'
 TEST_PARENT_EMAIL = 'parent@example.com'
@@ -83,7 +83,7 @@ TEST_API_KEY_ENTRY = models.APIKey(
 MALE_TEST_PERCENTILE_NAME = 'male_test_percentiles'
 FEMALE_TEST_PERCENTILE_NAME = 'female_test_percentiles'
 OTHER_TEST_PERCENTILE_NAME = 'other_test_percentiles'
-TEST_FORMAT = models.MCDIFormat(
+TEST_FORMAT = models.CDIFormat(
     'standard',
     'standard',
     'standard.yaml',
@@ -102,7 +102,7 @@ TEST_FORMAT = models.MCDIFormat(
             {'name': 'not said', 'value': 0}
         ],
         'count_as_spoken': [1],
-        'meta': {'mcdi_type': 'multilingual-test'}
+        'meta': {'cdi_type': 'multilingual-test'}
     }
 )
 TEST_PRESENTATION_FORMAT_METADATA = models.PresentationFormat(
@@ -163,7 +163,7 @@ SEND_FORM_DATA_TEMPLATE = {
     'hard_of_hearing': '',
     'child_name': TEST_CHILD_NAME,
     'parent_email': TEST_PARENT_EMAIL,
-    'mcdi_type': TEST_MCDI_TYPE
+    'cdi_type': TEST_CDI_TYPE
 }
 SEND_FORM_DATA_TEMPLATE_MODIFIED = {
     'global_id': TEST_DB_ID_MOD,
@@ -177,7 +177,7 @@ SEND_FORM_DATA_TEMPLATE_MODIFIED = {
     'hard_of_hearing': constants.FORM_SELECTED_VALUE,
     'child_name': TEST_CHILD_NAME_MOD,
     'parent_email': TEST_PARENT_EMAIL_MOD,
-    'mcdi_type': TEST_MCDI_TYPE
+    'cdi_type': TEST_CDI_TYPE
 }
 TEST_SNAPSHOT = models.SnapshotMetadata(
     TEST_SNAPSHOT_ID,
@@ -201,7 +201,7 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
     TEST_HARD_OF_HEARING,
     False
 )
-PARENT_MCDI_FORM_URL = '/base/parent_mcdi/%d' % TEST_PARENT_FORM_ID
+PARENT_CDI_FORM_URL = '/base/parent_cdi/%d' % TEST_PARENT_FORM_ID
 TEMPLATE_WORD_SPOKEN_VALUES = {
     'cat_1_word_1_report': 1,
     'cat_1_word_2_report': 1,
@@ -289,11 +289,11 @@ class TestEditParentControllers(unittest.TestCase):
 
     def __run_with_mocks(self, on_start, body, on_end):
         with unittest.mock.patch('prog_code.util.user_util.get_user') as mock_get_user:
-            with unittest.mock.patch('prog_code.util.parent_account_util.generate_unique_mcdi_form_id') as mock_generate_unique_mcdi_form_id:
-                with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock_load_mcdi_model:
+            with unittest.mock.patch('prog_code.util.parent_account_util.generate_unique_cdi_form_id') as mock_generate_unique_cdi_form_id:
+                with unittest.mock.patch('prog_code.util.db_util.load_cdi_model') as mock_load_cdi_model:
                     with unittest.mock.patch('prog_code.util.filter_util.run_search_query') as mock_run_search_query:
                         with unittest.mock.patch('prog_code.util.db_util.insert_parent_form') as mock_insert_parent_form:
-                            with unittest.mock.patch('prog_code.util.parent_account_util.send_mcdi_email') as mock_send_mcdi_email:
+                            with unittest.mock.patch('prog_code.util.parent_account_util.send_cdi_email') as mock_send_cdi_email:
                                 with unittest.mock.patch('prog_code.util.db_util.insert_snapshot') as mock_insert_snapshot:
                                     with unittest.mock.patch('prog_code.util.db_util.remove_parent_form') as mock_remove_parent_form:
                                         with unittest.mock.patch('prog_code.util.db_util.get_parent_form_by_id') as mock_get_parent_form_by_id:
@@ -304,11 +304,11 @@ class TestEditParentControllers(unittest.TestCase):
                                                             with unittest.mock.patch('prog_code.util.db_util.load_snapshot_contents') as mock_load_snapshot_contents:
                                                                 mocks = {
                                                                     'get_user': mock_get_user,
-                                                                    'generate_unique_mcdi_form_id': mock_generate_unique_mcdi_form_id,
-                                                                    'load_mcdi_model': mock_load_mcdi_model,
+                                                                    'generate_unique_cdi_form_id': mock_generate_unique_cdi_form_id,
+                                                                    'load_cdi_model': mock_load_cdi_model,
                                                                     'run_search_query': mock_run_search_query,
                                                                     'insert_parent_form': mock_insert_parent_form,
-                                                                    'send_mcdi_email': mock_send_mcdi_email,
+                                                                    'send_cdi_email': mock_send_cdi_email,
                                                                     'insert_snapshot': mock_insert_snapshot,
                                                                     'remove_parent_form': mock_remove_parent_form,
                                                                     'get_parent_form_by_id': mock_get_parent_form_by_id,
@@ -335,15 +335,15 @@ class TestEditParentControllers(unittest.TestCase):
 
     def __standard_on_start(self, mocks):
         mocks['get_parent_form_by_id'].return_value = EXPECTED_PARENT_FORM
-        mocks['load_mcdi_model'].return_value = TEST_FORMAT
+        mocks['load_cdi_model'].return_value = TEST_FORMAT
 
     def __standard_on_end(self, mocks):
         mocks['get_parent_form_by_id'].assert_called_with(
             str(TEST_PARENT_FORM_ID)
         )
-        mocks['load_mcdi_model'].assert_called_with('standard')
+        mocks['load_cdi_model'].assert_called_with('standard')
 
-    def test_send_mcdi_form_missing_params(self):
+    def test_send_cdi_form_missing_params(self):
         def body():
             with self.app.test_client() as client:
 
@@ -381,7 +381,7 @@ class TestEditParentControllers(unittest.TestCase):
         self.__run_with_mocks(on_start, body, on_end)
         self.__assert_callback()
 
-    def test_send_mcdi_form_invalid_params(self):
+    def test_send_cdi_form_invalid_params(self):
 
         def body():
             with self.app.test_client() as client:
@@ -390,7 +390,7 @@ class TestEditParentControllers(unittest.TestCase):
                     sess['email'] = TEST_EMAIL
 
                 data = copy.copy(SEND_FORM_DATA_TEMPLATE)
-                data['mcdi_type'] = 'invalid_format'
+                data['cdi_type'] = 'invalid_format'
                 client.post('/base/parent_accounts', data=data)
 
                 with client.session_transaction() as sess:
@@ -441,8 +441,8 @@ class TestEditParentControllers(unittest.TestCase):
 
         def on_start(mocks):
             mocks['get_user'].return_value = TEST_USER
-            mocks['generate_unique_mcdi_form_id'].return_value = TEST_PARENT_FORM_ID
-            mocks['load_mcdi_model'].side_effect = [
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID
+            mocks['load_cdi_model'].side_effect = [
                 None,
                 TEST_FORMAT,
                 TEST_FORMAT,
@@ -453,17 +453,17 @@ class TestEditParentControllers(unittest.TestCase):
         def on_end(mocks):
             mocks['run_search_query'].assert_not_called()
             mocks['insert_parent_form'].assert_not_called()
-            mocks['send_mcdi_email'].assert_not_called()
+            mocks['send_cdi_email'].assert_not_called()
 
             mocks['get_user'].assert_called_with(TEST_EMAIL)
-            mocks['generate_unique_mcdi_form_id'].assert_called()
-            mocks['load_mcdi_model'].assert_any_call('invalid_format')
-            mocks['load_mcdi_model'].assert_any_call(TEST_MCDI_TYPE)
+            mocks['generate_unique_cdi_form_id'].assert_called()
+            mocks['load_cdi_model'].assert_any_call('invalid_format')
+            mocks['load_cdi_model'].assert_any_call(TEST_CDI_TYPE)
 
         self.__run_with_mocks(on_start, body, on_end)
         self.__assert_callback()
 
-    def test_send_mcdi_minimum_params(self):
+    def test_send_cdi_minimum_params(self):
 
         def body():
             minimal_data_template = copy.copy(SEND_FORM_DATA_TEMPLATE)
@@ -502,14 +502,14 @@ class TestEditParentControllers(unittest.TestCase):
 
         def on_start(mocks):
             mocks['get_user'].return_value = TEST_USER
-            mocks['generate_unique_mcdi_form_id'].return_value = TEST_PARENT_FORM_ID
-            mocks['load_mcdi_model'].return_value = TEST_FORMAT
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
             mocks['run_search_query'].return_value = [TEST_SNAPSHOT]
 
         def on_end(mocks):
             mocks['get_user'].assert_called_with(TEST_EMAIL)
-            mocks['generate_unique_mcdi_form_id'].assert_called()
-            mocks['load_mcdi_model'].assert_called_with(TEST_MCDI_TYPE)
+            mocks['generate_unique_cdi_form_id'].assert_called()
+            mocks['load_cdi_model'].assert_called_with(TEST_CDI_TYPE)
             mocks['run_search_query'].assert_called_with(
                 unittest.mock.ANY,
                 'snapshots'
@@ -518,13 +518,13 @@ class TestEditParentControllers(unittest.TestCase):
             self.assertEqual(len(mocks['insert_parent_form'].mock_calls), 2)
             mocks['insert_parent_form'].assert_called_with(EXPECTED_PARENT_FORM)
 
-            self.assertEqual(len(mocks['send_mcdi_email'].mock_calls), 2)
-            mocks['send_mcdi_email'].assert_called_with(EXPECTED_PARENT_FORM)
+            self.assertEqual(len(mocks['send_cdi_email'].mock_calls), 2)
+            mocks['send_cdi_email'].assert_called_with(EXPECTED_PARENT_FORM)
 
         self.__run_with_mocks(on_start, body, on_end)
         self.__assert_callback()
 
-    def test_send_mcdi_all_params(self):
+    def test_send_cdi_all_params(self):
         def body():
             with self.app.test_client() as client:
 
@@ -544,42 +544,42 @@ class TestEditParentControllers(unittest.TestCase):
 
         def on_start(mocks):
             mocks['get_user'].return_value = TEST_USER
-            mocks['generate_unique_mcdi_form_id'].return_value = TEST_PARENT_FORM_ID_MOD
-            mocks['load_mcdi_model'].return_value = TEST_FORMAT
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID_MOD
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
             mocks['run_search_query'].return_value = [TEST_SNAPSHOT]
 
         def on_end(mocks):
             mocks['get_user'].assert_called_with(TEST_EMAIL)
-            mocks['generate_unique_mcdi_form_id'].assert_called()
-            mocks['load_mcdi_model'].assert_called_with(TEST_MCDI_TYPE)
+            mocks['generate_unique_cdi_form_id'].assert_called()
+            mocks['load_cdi_model'].assert_called_with(TEST_CDI_TYPE)
             mocks['run_search_query'].assert_called_with(
                 unittest.mock.ANY,
                 'snapshots'
             )
             mocks['insert_parent_form'].assert_called_with(EXPECTED_MODIFIED_PARENT_FORM)
-            mocks['send_mcdi_email'].assert_called_with(EXPECTED_MODIFIED_PARENT_FORM)
+            mocks['send_cdi_email'].assert_called_with(EXPECTED_MODIFIED_PARENT_FORM)
 
         self.__run_with_mocks(on_start, body, on_end)
         self.__assert_callback()
 
-    def test_handle_parent_mcdi_form_bad_id(self):
+    def test_handle_parent_cdi_form_bad_id(self):
         def body():
             with self.app.test_client() as client:
 
                 # Testing with unexpected form ID
-                resp = client.post(PARENT_MCDI_FORM_URL)
+                resp = client.post(PARENT_CDI_FORM_URL)
                 self.assertEqual(resp.status_code, 404)
 
                 # Testing with invalid study id
-                client.post(PARENT_MCDI_FORM_URL)
+                client.post(PARENT_CDI_FORM_URL)
                 self.assertEqual(resp.status_code, 404)
 
                 # Testing with invalid global id
-                client.post(PARENT_MCDI_FORM_URL)
+                client.post(PARENT_CDI_FORM_URL)
                 self.assertEqual(resp.status_code, 404)
 
                 # Testing with no IDs
-                client.post(PARENT_MCDI_FORM_URL)
+                client.post(PARENT_CDI_FORM_URL)
                 self.assertEqual(resp.status_code, 404)
 
         def on_start(mocks):
@@ -594,7 +594,7 @@ class TestEditParentControllers(unittest.TestCase):
             parent_form_no_ids.database_id = None
 
             mocks['get_user'].return_value = None
-            mocks['load_mcdi_model'].return_value = TEST_FORMAT
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
             mocks['get_parent_form_by_id'].side_effect = [
                 None,
                 parent_form_no_db_id,
@@ -604,7 +604,7 @@ class TestEditParentControllers(unittest.TestCase):
 
         def on_end(mocks):
             mocks['get_user'].assert_called_with(None)
-            mocks['load_mcdi_model'].assert_called_with('standard')
+            mocks['load_cdi_model'].assert_called_with('standard')
             mocks['insert_snapshot'].assert_not_called()
             mocks['remove_parent_form'].assert_not_called()
 
@@ -617,11 +617,11 @@ class TestEditParentControllers(unittest.TestCase):
         self.__run_with_mocks(on_start, body, on_end)
         self.__assert_callback()
 
-    def test_handle_parent_mcdi_form_bad_input(self):
+    def test_handle_parent_cdi_form_bad_input(self):
         def body():
             with self.app.test_client() as client:
 
-                resp = client.post(PARENT_MCDI_FORM_URL, data={
+                resp = client.post(PARENT_CDI_FORM_URL, data={
                     'birthday': 'invalid birthday'
                 })
 
@@ -631,7 +631,7 @@ class TestEditParentControllers(unittest.TestCase):
                     sess[constants.ERROR_ATTR] = ''
                     self.assertFalse(constants.CONFIRMATION_ATTR in sess)
 
-                resp = client.post(PARENT_MCDI_FORM_URL, data={
+                resp = client.post(PARENT_CDI_FORM_URL, data={
                     'gender': 'invalid gender'
                 })
 
@@ -641,7 +641,7 @@ class TestEditParentControllers(unittest.TestCase):
                     sess[constants.ERROR_ATTR] = ''
                     self.assertFalse(constants.CONFIRMATION_ATTR in sess)
 
-                resp = client.post(PARENT_MCDI_FORM_URL, data={
+                resp = client.post(PARENT_CDI_FORM_URL, data={
                     'items_excluded': 'invalid items excluded'
                 })
 
@@ -651,7 +651,7 @@ class TestEditParentControllers(unittest.TestCase):
                     sess[constants.ERROR_ATTR] = ''
                     self.assertFalse(constants.CONFIRMATION_ATTR in sess)
 
-                resp = client.post(PARENT_MCDI_FORM_URL, data={
+                resp = client.post(PARENT_CDI_FORM_URL, data={
                     'items_excluded': -1
                 })
 
@@ -661,7 +661,7 @@ class TestEditParentControllers(unittest.TestCase):
                     sess[constants.ERROR_ATTR] = ''
                     self.assertFalse(constants.CONFIRMATION_ATTR in sess)
 
-                resp = client.post(PARENT_MCDI_FORM_URL, data={
+                resp = client.post(PARENT_CDI_FORM_URL, data={
                     'extra_categories': 'invalid items excluded'
                 })
 
@@ -671,7 +671,7 @@ class TestEditParentControllers(unittest.TestCase):
                     sess[constants.ERROR_ATTR] = ''
                     self.assertFalse(constants.CONFIRMATION_ATTR in sess)
 
-                resp = client.post(PARENT_MCDI_FORM_URL, data={
+                resp = client.post(PARENT_CDI_FORM_URL, data={
                     'extra_categories': -1
                 })
 
@@ -681,7 +681,7 @@ class TestEditParentControllers(unittest.TestCase):
                     sess[constants.ERROR_ATTR] = ''
                     self.assertFalse(constants.CONFIRMATION_ATTR in sess)
 
-                resp = client.post(PARENT_MCDI_FORM_URL)
+                resp = client.post(PARENT_CDI_FORM_URL)
 
                 with client.session_transaction() as sess:
                     self.assertTrue(constants.ERROR_ATTR in sess)
@@ -689,7 +689,7 @@ class TestEditParentControllers(unittest.TestCase):
                     sess[constants.ERROR_ATTR] = ''
                     self.assertFalse(constants.CONFIRMATION_ATTR in sess)
 
-                resp = client.post(PARENT_MCDI_FORM_URL, data={
+                resp = client.post(PARENT_CDI_FORM_URL, data={
                     'languages': ''
                 })
 
@@ -725,7 +725,7 @@ class TestEditParentControllers(unittest.TestCase):
                 no_languages_form,
                 no_languages_form
             ]
-            mocks['load_mcdi_model'].return_value = TEST_FORMAT
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
 
         def on_end(mocks):
             self.assertEqual(
@@ -737,10 +737,10 @@ class TestEditParentControllers(unittest.TestCase):
             )
 
             self.assertEqual(
-                len(mocks['load_mcdi_model'].mock_calls),
+                len(mocks['load_cdi_model'].mock_calls),
                 8
             )
-            mocks['load_mcdi_model'].assert_called_with('standard')
+            mocks['load_cdi_model'].assert_called_with('standard')
 
             mocks['load_percentile_model'].assert_not_called()
             mocks['insert_snapshot'].assert_not_called()
@@ -758,14 +758,14 @@ class TestEditParentControllers(unittest.TestCase):
 
             with self.app.test_client() as client:
 
-                client.post(PARENT_MCDI_FORM_URL, data=word_data_1)
+                client.post(PARENT_CDI_FORM_URL, data=word_data_1)
                 with client.session_transaction() as sess:
                     self.assertTrue(constants.ERROR_ATTR in sess)
                     self.assertNotEqual(sess[constants.ERROR_ATTR], '')
                     sess[constants.ERROR_ATTR] = ''
                     self.assertFalse(constants.CONFIRMATION_ATTR in sess)
 
-                client.post(PARENT_MCDI_FORM_URL, data=word_data_2)
+                client.post(PARENT_CDI_FORM_URL, data=word_data_2)
                 with client.session_transaction() as sess:
                     self.assertTrue(constants.ERROR_ATTR in sess)
                     self.assertNotEqual(sess[constants.ERROR_ATTR], '')
@@ -782,7 +782,7 @@ class TestEditParentControllers(unittest.TestCase):
 
             with self.app.test_client() as client:
 
-                client.post(PARENT_MCDI_FORM_URL, data=word_data)
+                client.post(PARENT_CDI_FORM_URL, data=word_data)
                 with client.session_transaction() as sess:
                     self.assertTrue(constants.ERROR_ATTR in sess)
                     self.assertNotEqual(sess[constants.ERROR_ATTR], '')
@@ -796,7 +796,7 @@ class TestEditParentControllers(unittest.TestCase):
         def body():
             with self.app.test_client() as client:
 
-                client.post(PARENT_MCDI_FORM_URL, data=TEMPLATE_WORD_SPOKEN_VALUES)
+                client.post(PARENT_CDI_FORM_URL, data=TEMPLATE_WORD_SPOKEN_VALUES)
                 with client.session_transaction() as sess:
                     self.assertTrue(constants.ERROR_ATTR in sess)
                     self.assertNotEqual(sess[constants.ERROR_ATTR], '')
@@ -806,13 +806,13 @@ class TestEditParentControllers(unittest.TestCase):
         def on_start(mocks):
             mocks['get_parent_form_by_id'].return_value = EXPECTED_PARENT_FORM
             mocks['get_snapshot_chronology_for_db_id'].return_value = TEST_DB_ID
-            mocks['load_mcdi_model'].return_value = TEST_FORMAT
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
             mocks['load_percentile_model'].return_value = None
 
         def on_end(mocks):
             mocks['get_parent_form_by_id'].assert_called_with(str(TEST_PARENT_FORM_ID))
             mocks['get_snapshot_chronology_for_db_id'].assert_called_with(TEST_DB_ID)
-            mocks['load_mcdi_model'].assert_called_with('standard')
+            mocks['load_cdi_model'].assert_called_with('standard')
             mocks['load_percentile_model'].assert_called_with(MALE_TEST_PERCENTILE_NAME)
 
         self.__run_with_mocks(on_start, body, on_end)
@@ -821,7 +821,7 @@ class TestEditParentControllers(unittest.TestCase):
     def test_submit_parent_form_no_params(self):
         def body():
             with self.app.test_client() as client:
-                client.post(PARENT_MCDI_FORM_URL, data=TEMPLATE_WORD_SPOKEN_VALUES)
+                client.post(PARENT_CDI_FORM_URL, data=TEMPLATE_WORD_SPOKEN_VALUES)
 
         def on_start(mocks):
             word_values = dict(map(
@@ -831,7 +831,7 @@ class TestEditParentControllers(unittest.TestCase):
 
             mocks['get_parent_form_by_id'].return_value = EXPECTED_PARENT_FORM
             mocks['get_snapshot_chronology_for_db_id'].return_value = [TEST_SNAPSHOT]
-            mocks['load_mcdi_model'].return_value = TEST_FORMAT
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
             mocks['load_percentile_model'].return_value = TEST_PERCENTILE_TABLE
             mocks['monthdelta'].return_value = TEST_AGE
             mocks['find_percentile'].return_value = TEST_PERCENTILE
@@ -843,7 +843,7 @@ class TestEditParentControllers(unittest.TestCase):
             mocks['get_snapshot_chronology_for_db_id'].assert_called_with(
                 TEST_DB_ID
             )
-            mocks['load_mcdi_model'].assert_called_with('standard')
+            mocks['load_cdi_model'].assert_called_with('standard')
             mocks['load_percentile_model'].assert_called_with(
                 MALE_TEST_PERCENTILE_NAME
             )
@@ -879,7 +879,7 @@ class TestEditParentControllers(unittest.TestCase):
             data['birthday'] = TEST_BIRTHDAY_MOD
 
             with self.app.test_client() as client:
-                client.post(PARENT_MCDI_FORM_URL, data=data)
+                client.post(PARENT_CDI_FORM_URL, data=data)
 
                 with client.session_transaction() as sess:
                     self.assertFalse(constants.ERROR_ATTR in sess)
@@ -900,7 +900,7 @@ class TestEditParentControllers(unittest.TestCase):
 
             mocks['get_parent_form_by_id'].return_value = partial_parent_form
             mocks['get_snapshot_chronology_for_db_id'].return_value = [TEST_SNAPSHOT]
-            mocks['load_mcdi_model'].return_value = TEST_FORMAT
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
             mocks['load_percentile_model'].return_value = TEST_PERCENTILE_TABLE
             mocks['monthdelta'].return_value = TEST_AGE
             mocks['find_percentile'].return_value = TEST_PERCENTILE
@@ -909,7 +909,7 @@ class TestEditParentControllers(unittest.TestCase):
         def on_end(mocks):
             mocks['get_parent_form_by_id'].assert_called_with(str(TEST_PARENT_FORM_ID))
             mocks['get_snapshot_chronology_for_db_id'].assert_called_with(TEST_DB_ID)
-            mocks['load_mcdi_model'].assert_called_with('standard')
+            mocks['load_cdi_model'].assert_called_with('standard')
             mocks['load_percentile_model'].assert_called_with(MALE_TEST_PERCENTILE_NAME)
             mocks['monthdelta'].assert_called_with(TEST_BIRTHDAY_DATE_MOD, TODAY)
             mocks['find_percentile'].assert_called_with(
@@ -943,7 +943,7 @@ class TestEditParentControllers(unittest.TestCase):
             data['birthday'] = TEST_BIRTHDAY_MOD
 
             with self.app.test_client() as client:
-                client.post(PARENT_MCDI_FORM_URL, data=data)
+                client.post(PARENT_CDI_FORM_URL, data=data)
 
                 with client.session_transaction() as sess:
                     self.assertFalse(constants.ERROR_ATTR in sess)
@@ -952,7 +952,7 @@ class TestEditParentControllers(unittest.TestCase):
         def on_start(mocks):
             mocks['get_parent_form_by_id'].return_value = EXPECTED_PARENT_FORM
             mocks['get_snapshot_chronology_for_db_id'].return_value = [TEST_SNAPSHOT]
-            mocks['load_mcdi_model'].return_value = TEST_FORMAT
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
             mocks['load_percentile_model'].return_value = TEST_PERCENTILE_TABLE
             mocks['monthdelta'].return_value = TEST_AGE
             mocks['find_percentile'].return_value = TEST_PERCENTILE
@@ -965,7 +965,7 @@ class TestEditParentControllers(unittest.TestCase):
             mocks['get_snapshot_chronology_for_db_id'].assert_called_with(
                 TEST_DB_ID
             )
-            mocks['load_mcdi_model'].assert_called_with('standard')
+            mocks['load_cdi_model'].assert_called_with('standard')
             mocks['load_percentile_model'].assert_called_with(
                 MALE_TEST_PERCENTILE_NAME
             )
@@ -1000,20 +1000,20 @@ class TestEditParentControllers(unittest.TestCase):
 
         def body():
             with self.app.test_client() as client:
-                form = client.get(PARENT_MCDI_FORM_URL).data.decode('utf-8')
+                form = client.get(PARENT_CDI_FORM_URL).data.decode('utf-8')
                 self.assertEqual(form.count('"1" checked'), 2)
                 self.assertEqual(form.count('"0" checked'), 4)
 
         def on_start(mocks):
             mocks['get_parent_form_by_id'].return_value = EXPECTED_PARENT_FORM
-            mocks['load_mcdi_model'].return_value = TEST_FORMAT
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
             mocks['get_user'].return_value = None
             mocks['get_snapshot_chronology_for_db_id'].return_value = self.__chronology
             mocks['load_snapshot_contents'].return_value = TWO_WORD_KNOWN_SNAPSHOT_CONTENTS
 
         def on_end(mocks):
             mocks['get_parent_form_by_id'].assert_called_with(str(TEST_PARENT_FORM_ID))
-            mocks['load_mcdi_model'].assert_called_with('standard')
+            mocks['load_cdi_model'].assert_called_with('standard')
             mocks['get_user'].assert_called_with(None)
             mocks['get_snapshot_chronology_for_db_id'].assert_called_with(TEST_DB_ID)
             mocks['load_snapshot_contents'].assert_called_with(self.__chronology[0])

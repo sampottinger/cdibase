@@ -46,13 +46,13 @@ FILTER_DELETED_MSG = 'Filter deleted.'
 FILTER_ALREADY_DELETED_MSG = 'Filter already deleted.'
 UNKNOWN_PRESENTATION_FORMAT_MSG = 'Unknown presentation format specified.'
 
-CONTENT_DISPOISTION_ZIP = 'attachment; filename=mcdi_results.zip'
-CONTENT_DISPOISTION_CSV = 'attachment; filename=mcdi_results.csv'
+CONTENT_DISPOISTION_ZIP = 'attachment; filename=cdi_results.zip'
+CONTENT_DISPOISTION_CSV = 'attachment; filename=cdi_results.csv'
 CSV_MIME_TYPE = 'text/csv'
 OCTET_MIME_TYPE = 'application/octet-stream'
 
-CONSOLIDATED_FILE_URL = '/base/access_data/download_mcdi_results.csv?deleted=%s'
-ARCHIVE_FILE_URL = '/base/access_data/download_mcdi_results.zip?deleted=%s'
+CONSOLIDATED_FILE_URL = '/base/access_data/download_cdi_results.csv?deleted=%s'
+ARCHIVE_FILE_URL = '/base/access_data/download_cdi_results.zip?deleted=%s'
 ACCESS_DATA_URL = '/base/access_data'
 
 DOWNLOAD_WAITING_ATTR = 'is_waiting'
@@ -86,15 +86,15 @@ def access_data():
     )
 
 
-@app.route('/base/access_data/download_mcdi_results', methods=['POST'])
+@app.route('/base/access_data/download_cdi_results', methods=['POST'])
 @session_util.require_login(access_data=True)
 def execute_access_request():
-    """Execute a MCDI database query and download the results.
+    """Execute a CDI database query and download the results.
 
-    Execute an MCDI database query queued in a user's session and return the
+    Execute an CDI database query queued in a user's session and return the
     results in either a single "consolidated" CSV or a zip archive of CSVs. The
     request should include format as an argument indicating the presentation
-    format that the MCDIs should be provided in (name of a presentation format
+    format that the CDIs should be provided in (name of a presentation format
     provided via configuration file) as it will be saved to the session and
     used by execute_zip_access_request. The request should also include
     a consolidated_csv argument that, if equal to "on" will have the requset
@@ -129,7 +129,7 @@ def is_waiting_on_download():
     """Determine if the user is waiting on a download to start.
 
     Determine if a user is waiting for CSV file contents to be generated in
-    response to an MCDI database query.
+    response to an CDI database query.
 
     @return: JSON serialization of the status of the download. Will be a
         serialization of an JS-object with the single attribute: is_waiting
@@ -146,7 +146,7 @@ def abort_download():
     """Have the session indicate that the user gave up on waiting for download.
 
     Have the user's session indicate that the user decided not to wait for CSV
-    file contents to be generated from an MCDI database query.
+    file contents to be generated from an CDI database query.
 
     @return: JSON serialization of the updated status of the user's download.
         Will be a serialization of an JS-object with the single attribute:
@@ -242,7 +242,7 @@ def delete_filter(filter_index):
         return flask.redirect(ACCESS_DATA_URL)
 
 
-@app.route('/base/access_data/download_mcdi_results.zip')
+@app.route('/base/access_data/download_cdi_results.zip')
 @session_util.require_login(access_data=True)
 def execute_zip_access_request():
     """Controller for finding and rendering archive of database query results.
@@ -307,7 +307,7 @@ def execute_zip_access_request():
     return response
 
 
-@app.route('/base/access_data/download_mcdi_results.csv')
+@app.route('/base/access_data/download_cdi_results.csv')
 @session_util.require_login(access_data=True)
 def execute_csv_access_request():
     """Controller for finding and rendering archives of database query results.

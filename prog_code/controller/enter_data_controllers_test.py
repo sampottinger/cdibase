@@ -49,8 +49,8 @@ TEST_USER = models.User(
 MALE_TEST_PERCENTILE_NAME = 'male_test_percentiles'
 FEMALE_TEST_PERCENTILE_NAME = 'female_test_percentiles'
 OTHER_TEST_PERCENTILE_NAME = 'other_test_percentiles'
-TEST_MCDI_FORMAT_NAME = 'standard'
-TEST_FORMAT = models.MCDIFormat(
+TEST_CDI_FORMAT_NAME = 'standard'
+TEST_FORMAT = models.CDIFormat(
     'standard',
     'standard',
     'standard.yaml',
@@ -75,7 +75,7 @@ TEST_FORMAT = models.MCDIFormat(
             {'name': 'not said', 'value': 0}
         ],
         'count_as_spoken': [1],
-        'meta': {'mcdi_type': 'standard'}
+        'meta': {'cdi_type': 'standard'}
     }
 )
 
@@ -189,7 +189,7 @@ class EnterDataControllersTests(unittest.TestCase):
 
     def __run_with_mocks(self, on_start, body, on_end):
         with unittest.mock.patch('prog_code.util.user_util.get_user') as mock_get_user:
-            with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock_load_mcdi_model:
+            with unittest.mock.patch('prog_code.util.db_util.load_cdi_model') as mock_load_cdi_model:
                 with unittest.mock.patch('prog_code.util.db_util.insert_snapshot') as mock_insert_snapshot:
                     with unittest.mock.patch('prog_code.util.db_util.report_usage') as mock_report_usage:
                         with unittest.mock.patch('prog_code.util.db_util.load_percentile_model') as mock_load_percentile_model:
@@ -198,10 +198,10 @@ class EnterDataControllersTests(unittest.TestCase):
                                     with unittest.mock.patch('prog_code.util.db_util.lookup_global_participant_id') as mock_lookup_global_participant_id:
                                         with unittest.mock.patch('prog_code.util.db_util.update_participant_metadata') as mock_update_participant_metadata:
                                             with unittest.mock.patch('prog_code.util.recalc_util.recalculate_ages_and_percentiles') as mock_recalculate_ages_and_percentiles:
-                                                with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model_listing') as mock_load_mcdi_model_listing:
+                                                with unittest.mock.patch('prog_code.util.db_util.load_cdi_model_listing') as mock_load_cdi_model_listing:
                                                     mocks = {
                                                         'get_user': mock_get_user,
-                                                        'load_mcdi_model': mock_load_mcdi_model,
+                                                        'load_cdi_model': mock_load_cdi_model,
                                                         'insert_snapshot': mock_insert_snapshot,
                                                         'report_usage': mock_report_usage,
                                                         'load_percentile_model': mock_load_percentile_model,
@@ -210,7 +210,7 @@ class EnterDataControllersTests(unittest.TestCase):
                                                         'lookup_global_participant_id': mock_lookup_global_participant_id,
                                                         'update_participant_metadata': mock_update_participant_metadata,
                                                         'recalculate_ages_and_percentiles': mock_recalculate_ages_and_percentiles,
-                                                        'load_mcdi_model_listing': mock_load_mcdi_model_listing
+                                                        'load_cdi_model_listing': mock_load_cdi_model_listing
                                                     }
 
                                                     on_start(mocks)
@@ -221,11 +221,11 @@ class EnterDataControllersTests(unittest.TestCase):
 
     def __default_on_start(self, mocks):
         mocks['get_user'].return_value = TEST_USER
-        mocks['load_mcdi_model'].return_value = TEST_FORMAT
+        mocks['load_cdi_model'].return_value = TEST_FORMAT
 
     def __default_on_end(self, mocks):
         mocks['get_user'].assert_called_with(TEST_EMAIL)
-        mocks['load_mcdi_model'].assert_called_with(TEST_MCDI_FORMAT_NAME)
+        mocks['load_cdi_model'].assert_called_with(TEST_CDI_FORMAT_NAME)
 
     def __run_with_default_mocks(self, body):
         self.__run_with_mocks(
@@ -270,7 +270,7 @@ class EnterDataControllersTests(unittest.TestCase):
                 with client.session_transaction() as sess:
                     sess['email'] = TEST_EMAIL
 
-                url = '/base/enter_data/%s' % TEST_MCDI_FORMAT_NAME
+                url = '/base/enter_data/%s' % TEST_CDI_FORMAT_NAME
                 client.get(url)
 
                 with client.session_transaction() as sess:
@@ -285,22 +285,22 @@ class EnterDataControllersTests(unittest.TestCase):
 
         def on_start(mocks):
             mocks['get_user'].return_value = TEST_USER
-            mocks['load_mcdi_model'].side_effect = [
+            mocks['load_cdi_model'].side_effect = [
                 TEST_FORMAT,
                 None
             ]
 
         def on_end(mocks):
             mocks['get_user'].assert_called_with(TEST_EMAIL)
-            mocks['load_mcdi_model'].assert_any_call(TEST_MCDI_FORMAT_NAME)
-            mocks['load_mcdi_model'].assert_any_call('invalid format')
+            mocks['load_cdi_model'].assert_any_call(TEST_CDI_FORMAT_NAME)
+            mocks['load_cdi_model'].assert_any_call('invalid format')
 
         self.__run_with_mocks(on_start, body, on_end)
         self.__assert_callback()
 
     def test_missing_enter_data_params(self):
         def body():
-            target_url = '/base/enter_data/%s' % TEST_MCDI_FORMAT_NAME
+            target_url = '/base/enter_data/%s' % TEST_CDI_FORMAT_NAME
 
             with self.app.test_client() as client:
 
@@ -413,7 +413,7 @@ class EnterDataControllersTests(unittest.TestCase):
     def test_invalid_enter_data_params(self):
 
         def body():
-            target_url = '/base/enter_data/%s' % TEST_MCDI_FORMAT_NAME
+            target_url = '/base/enter_data/%s' % TEST_CDI_FORMAT_NAME
 
             with self.app.test_client() as client:
 
@@ -506,7 +506,7 @@ class EnterDataControllersTests(unittest.TestCase):
     def test_success_enter_data(self):
 
         def body():
-            target_url = '/base/enter_data/%s' % TEST_MCDI_FORMAT_NAME
+            target_url = '/base/enter_data/%s' % TEST_CDI_FORMAT_NAME
 
             with self.app.test_client() as client:
 
@@ -523,13 +523,13 @@ class EnterDataControllersTests(unittest.TestCase):
 
         def on_start(mocks):
             mocks['get_user'].return_value = TEST_USER
-            mocks['load_mcdi_model'].return_value = TEST_FORMAT
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
             mocks['load_percentile_model'].return_value = TEST_PERCENTILE_MODEL
             mocks['find_percentile'].return_value = TEST_PERCENTILE
 
         def on_end(mocks):
             mocks['get_user'].assert_called_with(TEST_EMAIL)
-            mocks['load_mcdi_model'].assert_called_with(TEST_MCDI_FORMAT_NAME)
+            mocks['load_cdi_model'].assert_called_with(TEST_CDI_FORMAT_NAME)
             mocks['load_percentile_model'].assert_called_with(
                 MALE_TEST_PERCENTILE_NAME
             )

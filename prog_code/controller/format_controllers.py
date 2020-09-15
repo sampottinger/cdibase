@@ -1,6 +1,6 @@
 """Logic for rendering views and responding to requests related to user specs.
 
-Logic for rendering rendering views and responding requests related to MCDI
+Logic for rendering rendering views and responding requests related to CDI
 formats, CSV file / archive rendering options, and tables for calculating
 participant percentiles.
 
@@ -59,7 +59,7 @@ class Format:
     """Strategy that contains information necessary to manage (CRD) a format.
 
     Strategy that contains information necessary to create, read, and delete a
-    MCDI form, persentation format, or percentile table.
+    CDI form, persentation format, or percentile table.
     """
 
     def __init__(self, upload_type, url_component, load_model_function,
@@ -104,14 +104,14 @@ class Format:
 
 
 FORMATS = {
-    'mcdi': Format(
-        'MCDI',
-        'mcdi',
-        db_util.load_mcdi_model,
-        db_util.save_mcdi_model,
-        db_util.delete_mcdi_model,
-        models.MCDIFormatMetadata,
-        models.MCDIFormat,
+    'cdi': Format(
+        'CDI',
+        'cdi',
+        db_util.load_cdi_model,
+        db_util.save_cdi_model,
+        db_util.delete_cdi_model,
+        models.CDIFormatMetadata,
+        models.CDIFormat,
         '.yaml'
     ),
     'presentation': Format(
@@ -145,14 +145,14 @@ def edit_formats():
     Index page with controls for editing formatting, forms, and percentile
     calculation behavior.
 
-    @return: Rendered page with listing of MCDI formats, options for rendering
+    @return: Rendered page with listing of CDI formats, options for rendering
         database values as CSV files, and percentile tables.
     @rtype: flask.Response
     """
     return flask.render_template(
         'edit_formats.html',
         cur_page='edit_formats',
-        mcdi_formats=db_util.load_mcdi_model_listing(),
+        cdi_formats=db_util.load_cdi_model_listing(),
         presentation_formats=db_util.load_presentation_model_listing(),
         percentile_tables=db_util.load_percentile_model_listing(),
         **session_util.get_standard_template_values()
@@ -164,8 +164,8 @@ def edit_formats():
 def upload_format(format_type):
     """Handler to save a specification.
 
-    format_type == mcdi:
-    Handler to save a specification of what a form of the MCDI looks like,
+    format_type == cdi:
+    Handler to save a specification of what a form of the CDI looks like,
     used in data entry and can be specified when downloading CSV / data
     archives from the application.
 
@@ -176,7 +176,7 @@ def upload_format(format_type):
 
     format_type == percentile:
     Controller to handle upload of a table of data necessary to calculate
-    percentiles for research participants against original MCDI distributions.
+    percentiles for research participants against original CDI distributions.
 
     @return: HTML form on GET and redirect on POST.
     @rtype: flask.Response
@@ -241,13 +241,13 @@ def upload_format(format_type):
 @app.route('/base/edit_formats/<format_type>/<format_name>/delete')
 @session_util.require_login(change_formats=True)
 def delete_format(format_type, format_name):
-    """Delete an existing specification (presetation, MCDI, or precentile).
+    """Delete an existing specification (presetation, CDI, or precentile).
 
-    Delete a presentation format, MCDI format, or precentile table from the
+    Delete a presentation format, CDI format, or precentile table from the
     database and uploads folder.
 
-    format_type == mcdi
-    Controller to delete an existing registered MCDI format specification.
+    format_type == cdi
+    Controller to delete an existing registered CDI format specification.
 
     format_type == presentation
     Delete one rendering "format" where raw database values are turned into
@@ -255,9 +255,9 @@ def delete_format(format_type, format_name):
 
     format_type == percentile:
     Controller to handle delete of a table of data necessary to calculate
-    percentiles for research participants against original MCDI distributions.
+    percentiles for research participants against original CDI distributions.
 
-    @param format_type: The type of format to delete. Should be mcdi,
+    @param format_type: The type of format to delete. Should be cdi,
         presentation, percentile.
     @type format_type: str
     @param format_name: The name of the format to delete.

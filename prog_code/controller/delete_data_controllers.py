@@ -55,8 +55,8 @@ RESTORED_MESSAGE = 'Entries restored.'
 NEED_OPERATION_MSG = 'Please specify if you want to delete or restore ' \
     'matching entries.'
 
-CONTENT_DISPOISTION_ZIP = 'attachment; filename=mcdi_results.zip'
-CONTENT_DISPOISTION_CSV = 'attachment; filename=mcdi_results.csv'
+CONTENT_DISPOISTION_ZIP = 'attachment; filename=cdi_results.zip'
+CONTENT_DISPOISTION_CSV = 'attachment; filename=cdi_results.csv'
 CSV_MIME_TYPE = 'text/csv'
 OCTET_MIME_TYPE = 'application/octet-stream'
 
@@ -96,15 +96,15 @@ def delete_data():
     )
 
 
-@app.route('/base/delete_data/delete_mcdi_results', methods=['POST'])
+@app.route('/base/delete_data/delete_cdi_results', methods=['POST'])
 @session_util.require_login(delete_data=True)
 def start_delete_request():
-    """Execute a MCDI database query and download the results.
+    """Execute a CDI database query and download the results.
 
-    Execute an MCDI database query queued in a user's session and return the
+    Execute an CDI database query queued in a user's session and return the
     results in either a single "consolidated" CSV or a zip archive of CSVs. The
     request should include format as an argument indicating the presentation 
-    format that the MCDIs should be provided in (name of a presentation format
+    format that the CDIs should be provided in (name of a presentation format
     provided via configuration file) as it will be saved to the session and
     used by execute_zip_access_request. The request should also include
     a consolidated_csv argument that, if equal to "on" will have the requset
@@ -140,7 +140,7 @@ def is_waiting_on_delete():
     """Determine if the user is waiting on a delete to start.
 
     Determine if a user is waiting for CSV file contents to be generated in
-    response to an MCDI database query.
+    response to an CDI database query.
 
     @return: JSON serialization of the status of the delete. Will be a
         serialization of an JS-object with the single attribute: is_waiting

@@ -36,7 +36,7 @@ from ..struct import models
 from cdibase import app
 
 PARTICIPANT_NOT_FOUND_MSG = '[ not found ]'
-MCDI_NOT_FOUND_MSG = 'Could not the specified MCDI format.'
+CDI_NOT_FOUND_MSG = 'Could not the specified CDI format.'
 GLOBAL_ID_NOT_PROVIDED_MSG = 'Participant global id was not provided.'
 GLOBAL_ID_NOT_INT_MSG = 'Participant global id should be a whole number.'
 STUDY_ID_NOT_PROVIDED_MSG = 'Study id was not provided.'
@@ -60,18 +60,18 @@ BIRTHDAY_INVALID_FORMAT_REARRANGE_MSG = 'Birthday entered in incorrect format.'
 SESSION_DATE_INVALID_FORMAT_MSG = 'Session date must be of form YYYY/MM/DD.'
 WORD_VALUE_MISSING_MSG = '%s value missing.'
 WORD_VALUE_INVALID_MSG = '%s value invalid'
-MCDI_ADDED_MSG = 'MCDI record added for participant %d.'
+CDI_ADDED_MSG = 'CDI record added for participant %d.'
 ENTER_DATA_URL = '/base/enter_data'
-NEW_CHILD_MCDI_ADDED_MSG = 'New child and MCDI added.'
+NEW_CHILD_CDI_ADDED_MSG = 'New child and CDI added.'
 DATE_REGEX = re.compile('\d{4}/\d{1,2}/\d{1,2}')
 
 
 @app.route('/base/enter_data')
 @session_util.require_login(enter_data=True)
 def enter_data_index():
-    """Controller for listing of various forms / MCDI types.
+    """Controller for listing of various forms / CDI types.
 
-    Controller for listing of the forms / MCDI types the application has access
+    Controller for listing of the forms / CDI types the application has access
     to which can be turned into HTML forms.
 
     @return: Index page with a listing of existing data entry formats and a link
@@ -81,7 +81,7 @@ def enter_data_index():
     return flask.render_template(
         'enter_data.html',
         cur_page='enter_data',
-        formats=db_util.load_mcdi_model_listing(),
+        formats=db_util.load_cdi_model_listing(),
         **session_util.get_standard_template_values()
     )
 
@@ -91,10 +91,10 @@ def enter_data_index():
 def enter_data_form(format_name):
     """Actual data entry form controller.
 
-    GET displays the form for a version of MCDI or other structure the lab
+    GET displays the form for a version of CDI or other structure the lab
     tracks. POST submits form into database.
 
-    @param format_name: The name of the form of the MCDI to turn into an HTML
+    @param format_name: The name of the form of the CDI to turn into an HTML
         form to fill out.
     @type format_name: str
     @return: HTML form on GET and redirect on POST or error.
@@ -102,9 +102,9 @@ def enter_data_form(format_name):
     """
     request = flask.request
 
-    selected_format = db_util.load_mcdi_model(format_name)
+    selected_format = db_util.load_cdi_model(format_name)
     if selected_format == None:
-        flask.session[constants.ERROR_ATTR] = MCDI_NOT_FOUND_MSG
+        flask.session[constants.ERROR_ATTR] = CDI_NOT_FOUND_MSG
         return flask.redirect(ENTER_DATA_URL)
 
     # Render form
@@ -113,7 +113,7 @@ def enter_data_form(format_name):
             'enter_data_form.html',
             cur_page='enter_data',
             selected_format=selected_format,
-            formats=db_util.load_mcdi_model_listing(),
+            formats=db_util.load_cdi_model_listing(),
             male_val=constants.MALE,
             female_val=constants.FEMALE,
             other_gender_val=constants.OTHER_GENDER,
@@ -277,7 +277,7 @@ def enter_data_form(format_name):
             revision,
             ','.join(languages),
             len(languages),
-            selected_format.details['meta']['mcdi_type'],
+            selected_format.details['meta']['cdi_type'],
             hard_of_hearing,
             False
         )
@@ -295,9 +295,9 @@ def enter_data_form(format_name):
         db_util.insert_snapshot(new_snapshot, word_entries)
 
         if global_id != None:
-            msg = MCDI_ADDED_MSG % global_id
+            msg = CDI_ADDED_MSG % global_id
         else:
-            msg = NEW_CHILD_MCDI_ADDED_MSG
+            msg = NEW_CHILD_CDI_ADDED_MSG
         flask.session[constants.CONFIRMATION_ATTR] = msg
 
         return flask.redirect(request.path)

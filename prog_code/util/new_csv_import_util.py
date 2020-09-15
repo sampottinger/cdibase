@@ -46,7 +46,7 @@ STATE_PARSE_EXTRA_CATEGORIES = 14
 STATE_PARSE_REVISION = 15
 STATE_PARSE_LANGUAGES = 16
 STATE_PARSE_NUM_LANGUAGES = 17
-STATE_PARSE_MCDI_TYPE = 18
+STATE_PARSE_CDI_TYPE = 18
 STATE_PARSE_HARD_OF_HEARING = 19
 STATE_PARSE_DELETED = 20
 STATE_PARSE_START_WORDS = 21
@@ -70,7 +70,7 @@ EXPECTED_HEADER_FIELDS = [
     "revision",
     "languages",
     "num languages",
-    "mcdi type",
+    "cdi type",
     "hard of hearing",
     "deleted"
 ]
@@ -206,7 +206,7 @@ class UploadParserAutomaton:
             STATE_PARSE_REVISION: lambda x: self.parse_revision(x),
             STATE_PARSE_LANGUAGES: lambda x: self.parse_languages(x),
             STATE_PARSE_NUM_LANGUAGES: lambda x: self.parse_num_languages(x),
-            STATE_PARSE_MCDI_TYPE: lambda x: self.parse_cdi_type(x),
+            STATE_PARSE_CDI_TYPE: lambda x: self.parse_cdi_type(x),
             STATE_PARSE_HARD_OF_HEARING: lambda x: self.parse_hard_of_hearing(x),
             STATE_PARSE_DELETED: lambda x: self.parse_deleted(x),
             STATE_PARSE_START_WORDS: lambda x: self.parse_word_start(x),
@@ -705,7 +705,7 @@ class UploadParserAutomaton:
     def parse_num_languages(self, input_val):
         if self.__is_empty(input_val):
             self.__num_languages_deferred = True
-            self.__state = STATE_PARSE_MCDI_TYPE
+            self.__state = STATE_PARSE_CDI_TYPE
             return
         else:
             self.__num_languages_deferred = False
@@ -720,13 +720,13 @@ class UploadParserAutomaton:
             return
 
         self.__num_languages = num_languages
-        self.__state = STATE_PARSE_MCDI_TYPE
+        self.__state = STATE_PARSE_CDI_TYPE
 
     def parse_cdi_type(self, cdi_name):
-        mcdi_model = self.__cached_adapter.load_mcdi_model(cdi_name)
+        cdi_model = self.__cached_adapter.load_cdi_model(cdi_name)
 
         # Check CDI was known
-        if mcdi_model == None:
+        if cdi_model == None:
             msg = ERROR_UNKNOWN_CDI_TYPE % (
                 cdi_name,
                 self.__columns_processed + 1
@@ -737,7 +737,7 @@ class UploadParserAutomaton:
         # Check words were present
         required_words = set(functools.reduce(
             lambda last, cur: last + cur["words"],
-            mcdi_model.details["categories"],
+            cdi_model.details["categories"],
             []
         ))
 
@@ -749,18 +749,18 @@ class UploadParserAutomaton:
         # Check allowed values
         explicit_options = set(map(
             lambda x: x["value"],
-            mcdi_model.details["options"]
+            cdi_model.details["options"]
         ))
 
         prefill_values = set(functools.reduce(
             lambda prev, cur: extend_list(prev, cur.get("prefill_value", [])),
-            mcdi_model.details["options"],
+            cdi_model.details["options"],
             []
         ))
 
         self.__allowed_word_values = explicit_options.union(prefill_values)
 
-        self.__count_as_spoken_values = set(mcdi_model.details["count_as_spoken"])
+        self.__count_as_spoken_values = set(cdi_model.details["count_as_spoken"])
 
         difference = required_words.symmetric_difference(self.__expected_words)
         if len(difference) > 0:
@@ -938,7 +938,7 @@ def process_csv(input_rows_iterator):
         column = map(lambda row: row[col_num], input_rows)
         columns.append(column)
 
-    automaton = UploadParserAutomaton(recalc_util.CachedMCDIAdapter())
+    automaton = UploadParserAutomaton(recalc_util.CachedCDIAdapter())
 
     for column in columns:
         automaton.process_column(column)

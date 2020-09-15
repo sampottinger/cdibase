@@ -40,22 +40,22 @@ class ParentAccountUtilTests(unittest.TestCase):
         test_result = parent_account_util.is_likely_email_address(test_email)
         self.assertTrue(test_result)
 
-    def test_generate_unique_mcdi_form_id(self):
+    def test_generate_unique_cdi_form_id(self):
         with unittest.mock.patch('prog_code.util.db_util.get_parent_form_by_id') as mock:
             mock.side_effect = [True, True, None]
-            parent_account_util.generate_unique_mcdi_form_id()
+            parent_account_util.generate_unique_cdi_form_id()
             self.assertEqual(len(mock.mock_calls), 3)
 
-    def test_send_mcdi_email(self):
+    def test_send_cdi_email(self):
         with unittest.mock.patch('prog_code.util.mail_util.send_msg') as mock:
             form_url = parent_account_util.URL_TEMPLATE % 'url'
-            msg = parent_account_util.MCDI_EMAIL_TEMPLATE % ('child', form_url)
+            msg = parent_account_util.CDI_EMAIL_TEMPLATE % ('child', form_url)
 
             test_form = TEST_PARENT_FORM('child', 'url', 'test email')
-            parent_account_util.send_mcdi_email(test_form)
+            parent_account_util.send_cdi_email(test_form)
 
             mock.assert_called_with(
                 'test email',
-                parent_account_util.MCDI_EMAIL_SUBJECT,
+                parent_account_util.CDI_EMAIL_SUBJECT,
                 msg
             )

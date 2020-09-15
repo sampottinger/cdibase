@@ -50,7 +50,7 @@ SNAPSHOT_METADATA_COLS = [
     'revision',
     'languages',
     'num_languages',
-    'mcdi_type',
+    'cdi_type',
     'hard_of_hearing',
     'deleted'
 ]
@@ -125,16 +125,16 @@ def get_db_connection():
     """
     return SharedConnection.get_instance()
 
-def save_mcdi_model(newMetadataModel):
-    """Save a metadata for a MCDI format.
+def save_cdi_model(newMetadataModel):
+    """Save a metadata for a CDI format.
 
     @param newMetadataModel: Model containing format metadata.
-    @type newMetadataModel: models.MCDIFormatMetadata
+    @type newMetadataModel: models.CDIFormatMetadata
     """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        'INSERT INTO mcdi_formats VALUES (?, ?, ?)',
+        'INSERT INTO cdi_formats VALUES (?, ?, ?)',
         (
             newMetadataModel.human_name,
             newMetadataModel.safe_name,
@@ -145,51 +145,51 @@ def save_mcdi_model(newMetadataModel):
     connection.close()
 
 
-def delete_mcdi_model(metadataModelName):
-    """Delete an existing saved MCDI format.
+def delete_cdi_model(metadataModelName):
+    """Delete an existing saved CDI format.
 
-    @param metadataModelName: The name of the MCDI format to delete.
+    @param metadataModelName: The name of the CDI format to delete.
     @type metadataModelName: str
     """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        'DELETE FROM mcdi_formats WHERE safe_name=?',
+        'DELETE FROM cdi_formats WHERE safe_name=?',
         (metadataModelName,)
     )
     connection.commit()
     connection.close()
 
 
-def load_mcdi_model_listing():
-    """Load metadata for all MCDI formats.
+def load_cdi_model_listing():
+    """Load metadata for all CDI formats.
 
-    @return: Iterable over metadata for all MCDI formats..
-    @rtype: Iterable over models.MCDIFormatMetadata
+    @return: Iterable over metadata for all CDI formats..
+    @rtype: Iterable over models.CDIFormatMetadata
     """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        'SELECT human_name,safe_name,filename FROM mcdi_formats'
+        'SELECT human_name,safe_name,filename FROM cdi_formats'
     )
-    ret_val = map(lambda x: models.MCDIFormatMetadata(x[0], x[1], x[2]), cursor)
+    ret_val = map(lambda x: models.CDIFormatMetadata(x[0], x[1], x[2]), cursor)
     connection.close()
     return ret_val
 
 
-def load_mcdi_model(name):
-    """Load a complete MCDI format.
+def load_cdi_model(name):
+    """Load a complete CDI format.
 
-    @param name: The name of the MCDI format to load.
+    @param name: The name of the CDI format to load.
     @type name: str
-    @return: MCDI format details and metadata. None if MCDI format
+    @return: CDI format details and metadata. None if CDI format
         by the given name could not be found.
-    @rtype: models.MCDIFormat
+    @rtype: models.CDIFormat
     """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
-        '''SELECT human_name,safe_name,filename FROM mcdi_formats
+        '''SELECT human_name,safe_name,filename FROM cdi_formats
         WHERE safe_name=?''',
         (name.replace(" ", ""),)
     )
@@ -205,7 +205,7 @@ def load_mcdi_model(name):
         content = f.read()
     spec = yaml.load(content)
 
-    return models.MCDIFormat(metadata[0], metadata[1], metadata[2], spec)
+    return models.CDIFormat(metadata[0], metadata[1], metadata[2], spec)
 
 
 def save_presentation_model(newMetadataModel):
@@ -247,7 +247,7 @@ def delete_presentation_model(metadataModelName):
 def load_presentation_model_listing():
     """Load metadata for all presentation formats.
 
-    @return: Iterable over metadata for all MCDI formats..
+    @return: Iterable over metadata for all CDI formats..
     @rtype: Iterable over models.PresentationFormatMetadata
     """
     connection = get_db_connection()
@@ -262,11 +262,11 @@ def load_presentation_model_listing():
 
 
 def load_presentation_model(name):
-    """Load a complete MCDI format.
+    """Load a complete CDI format.
 
-    @param name: The name of the MCDI format to load.
+    @param name: The name of the CDI format to load.
     @type name: str
-    @return: MCDI format details and metadata. None if presentation format
+    @return: CDI format details and metadata. None if presentation format
         by the given name could not be found.
     @rtype: models.PresentationFormat
     """
@@ -294,11 +294,11 @@ def load_presentation_model(name):
 
 
 def save_percentile_model(newMetadataModel):
-    """Save a table of values necessary for calcuating child MCDI percentiles.
+    """Save a table of values necessary for calcuating child CDI percentiles.
 
     @param name: The name of the precentile table model to load.
     @type name: str
-    @return: MCDI format details and metadata.
+    @return: CDI format details and metadata.
     @rtype: models.PercentileTableMetadata
     """
     connection = get_db_connection()
@@ -392,11 +392,11 @@ def list_stuides():
 def load_snapshot_contents(snapshot):
     """Load reports of individual statuses for words.
 
-    Load status for individual / state of words as part of an MCDI snapshot.
+    Load status for individual / state of words as part of an CDI snapshot.
 
     @param snapshot: The snapshot to get contents for.
     @type snapshot: model.SnapshotMetadata
-    @return: Iterable over the details of the given MCDI snapshot.
+    @return: Iterable over the details of the given CDI snapshot.
     @rtype: Iterable over models.SnapshotContent
     """
     connection = get_db_connection()
@@ -796,7 +796,7 @@ def update_snapshot(snapshot_metadata, cursor=None):
             snapshot_metadata.revision,
             languages_val,
             snapshot_metadata.num_languages,
-            snapshot_metadata.mcdi_type,
+            snapshot_metadata.cdi_type,
             snapshot_metadata.hard_of_hearing,
             snapshot_metadata.deleted,
             snapshot_metadata.database_id
@@ -810,7 +810,7 @@ def update_snapshot(snapshot_metadata, cursor=None):
 
 # TODO: Combined for transaction
 def insert_snapshot(snapshot_metadata, word_entries, cursor=None):
-    """Insert a new MCDI snapshot.
+    """Insert a new CDI snapshot.
 
     @param snapshot_metadata: The metadata for this snapshot that should be
         saved along with individual word entries.
@@ -858,7 +858,7 @@ def insert_snapshot(snapshot_metadata, word_entries, cursor=None):
             snapshot_metadata.revision,
             ','.join(snapshot_metadata.languages),
             snapshot_metadata.num_languages,
-            snapshot_metadata.mcdi_type,
+            snapshot_metadata.cdi_type,
             snapshot_metadata.hard_of_hearing,
             snapshot_metadata.deleted
         )
@@ -911,7 +911,7 @@ def insert_parent_form(form_metadata):
             form_metadata.form_id,
             form_metadata.child_name,
             form_metadata.parent_email,
-            form_metadata.mcdi_type,
+            form_metadata.cdi_type,
             form_metadata.database_id,
             form_metadata.study_id,
             form_metadata.study,
@@ -931,9 +931,9 @@ def insert_parent_form(form_metadata):
 
 
 def get_parent_form_by_id(form_id):
-    """Get information about a parent MCDI form.
+    """Get information about a parent CDI form.
 
-    @param form_id: The ID of the parent MCDI form to get the record for.
+    @param form_id: The ID of the parent CDI form to get the record for.
     @type form_id: str
     @return: The ParentForm corresponding to the provided ID or None if that
         form could not be found.
@@ -956,9 +956,9 @@ def get_parent_form_by_id(form_id):
 
 
 def remove_parent_form(form_id):
-    """Delete the record of a parent MCDI form.
+    """Delete the record of a parent CDI form.
 
-    @param form_id: The ID of the parent MCDI form to delete.
+    @param form_id: The ID of the parent CDI form to delete.
     @type form_id: str
     """
     connection = get_db_connection()

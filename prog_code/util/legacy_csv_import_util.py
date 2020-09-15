@@ -428,7 +428,7 @@ def parse_csv_prototypes(contents, percentile_table, act_as_file=False):
     }
 
 
-def build_snapshot(prototype, mcdi_type, languages, hard_of_hearing, cursor):
+def build_snapshot(prototype, cdi_type, languages, hard_of_hearing, cursor):
     metadata = models.SnapshotMetadata(
         -1,
         prototype['child_id'],
@@ -447,7 +447,7 @@ def build_snapshot(prototype, mcdi_type, languages, hard_of_hearing, cursor):
         0,
         languages,
         len(languages),
-        mcdi_type,
+        cdi_type,
         hard_of_hearing,
         0
     )
@@ -460,11 +460,11 @@ def build_snapshot(prototype, mcdi_type, languages, hard_of_hearing, cursor):
     return metadata
 
 
-def parse_csv(contents, mcdi_type, languages, hard_of_hearing,
+def parse_csv(contents, cdi_type, languages, hard_of_hearing,
     act_as_file=False):
 
-    mcdi_model = db_util.load_mcdi_model(mcdi_type)
-    percentile_names = mcdi_model.details['percentiles']
+    cdi_model = db_util.load_cdi_model(cdi_type)
+    percentile_names = cdi_model.details['percentiles']
 
     male_percentiles_name = percentile_names['male']
     female_percentiles_name = percentile_names['female']
@@ -493,7 +493,7 @@ def parse_csv(contents, mcdi_type, languages, hard_of_hearing,
     ids = map(lambda x: x['child_id'], prototypes)
 
     for prototype in prototypes:
-        build_snapshot(prototype, mcdi_type, languages, hard_of_hearing, cursor)
+        build_snapshot(prototype, cdi_type, languages, hard_of_hearing, cursor)
 
     connection.commit()
     connection.close()

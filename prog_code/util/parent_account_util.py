@@ -30,9 +30,9 @@ import prog_code.util.filter_util as filter_util
 import prog_code.util.mail_util as mail_util
 import prog_code.util.user_util as user_util
 
-MCDI_EMAIL_SUBJECT = 'CU Language Project'
+CDI_EMAIL_SUBJECT = 'CU Language Project'
 
-MCDI_EMAIL_TEMPLATE = '''Hello!
+CDI_EMAIL_TEMPLATE = '''Hello!
 
 Thank you for helping the CU Language Project. Please complete a vocabulary checklist for
 %s by going to the URL below.
@@ -55,7 +55,7 @@ For directions and more information please visit our website:
 http://psych.colorado.edu/~colungalab/CULanguage/CU-LANGUAGE_parents.html
 '''
 
-URL_TEMPLATE = 'https://cdi.colorado.edu/base/parent_mcdi/%s'
+URL_TEMPLATE = 'https://cdi.colorado.edu/base/parent_cdi/%s'
 EMAIL_REGEX = re.compile('^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$',
     re.IGNORECASE)
 
@@ -216,11 +216,11 @@ def is_likely_email_address(target):
     return EMAIL_REGEX.match(target) != None
 
 
-def generate_unique_mcdi_form_id():
-    """Generate a unique random parent MCDI form ID.
+def generate_unique_cdi_form_id():
+    """Generate a unique random parent CDI form ID.
 
-    Generate a new parent MCDI form ID that is not currently in use by other
-    MCDI forms and is unpredictable given previous IDs.
+    Generate a new parent CDI form ID that is not currently in use by other
+    CDI forms and is unpredictable given previous IDs.
 
     @return: The newly generated form ID.
     @rtype: str
@@ -234,11 +234,11 @@ def generate_unique_mcdi_form_id():
     return ret_id
 
 
-def send_mcdi_email(parent_form):
-    """Send an email with parent MCDI form information.
+def send_cdi_email(parent_form):
+    """Send an email with parent CDI form information.
 
     Sends an email to a parent with a link that the parent can follow to fill
-    out an MCDI form for thier child.
+    out an CDI form for thier child.
 
     @param parent_form: The form to send an email for.
     @type parent_form: models.ParentForm
@@ -246,8 +246,8 @@ def send_mcdi_email(parent_form):
     form_url = URL_TEMPLATE % parent_form.form_id
     mail_util.send_msg(
         parent_form.parent_email,
-        MCDI_EMAIL_SUBJECT,
-        MCDI_EMAIL_TEMPLATE % (parent_form.child_name, form_url)
+        CDI_EMAIL_SUBJECT,
+        CDI_EMAIL_TEMPLATE % (parent_form.child_name, form_url)
     )
 
 

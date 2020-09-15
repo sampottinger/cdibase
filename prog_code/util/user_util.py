@@ -88,7 +88,7 @@ def create_new_user(email, can_enter_data, can_delete_data, can_import_data,
     @type can_enter_data: bool
     @param can_access_data: Indicates if the user can access existing lab data.
     @type can_access_data: bool
-    @param can_change_formats: Indicates if the user can edit MCDI forms,
+    @param can_change_formats: Indicates if the user can edit CDI forms,
         presentation formats, and percentile data tables.
     @type can_change_formats: bool
     @param can_use_api_key: Indicates if this user can use an API key.
@@ -178,7 +178,7 @@ def update_user(orig_email, email, can_enter_data, can_delete_data,
     @type can_import_data: bool
     @param can_access_data: Indicate if the user can access existing lab data.
     @type can_access_data: bool
-    @param can_change_formats: Indicate if the user can change MCDI forms, CSV
+    @param can_change_formats: Indicate if the user can change CDI forms, CSV
         presentation formats, and percentile tables.
     @type can_change_formats: bool
     @param can_use_api_key: Indicates if this user can use an API key.

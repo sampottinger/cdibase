@@ -46,14 +46,14 @@ def import_data():
     """
     default_format = flask.session.get(
         'last_format_used',
-        db_util.load_mcdi_model_listing()[0].safe_name
+        db_util.load_cdi_model_listing()[0].safe_name
     )
 
     if flask.request.method == 'GET':
         return flask.render_template(
             'import_data.html',
             cur_page='import_data',
-            formats=db_util.load_mcdi_model_listing(),
+            formats=db_util.load_cdi_model_listing(),
             default_format=default_format,
             **session_util.get_standard_template_values()
         )
@@ -62,13 +62,13 @@ def import_data():
         contents = io.StringIO(
             unicode(flask.request.files['file'].read()), newline=None
         )
-        mcdi_type = flask.request.form.get('cdi-type', '')
+        cdi_type = flask.request.form.get('cdi-type', '')
         file_format = flask.request.form['file-format']
 
         if file_format == "new":
             return import_data_new(contents)
         else:
-            return import_data_legacy(contents, mcdi_type)
+            return import_data_legacy(contents, cdi_type)
 
 
 def import_data_new(contents):
@@ -95,10 +95,10 @@ def import_data_new(contents):
     return flask.redirect('/base/import_data')
 
 
-def import_data_legacy(contents, mcdi_type):
+def import_data_legacy(contents, cdi_type):
     results = legacy_csv_import_util.parse_csv(
         contents,
-        mcdi_type,
+        cdi_type,
         ['english'],
         constants.EXPLICIT_FALSE,
         True
@@ -118,7 +118,7 @@ def import_data_legacy(contents, mcdi_type):
         })
     )
 
-    if mcdi_type != '':
-        flask.session['last_format_used'] = mcdi_type
+    if cdi_type != '':
+        flask.session['last_format_used'] = cdi_type
 
     return flask.redirect('/base/import_data')
