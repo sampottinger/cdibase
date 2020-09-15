@@ -71,7 +71,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
 
         self.__callback_called = False
 
-    def __setup_test_cdi(self, callback, run_automaton_actions=True):
+    def __setup_test_cdi(self, callback=None, run_automaton_actions=True):
         with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model') as mock:
             mock.return_value = models.MCDIFormat(
                 'test MCDI type',
@@ -94,7 +94,8 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
                 self.__test_automaton.parse_header(CORRECT_TEST_HEADER_VALUES)
                 self.__test_automaton.parse_cdi_type('test_mcdi_type')
 
-            callback()
+            if callback:
+                callback()
 
             mock.assert_called_with('test_mcdi_type')
 
@@ -401,7 +402,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             new_csv_import_util.STATE_FOUND_ERROR
         )
 
-    def test_state_parse_session_date_valid(self):
+    def test_state_parse_session_date_valid_dash(self):
         self.__test_automaton.parse_session_date('2011-04-13')
 
         self.assertEqual(
@@ -409,7 +410,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
             new_csv_import_util.STATE_PARSE_SESSION_NUM
         )
 
-    def test_state_parse_session_date_valid(self):
+    def test_state_parse_session_date_valid_slash(self):
         self.__test_automaton.parse_session_date('2011/04/13')
 
         self.assertEqual(
@@ -983,7 +984,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
         )
 
 
-    def test_state_parse_start_words_valid(self):
+    def test_state_parse_start_words_valid_start_and_word(self):
         def callback():
             self.__callback_called = True
             self.__test_automaton.parse_word_start('1')
@@ -997,7 +998,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
         self.__setup_test_cdi(callback)
         self.assertTrue(self.__callback_called)
 
-    def test_state_parse_start_words_invalid_range(self):
+    def test_state_parse_start_words_invalid_range_with_start(self):
         def callback():
             self.__callback_called = True
             self.__test_automaton.parse_word_start('1')
@@ -1011,7 +1012,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
         self.__setup_test_cdi(callback)
         self.assertTrue(self.__callback_called)
 
-    def test_state_parse_start_words_invalid_type(self):
+    def test_state_parse_start_words_invalid_type_with_start(self):
         def callback():
             self.__callback_called = True
             self.__test_automaton.parse_word_start('1')
@@ -1025,7 +1026,7 @@ class NewUploadParserAutomatonTests(unittest.TestCase):
         self.__setup_test_cdi(callback)
         self.assertTrue(self.__callback_called)
 
-    def test_state_parse_start_words_invalid_empty(self):
+    def test_state_parse_start_words_invalid_empty_start_and_word(self):
         def callback():
             self.__callback_called = True
             self.__test_automaton.parse_word_start('1')

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import threading
 
-import flask_mail
+import flask_mail # type: ignore
 
 TESTING = False
 DEBUG_PRINT_EMAIL = False

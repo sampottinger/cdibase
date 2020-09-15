@@ -18,12 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v3
 """
+import typing
 
 import prog_code.util.db_util as db_util
 import prog_code.util.user_util as user_util
 
 
-def interp_csv_field(target):
+def interp_csv_field(target: str) -> typing.List[str]:
     """Interpret a simple comma seperated string as a list of string values.
 
     Interpret a simple string that deliminates values by commas (no quoting
@@ -40,7 +41,7 @@ def interp_csv_field(target):
         return target.split(',')
 
 
-def get_if_avail(target_list, index, default_value=''):
+def get_if_avail(target_list: str, index: int, default_value: str = '') -> str:
     """Get a value from a list if that item is available.
 
     @param target_list: The list to try to get an item from.
@@ -49,6 +50,7 @@ def get_if_avail(target_list, index, default_value=''):
     @type index: int
     @keyword default_value: The value to return if the given item is not found
         in the specifed collection.
+    @return: The value if available or default_value if not given.
     """
     if len(target_list) > index:
         return target_list[index]

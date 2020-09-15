@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # TODO(apottinger): Change to cdibase.py
 
-import flask
+import flask # type: ignore
 
 from flask_mail import Mail
 
