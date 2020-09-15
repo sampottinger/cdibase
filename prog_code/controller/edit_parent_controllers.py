@@ -598,10 +598,10 @@ def handle_parent_mcdi_form(form_id):
                 )
                 word_entries = dict(known_words_tuples)
 
-        option_values = map(
+        option_values = list(map(
             lambda x: x['value'],
             selected_format.details['options']
-        )
+        ))
 
         for option in selected_format.details['options']:
             if 'prefill_value' in option:
