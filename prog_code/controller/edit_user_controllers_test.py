@@ -62,188 +62,223 @@ class TestEditUserControllers(unittest.TestCase):
     def setUp(self):
         self.app = daxlabbase.app
         self.app.debug = True
+        self.__callback_called = False
+
+    def __run_with_mocks(self, on_start, body, on_end):
+        with unittest.mock.patch('prog_code.util.user_util.get_user') as mock_get_user:
+            with unittest.mock.patch('prog_code.util.user_util.delete_user') as mock_delete_user:
+                with unittest.mock.patch('prog_code.util.user_util.update_user') as mock_update_user:
+                    with unittest.mock.patch('prog_code.util.user_util.create_new_user') as mock_create_new_user:
+                        with unittest.mock.patch('prog_code.util.db_util.report_usage') as mock_report_usage:
+
+                            mocks = {
+                                'get_user': mock_get_user,
+                                'delete_user': mock_delete_user,
+                                'update_user': mock_update_user,
+                                'create_new_user': mock_create_new_user,
+                                'report_usage': mock_report_usage
+                            }
+
+                            on_start(mocks)
+                            body()
+                            on_end(mocks)
+
+                            self.__callback_called = True
+
+    def __assert_callback(self):
+        self.assertTrue(self.__callback_called)
 
     def test_delete_user(self):
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(user_util, 'delete_user')
-        self.mox.StubOutWithMock(db_util, 'report_usage')
+        def body():
+            with self.app.test_client() as client:
 
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        user_util.get_user(TARGET_EMAIL).AndReturn(TARGET_USER)
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        db_util.report_usage(
-            TEST_EMAIL,
-            "Delete User",
-            json.dumps({"user": TARGET_EMAIL})
-        )
+                url = '/base/edit_users/%s/delete' % TARGET_EMAIL
+                client.get(url)
 
-        user_util.delete_user(TARGET_EMAIL)
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.CONFIRMATION_ATTR in sess)
+                    del sess[constants.CONFIRMATION_ATTR]
+                    self.assertFalse(constants.ERROR_ATTR in sess)
 
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        user_util.get_user(TARGET_EMAIL).AndReturn(None)
+                url = '/base/edit_users/%s/delete' % TARGET_EMAIL
+                client.get(url)
 
-        self.mox.ReplayAll()
+                with client.session_transaction() as sess:
+                    self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+                    self.assertTrue(constants.ERROR_ATTR in sess)
 
-        with self.app.test_client() as client:
+        def on_start(mocks):
+            mocks['get_user'].side_effect = [
+                TEST_USER,
+                TARGET_USER,
+                TEST_USER,
+                None
+            ]
 
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+        def on_end(mocks):
+            mocks['get_user'].assert_any_call(TEST_EMAIL)
+            mocks['get_user'].assert_any_call(TARGET_EMAIL)
+            mocks['report_usage'].assert_called_once()
+            mocks['report_usage'].assert_called_with(
+                TEST_EMAIL,
+                'Delete User',
+                json.dumps({'user': TARGET_EMAIL})
+            )
+            mocks['delete_user'].assert_called_once()
+            mocks['delete_user'].assert_called_with(TARGET_EMAIL)
 
-            url = '/base/edit_users/%s/delete' % TARGET_EMAIL
-            client.get(url)
-
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.CONFIRMATION_ATTR in sess)
-                del sess[constants.CONFIRMATION_ATTR]
-                self.assertFalse(constants.ERROR_ATTR in sess)
-
-            url = '/base/edit_users/%s/delete' % TARGET_EMAIL
-            client.get(url)
-
-            with client.session_transaction() as sess:
-                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
-                self.assertTrue(constants.ERROR_ATTR in sess)
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_edit_user(self):
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(user_util, 'delete_user')
-        self.mox.StubOutWithMock(user_util, 'update_user')
-        self.mox.StubOutWithMock(db_util, 'report_usage')
+        def body():
+            with self.app.test_client() as client:
 
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        user_util.get_user(TARGET_EMAIL).AndReturn(None)
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        user_util.get_user(TARGET_EMAIL).AndReturn(TARGET_USER)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+                url = '/base/edit_users/%s/edit' % TARGET_EMAIL
+                client.post(url)
+                with client.session_transaction() as sess:
+                    self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    del sess[constants.ERROR_ATTR]
 
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        user_util.get_user(TARGET_EMAIL).AndReturn(TARGET_USER)
-        user_util.get_user(NEW_EMAIL).AndReturn(None)
+                url = '/base/edit_users/%s/edit' % TARGET_EMAIL
+                client.post(url, data={
+                    'new_email': TEST_EMAIL
+                })
+                with client.session_transaction() as sess:
+                    self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    del sess[constants.ERROR_ATTR]
 
-        db_util.report_usage(
-            TEST_EMAIL,
-            "Edit User",
-            json.dumps({"user": TARGET_EMAIL})
-        )
+                url = '/base/edit_users/%s/edit' % TARGET_EMAIL
+                client.post(url, data={
+                    'new_email': NEW_EMAIL,
+                    'can_enter_data': constants.FORM_SELECTED_VALUE,
+                    'can_import_data': constants.FORM_SELECTED_VALUE,
+                    'can_access_data': constants.FORM_SELECTED_VALUE,
+                    'can_use_api_key': constants.FORM_SELECTED_VALUE
+                })
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.CONFIRMATION_ATTR in sess)
+                    self.assertFalse(constants.ERROR_ATTR in sess)
 
-        user_util.update_user(
-            TARGET_EMAIL,
-            NEW_EMAIL,
-            True,
-            False,
-            True,
-            False,
-            True,
-            False,
-            True,
-            False
-        )
+        def on_start(mocks):
+            mocks['get_user'].side_effect = [
+                TEST_USER,
+                None,
+                TEST_USER,
+                TARGET_USER,
+                TEST_USER,
+                TEST_USER,
+                TARGET_USER,
+                None
+            ]
 
-        self.mox.ReplayAll()
+        def on_end(mocks):
+            mocks['get_user'].assert_any_call(TEST_EMAIL)
+            mocks['get_user'].assert_any_call(TARGET_EMAIL)
+            mocks['report_usage'].assert_called_with(
+                TEST_EMAIL,
+                'Edit User',
+                json.dumps({'user': TARGET_EMAIL})
+            )
+            mocks['update_user'].assert_called_with(
+                TARGET_EMAIL,
+                NEW_EMAIL,
+                True,
+                False,
+                True,
+                False,
+                True,
+                False,
+                True,
+                False
+            )
 
-        with self.app.test_client() as client:
-
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
-
-            url = '/base/edit_users/%s/edit' % TARGET_EMAIL
-            client.post(url)
-            with client.session_transaction() as sess:
-                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                del sess[constants.ERROR_ATTR]
-
-            url = '/base/edit_users/%s/edit' % TARGET_EMAIL
-            client.post(url, data={
-                'new_email': TEST_EMAIL
-            })
-            with client.session_transaction() as sess:
-                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                del sess[constants.ERROR_ATTR]
-
-            url = '/base/edit_users/%s/edit' % TARGET_EMAIL
-            client.post(url, data={
-                'new_email': NEW_EMAIL,
-                'can_enter_data': constants.FORM_SELECTED_VALUE,
-                'can_import_data': constants.FORM_SELECTED_VALUE,
-                'can_access_data': constants.FORM_SELECTED_VALUE,
-                'can_use_api_key': constants.FORM_SELECTED_VALUE
-            })
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.CONFIRMATION_ATTR in sess)
-                self.assertFalse(constants.ERROR_ATTR in sess)
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_add_user(self):
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(user_util, 'create_new_user')
-        self.mox.StubOutWithMock(db_util, 'report_usage')
+        def body():
+            with self.app.test_client() as client:
 
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        user_util.get_user(TARGET_EMAIL).AndReturn(TARGET_USER)
+                client.post('/base/edit_users/_add', data={
+                    'new_email': '',
+                    'can_enter_data': constants.FORM_SELECTED_VALUE,
+                    'can_import_data': constants.FORM_SELECTED_VALUE,
+                    'can_access_data': constants.FORM_SELECTED_VALUE,
+                    'can_use_api_key': constants.FORM_SELECTED_VALUE
+                })
+                with client.session_transaction() as sess:
+                    self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    del sess[constants.ERROR_ATTR]
 
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        user_util.get_user(NEW_EMAIL).AndReturn(None)
+                client.post('/base/edit_users/_add', data={
+                    'new_email': TARGET_EMAIL,
+                    'can_enter_data': constants.FORM_SELECTED_VALUE,
+                    'can_import_data': constants.FORM_SELECTED_VALUE,
+                    'can_access_data': constants.FORM_SELECTED_VALUE,
+                    'can_use_api_key': constants.FORM_SELECTED_VALUE
+                })
+                with client.session_transaction() as sess:
+                    self.assertFalse(constants.CONFIRMATION_ATTR in sess)
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    del sess[constants.ERROR_ATTR]
 
-        db_util.report_usage(
-            TEST_EMAIL,
-            "Add User",
-            json.dumps({"user": NEW_EMAIL})
-        )
+                client.post('/base/edit_users/_add', data={
+                    'new_email': NEW_EMAIL,
+                    'can_enter_data': constants.FORM_SELECTED_VALUE,
+                    'can_import_data': constants.FORM_SELECTED_VALUE,
+                    'can_access_data': constants.FORM_SELECTED_VALUE,
+                    'can_use_api_key': constants.FORM_SELECTED_VALUE
+                })
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.CONFIRMATION_ATTR in sess)
+                    self.assertFalse(constants.ERROR_ATTR in sess)
 
-        user_util.create_new_user(
-            NEW_EMAIL,
-            True,
-            False,
-            True,
-            False,
-            True,
-            False,
-            True,
-            False
-        )
+        def on_start(mocks):
+            mocks['get_user'].side_effect = [
+                TEST_USER,
+                TEST_USER,
+                TARGET_USER,
+                TEST_USER,
+                None
+            ]
 
-        self.mox.ReplayAll()
+        def on_end(mocks):
+            mocks['get_user'].assert_any_call(TEST_EMAIL)
+            mocks['get_user'].assert_any_call(TARGET_EMAIL)
+            mocks['get_user'].assert_any_call(NEW_EMAIL)
 
-        with self.app.test_client() as client:
+            mocks['report_usage'].assert_called_once()
+            mocks['report_usage'].assert_called_with(
+                TEST_EMAIL,
+                "Add User",
+                json.dumps({"user": NEW_EMAIL})
+            )
 
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+            mocks['create_new_user'].assert_called_once()
+            mocks['create_new_user'].assert_called_with(
+                NEW_EMAIL,
+                True,
+                False,
+                True,
+                False,
+                True,
+                False,
+                True,
+                False
+            )
 
-            client.post('/base/edit_users/_add', data={
-                'new_email': '',
-                'can_enter_data': constants.FORM_SELECTED_VALUE,
-                'can_import_data': constants.FORM_SELECTED_VALUE,
-                'can_access_data': constants.FORM_SELECTED_VALUE,
-                'can_use_api_key': constants.FORM_SELECTED_VALUE
-            })
-            with client.session_transaction() as sess:
-                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                del sess[constants.ERROR_ATTR]
-
-            client.post('/base/edit_users/_add', data={
-                'new_email': TARGET_EMAIL,
-                'can_enter_data': constants.FORM_SELECTED_VALUE,
-                'can_import_data': constants.FORM_SELECTED_VALUE,
-                'can_access_data': constants.FORM_SELECTED_VALUE,
-                'can_use_api_key': constants.FORM_SELECTED_VALUE
-            })
-            with client.session_transaction() as sess:
-                self.assertFalse(constants.CONFIRMATION_ATTR in sess)
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                del sess[constants.ERROR_ATTR]
-
-            client.post('/base/edit_users/_add', data={
-                'new_email': NEW_EMAIL,
-                'can_enter_data': constants.FORM_SELECTED_VALUE,
-                'can_import_data': constants.FORM_SELECTED_VALUE,
-                'can_access_data': constants.FORM_SELECTED_VALUE,
-                'can_use_api_key': constants.FORM_SELECTED_VALUE
-            })
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.CONFIRMATION_ATTR in sess)
-                self.assertFalse(constants.ERROR_ATTR in sess)
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
