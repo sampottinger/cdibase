@@ -112,7 +112,7 @@ Start the local development server with:
 $ python runserver.py
 ```
 
-Navigate to ```http://localhost:5000/base``` to access the locally running development server. 
+Navigate to ```http://localhost:5000/base``` to access the locally running development server.
 
 You may find it useful to have mail printed to the console as it does not send while in debug mode. Simply edit flask_config.cfg to read ```DEBUG_PRINT_EMAIL = True```.
 
@@ -167,9 +167,9 @@ $ python run_test.py
 
 You should see output that looks like:
 ```
-$ python run_test.py 
+$ python run_test.py
 
-Ran XX tests in 0.545s 
+Ran XX tests in 0.545s
 
 OK
 ```
@@ -182,4 +182,4 @@ The application consists of models, views (templates), controllers, and utilitie
 <br>
 ### Standards, Conventions, and State of Development
 
-Ideally future development should follow an 80% unit testing coverage guidelines for the controllers with discretionary unit test coverage for the utilities. Python code should include [epydoc](http://epydoc.sourceforge.net/) inline documentation and should follow [Google's Python Style Guidelines](http://google-styleguide.googlecode.com/svn/trunk/pyguide.html).
+Ideally future development should follow an 80% unit testing coverage guidelines for the controllers with discretionary unit test coverage for the utilities. Python code should include [epydoc](http://epydoc.sourceforge.net/) inline documentation and should follow [Google's Python Style Guidelines](http://google-styleguide.googlecode.com/svn/trunk/pyguide.html). Note, after the drop of mox, test code is excluded from the style guidelines due to things like line length but conformance is still recommended when convenient. 

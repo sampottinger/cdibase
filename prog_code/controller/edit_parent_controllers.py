@@ -199,7 +199,7 @@ def send_mcdi_form():
             flask.session[constants.ERROR_ATTR] = GENDER_INVALID_MSG
             return flask.redirect(PARENT_ACCOUNT_CONTROLS_URL)
 
-        # Create a new parent form model but wait to save it until resolving 
+        # Create a new parent form model but wait to save it until resolving
         # missing values by using a previous entry for the specified child.
         new_form = models.ParentForm(
             form_id,
@@ -374,19 +374,19 @@ def handle_parent_mcdi_form(form_id):
         if not successful:
             flask.session['SAVED_WORDS'] = word_entries
             return flask.redirect(request.path)
-        
+
         # Load the study from the parent form or, if the parent form does not
         # have it, load it form the user's response.
         study = parent_form.study
         if study == None or study == '':
             study = request.form.get('study', None)
-        
+
         # Load the study ID from the parent form or, if the parent form does not
         # have it, load it form the user's response.
         study_id = parent_form.study_id
         if study_id == None or study_id == '':
             study_id = request.form.get('study_id', None)
-        
+
         # Load the db ID from the parent form or, if the parent form does not
         # have it, load it form the user's response.
         database_id = parent_form.database_id
@@ -402,7 +402,7 @@ def handle_parent_mcdi_form(form_id):
         else:
             results = parent_account_util.get_snapshot_chronology_for_study_id(
                 study, study_id)
-        
+
         # Ensure that the parent form has birthday information or load it from
         # the user response, checking that it is of appropriate ISO format.
         birthday = parent_form.birthday
@@ -423,7 +423,7 @@ def handle_parent_mcdi_form(form_id):
                 ]
         else:
             birthday_parts = birthday.split('/')
-        
+
         # Ensure that the parent form has gender information or load it from
         # the user response, ensuring the gender provided is of an appropriate
         # value.
@@ -436,7 +436,7 @@ def handle_parent_mcdi_form(form_id):
                 flask.session[constants.ERROR_ATTR] = GENDER_INVALID_MSG
                 flask.session['SAVED_WORDS'] = word_entries
                 return flask.redirect(request.path)
-        
+
         # Ensure that the parent form has items excluded information or load it
         # from the user response, ensuring the items excluded information
         # provided is a valid value.
@@ -446,7 +446,7 @@ def handle_parent_mcdi_form(form_id):
                 request.form.get('items_excluded', None))
             if items_excluded == None or items_excluded < 0:
                 items_excluded = 0
-        
+
         # Ensure that the parent form has extra categories information or load
         # it from the user response, ensuring the extra categories information
         # provided is a valid value.
@@ -466,7 +466,7 @@ def handle_parent_mcdi_form(form_id):
                 request.form.get('total_num_sessions', None))
             if total_num_sessions == None or total_num_sessions < 0:
                 total_num_sessions = 0
-        
+
         # Ensure that the parent form has languages information or load it from
         # the user response.
         languages = parent_form.languages
@@ -480,7 +480,7 @@ def handle_parent_mcdi_form(form_id):
             return flask.redirect(request.path)
         else:
             languages = languages.split(',')
-        
+
         # Ensure that the parent form has hard of hearing information or load
         # it from the user response, ensuring the hard of hearing information
         # provided is a valid value.
@@ -527,7 +527,7 @@ def handle_parent_mcdi_form(form_id):
                 flask.session[constants.ERROR_ATTR] = msg
                 flask.session['SAVED_WORDS'] = word_entries
                 return flask.redirect(request.path)
-            
+
             percentile = math_util.find_percentile(
                 percentile_model.details,
                 words_spoken,
@@ -602,7 +602,7 @@ def handle_parent_mcdi_form(form_id):
             lambda x: x['value'],
             selected_format.details['options']
         )
-        
+
         for option in selected_format.details['options']:
             if 'prefill_value' in option:
                 option_values.extend(option['prefill_value'])

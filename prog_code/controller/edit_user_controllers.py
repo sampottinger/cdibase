@@ -39,6 +39,7 @@ EMAIL_NOT_PROVIDED_MSG = 'Email not provided. Please try again.'
 ACCOUNT_CREATED_MSG = 'Account created for %s.'
 ADD_USERS_URL = '/base/edit_users/_add'
 
+
 @app.route('/base/edit_users')
 @session_util.require_login(admin=True)
 def edit_users():
@@ -103,7 +104,7 @@ def edit_user(email):
             action_label='Edit User Account',
             **session_util.get_standard_template_values()
         )
-    
+
     else:
         new_email = request.form.get('new_email', '')
 
