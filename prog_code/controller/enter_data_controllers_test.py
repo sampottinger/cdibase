@@ -194,20 +194,28 @@ class EnterDataControllersTests(unittest.TestCase):
                     with unittest.mock.patch('prog_code.util.db_util.report_usage') as mock_report_usage:
                         with unittest.mock.patch('prog_code.util.db_util.load_percentile_model') as mock_load_percentile_model:
                             with unittest.mock.patch('prog_code.util.math_util.find_percentile') as mock_find_percentile:
-                                mocks = {
-                                    'get_user': mock_get_user,
-                                    'load_mcdi_model': mock_load_mcdi_model,
-                                    'insert_snapshot': mock_insert_snapshot,
-                                    'report_usage': mock_report_usage,
-                                    'load_percentile_model': mock_load_percentile_model,
-                                    'find_percentile': mock_find_percentile
-                                }
+                                with unittest.mock.patch('prog_code.util.filter_util.run_search_query') as mock_run_search_query:
+                                    with unittest.mock.patch('prog_code.util.db_util.lookup_global_participant_id') as mock_lookup_global_participant_id:
+                                        with unittest.mock.patch('prog_code.util.db_util.update_participant_metadata') as mock_update_participant_metadata:
+                                            with unittest.mock.patch('prog_code.util.recalc_util.recalculate_ages_and_percentiles') as mock_recalculate_ages_and_percentiles:
+                                                mocks = {
+                                                    'get_user': mock_get_user,
+                                                    'load_mcdi_model': mock_load_mcdi_model,
+                                                    'insert_snapshot': mock_insert_snapshot,
+                                                    'report_usage': mock_report_usage,
+                                                    'load_percentile_model': mock_load_percentile_model,
+                                                    'find_percentile': mock_find_percentile,
+                                                    'run_search_query': mock_run_search_query,
+                                                    'lookup_global_participant_id': mock_lookup_global_participant_id,
+                                                    'update_participant_metadata': mock_update_participant_metadata,
+                                                    'recalculate_ages_and_percentiles': mock_recalculate_ages_and_percentiles
+                                                }
 
-                                on_start(mocks)
-                                body()
-                                on_end(mocks)
+                                                on_start(mocks)
+                                                body()
+                                                on_end(mocks)
 
-                                self.__callback_called = True
+                                                self.__callback_called = True
 
     def __default_on_start(self, mocks):
         mocks['get_user'].return_value = TEST_USER
@@ -542,178 +550,188 @@ class EnterDataControllersTests(unittest.TestCase):
         self.__run_with_mocks(on_start, body, on_end)
         self.__assert_callback()
 
-#    def test_lookup_studies_by_global_id(self):
-#        ret_list = [
-#            TEST_EXPECTED_SNAPSHOT,
-#            TEST_EXPECTED_SNAPSHOT_2
-#        ]
-#
-#        self.mox.StubOutWithMock(filter_util, 'run_search_query')
-#        self.mox.StubOutWithMock(user_util, 'get_user')
-#        self.mox.StubOutWithMock(db_util, 'report_usage')
-#
-#        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-#        filter_util.run_search_query(
-#            [models.Filter('child_id', 'eq', TEST_DB_ID)],
-#            constants.SNAPSHOTS_DB_TABLE
-#        ).AndReturn(ret_list)
-#
-#        self.mox.ReplayAll()
-#
-#        with self.app.test_client() as client:
-#
-#            with client.session_transaction() as sess:
-#                sess['email'] = TEST_EMAIL
-#
-#            lookup_user_data = {
-#                'method': 'by_global_id',
-#                'global_id': TEST_DB_ID
-#            }
-#            result_info = client.post(
-#                '/base/edit_data/lookup_user',
-#                data=lookup_user_data
-#            )
-#
-#        result = json.loads(result_info.data)
-#        returned_global_id = result['global_id']
-#        returned_studies = result['cdis']
-#
-#        self.assertEqual(returned_global_id, TEST_DB_ID)
-#
-#        self.assertEqual(len(returned_studies), 2)
-#
-#        if returned_studies[0]['study'] == TEST_STUDY:
-#            self.assertEqual(returned_studies[0]['study'], TEST_STUDY)
-#            self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID)
-#            self.assertEqual(returned_studies[1]['study'], TEST_STUDY_2)
-#            self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID_2)
-#        else:
-#            self.assertEqual(returned_studies[0]['study'], TEST_STUDY_2)
-#            self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID_2)
-#            self.assertEqual(returned_studies[1]['study'], TEST_STUDY)
-#            self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID)
-#
-#        self.check_lookup_studies_metadata(result['metadata'])
-#
-#    def test_lookup_studies_by_study_id(self):
-#        ret_list = [
-#            TEST_EXPECTED_SNAPSHOT,
-#            TEST_EXPECTED_SNAPSHOT_2
-#        ]
-#
-#        self.mox.StubOutWithMock(user_util, 'get_user')
-#        self.mox.StubOutWithMock(filter_util, 'run_search_query')
-#        self.mox.StubOutWithMock(db_util, 'lookup_global_participant_id')
-#        self.mox.StubOutWithMock(db_util, 'report_usage')
-#
-#        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-#        db_util.lookup_global_participant_id(TEST_STUDY, TEST_STUDY_ID
-#            ).AndReturn(TEST_DB_ID)
-#        filter_util.run_search_query(
-#            [models.Filter('child_id', 'eq', TEST_DB_ID)],
-#            constants.SNAPSHOTS_DB_TABLE
-#        ).AndReturn(ret_list)
-#
-#        self.mox.ReplayAll()
-#
-#        with self.app.test_client() as client:
-#
-#            with client.session_transaction() as sess:
-#                sess['email'] = TEST_EMAIL
-#
-#            lookup_user_data = {
-#                'method': 'by_study_id',
-#                'study': TEST_STUDY,
-#                'study_id': TEST_STUDY_ID
-#            }
-#            result_info = client.post(
-#                '/base/edit_data/lookup_user',
-#                data=lookup_user_data
-#            )
-#
-#        result = json.loads(result_info.data)
-#        returned_global_id = result['global_id']
-#        returned_studies = result['cdis']
-#
-#        self.assertEqual(returned_global_id, TEST_DB_ID)
-#
-#        self.assertEqual(len(returned_studies), 2)
-#
-#        if returned_studies[0]['study'] == TEST_STUDY:
-#            self.assertEqual(returned_studies[0]['study'], TEST_STUDY)
-#            self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID)
-#            self.assertEqual(returned_studies[1]['study'], TEST_STUDY_2)
-#            self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID_2)
-#        else:
-#            self.assertEqual(returned_studies[0]['study'], TEST_STUDY_2)
-#            self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID_2)
-#            self.assertEqual(returned_studies[1]['study'], TEST_STUDY)
-#            self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID)
-#
-#        self.check_lookup_studies_metadata(result['metadata'])
-#
-#    def test_edit_metadata(self):
-#        new_birthday = '2014/12/28'
-#        new_languages = ['english', 'spanish']
-#        ret_list = [
-#            TEST_EXPECTED_SNAPSHOT,
-#            TEST_EXPECTED_SNAPSHOT_2,
-#        ]
-#
-#        self.mox.StubOutWithMock(user_util, 'get_user')
-#        self.mox.StubOutWithMock(db_util, 'update_participant_metadata')
-#        self.mox.StubOutWithMock(filter_util, 'run_search_query')
-#        self.mox.StubOutWithMock(db_util, 'report_usage')
-#        self.mox.StubOutWithMock(
-#            recalc_util,
-#            'recalculate_ages_and_percentiles'
-#        )
-#
-#        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-#
-#        db_util.report_usage(
-#            'test.email@example.com',
-#            'Update Metadata',
-#            '{"global_id": 1}'
-#        )
-#
-#        db_util.update_participant_metadata(
-#            TEST_DB_ID,
-#            constants.FEMALE,
-#            new_birthday,
-#            constants.EXPLICIT_TRUE,
-#            new_languages,
-#            snapshot_ids=[
-#                {'study': TEST_STUDY, 'id': 1},
-#                {'study': TEST_STUDY_2, 'id': 2}
-#            ]
-#        )
-#        filter_util.run_search_query(
-#            [models.Filter('child_id', 'eq', TEST_DB_ID)],
-#            constants.SNAPSHOTS_DB_TABLE
-#        ).AndReturn(ret_list)
-#        recalc_util.recalculate_ages_and_percentiles(ret_list)
-#
-#        self.mox.ReplayAll()
-#
-#        with self.app.test_client() as client:
-#
-#            with client.session_transaction() as sess:
-#                sess['email'] = TEST_EMAIL
-#
-#            new_metadata = {
-#                'global_id': TEST_DB_ID,
-#                'gender': constants.FEMALE,
-#                'birthday': new_birthday,
-#                'hard_of_hearing': constants.EXPLICIT_TRUE,
-#                'languages': ','.join(new_languages),
-#                'snapshot_ids': json.dumps([
-#                    {'study': TEST_STUDY, 'id': 1},
-#                    {'study': TEST_STUDY_2, 'id': 2}
-#                ])
-#            }
-#
-#            client.post(
-#                '/base/edit_data',
-#                data=new_metadata
-#            )
+    def test_lookup_studies_by_global_id(self):
+
+        def body():
+            with self.app.test_client() as client:
+
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
+
+                lookup_user_data = {
+                    'method': 'by_global_id',
+                    'global_id': TEST_DB_ID
+                }
+                result_info = client.post(
+                    '/base/edit_data/lookup_user',
+                    data=lookup_user_data
+                )
+
+            result = json.loads(result_info.data)
+            returned_global_id = result['global_id']
+            returned_studies = result['cdis']
+
+            self.assertEqual(returned_global_id, TEST_DB_ID)
+
+            self.assertEqual(len(returned_studies), 2)
+
+            if returned_studies[0]['study'] == TEST_STUDY:
+                self.assertEqual(returned_studies[0]['study'], TEST_STUDY)
+                self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID)
+                self.assertEqual(returned_studies[1]['study'], TEST_STUDY_2)
+                self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID_2)
+            else:
+                self.assertEqual(returned_studies[0]['study'], TEST_STUDY_2)
+                self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID_2)
+                self.assertEqual(returned_studies[1]['study'], TEST_STUDY)
+                self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID)
+
+            self.check_lookup_studies_metadata(result['metadata'])
+
+        def on_start(mocks):
+            ret_list = [
+                TEST_EXPECTED_SNAPSHOT,
+                TEST_EXPECTED_SNAPSHOT_2
+            ]
+
+            mocks['get_user'].return_value = TEST_USER
+            mocks['run_search_query'].return_value = ret_list
+
+        def on_end(mocks):
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+            mocks['run_search_query'].assert_called_with(
+                [models.Filter('child_id', 'eq', TEST_DB_ID)],
+                constants.SNAPSHOTS_DB_TABLE
+            )
+
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
+
+    def test_lookup_studies_by_study_id(self):
+
+        def body():
+            with self.app.test_client() as client:
+
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
+
+                lookup_user_data = {
+                    'method': 'by_study_id',
+                    'study': TEST_STUDY,
+                    'study_id': TEST_STUDY_ID
+                }
+                result_info = client.post(
+                    '/base/edit_data/lookup_user',
+                    data=lookup_user_data
+                )
+
+            result = json.loads(result_info.data)
+            returned_global_id = result['global_id']
+            returned_studies = result['cdis']
+
+            self.assertEqual(returned_global_id, TEST_DB_ID)
+
+            self.assertEqual(len(returned_studies), 2)
+
+            if returned_studies[0]['study'] == TEST_STUDY:
+                self.assertEqual(returned_studies[0]['study'], TEST_STUDY)
+                self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID)
+                self.assertEqual(returned_studies[1]['study'], TEST_STUDY_2)
+                self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID_2)
+            else:
+                self.assertEqual(returned_studies[0]['study'], TEST_STUDY_2)
+                self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID_2)
+                self.assertEqual(returned_studies[1]['study'], TEST_STUDY)
+                self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID)
+
+            self.check_lookup_studies_metadata(result['metadata'])
+
+        def on_start(mocks):
+            ret_list = [
+                TEST_EXPECTED_SNAPSHOT,
+                TEST_EXPECTED_SNAPSHOT_2
+            ]
+
+            mocks['get_user'].return_value = TEST_USER
+            mocks['lookup_global_participant_id'].return_value = TEST_DB_ID
+            mocks['run_search_query'].return_value = ret_list
+
+        def on_end(mocks):
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+            mocks['lookup_global_participant_id'].assert_called_with(
+                TEST_STUDY,
+                TEST_STUDY_ID
+            )
+            mocks['run_search_query'].assert_called_with(
+                [models.Filter('child_id', 'eq', TEST_DB_ID)],
+                constants.SNAPSHOTS_DB_TABLE
+            )
+
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
+
+    def test_edit_metadata(self):
+        self.__new_birthday = '2014/12/28'
+        self.__new_languages = ['english', 'spanish']
+        self.__ret_list = [
+            TEST_EXPECTED_SNAPSHOT,
+            TEST_EXPECTED_SNAPSHOT_2,
+        ]
+
+        def body():
+            with self.app.test_client() as client:
+
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
+
+                new_metadata = {
+                    'global_id': TEST_DB_ID,
+                    'gender': constants.FEMALE,
+                    'birthday': self.__new_birthday,
+                    'hard_of_hearing': constants.EXPLICIT_TRUE,
+                    'languages': ','.join(self.__new_languages),
+                    'snapshot_ids': json.dumps([
+                        {'study': TEST_STUDY, 'id': 1},
+                        {'study': TEST_STUDY_2, 'id': 2}
+                    ])
+                }
+
+                client.post(
+                    '/base/edit_data',
+                    data=new_metadata
+                )
+
+        def on_start(mocks):
+            mocks['get_user'].return_value = TEST_USER
+            mocks['run_search_query'].return_value = self.__ret_list
+
+        def on_end(mocks):
+            mocks['get_user'].assert_called_with(
+                TEST_EMAIL
+            )
+            mocks['report_usage'].assert_called_with(
+                'test.email@example.com',
+                'Update Metadata',
+                '{"global_id": 1}'
+            )
+            mocks['update_participant_metadata'].assert_called_with(
+                TEST_DB_ID,
+                constants.FEMALE,
+                self.__new_birthday,
+                constants.EXPLICIT_TRUE,
+                self.__new_languages,
+                snapshot_ids=[
+                    {'study': TEST_STUDY, 'id': 1},
+                    {'study': TEST_STUDY_2, 'id': 2}
+                ]
+            )
+            mocks['run_search_query'].assert_called_with(
+                [models.Filter('child_id', 'eq', TEST_DB_ID)],
+                constants.SNAPSHOTS_DB_TABLE
+            )
+            mocks['recalculate_ages_and_percentiles'].assert_called_with(
+                self.__ret_list
+            )
+
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
