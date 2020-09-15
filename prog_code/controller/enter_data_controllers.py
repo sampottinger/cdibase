@@ -33,7 +33,7 @@ from ..util import recalc_util
 from ..util import session_util
 from ..struct import models
 
-from daxlabbase import app
+from cdibase import app
 
 PARTICIPANT_NOT_FOUND_MSG = '[ not found ]'
 MCDI_NOT_FOUND_MSG = 'Could not the specified MCDI format.'

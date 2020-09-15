@@ -29,7 +29,7 @@ from ..util import session_util
 from ..util import user_util
 from ..util import db_util
 
-from daxlabbase import app
+from cdibase import app
 
 USER_NOT_FOUND_MSG = 'User \"%s\" could not be found.'
 USER_ALREADY_EXISTS_MSG = 'User \"%s\" already exists. User not updated.'

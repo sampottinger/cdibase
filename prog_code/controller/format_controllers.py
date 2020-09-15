@@ -38,7 +38,7 @@ from ..util import session_util
 
 from ..struct import models
 
-from daxlabbase import app
+from cdibase import app
 
 INVALID_FORMAT_MSG = 'Invalid format type.'
 NAME_NOT_SPECIFIED_MSG = 'Name not specified. Please try again.'

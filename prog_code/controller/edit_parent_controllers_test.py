@@ -21,7 +21,7 @@ from datetime import date
 import unittest
 import unittest.mock
 
-import daxlabbase
+import cdibase
 from ..util import constants
 from ..util import db_util
 from ..util import filter_util
@@ -283,7 +283,7 @@ TWO_WORD_KNOWN_SNAPSHOT_CONTENTS = [
 class TestEditParentControllers(unittest.TestCase):
 
     def setUp(self):
-        self.app = daxlabbase.app
+        self.app = cdibase.app
         self.app.debug = True
         self.__callback_called = False
 

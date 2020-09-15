@@ -39,7 +39,7 @@ from ..util import user_util
 
 from ..struct import models
 
-from daxlabbase import app
+from cdibase import app
 
 VALID_GENDER_VALUES = [constants.MALE, constants.FEMALE, constants.OTHER_GENDER]
 

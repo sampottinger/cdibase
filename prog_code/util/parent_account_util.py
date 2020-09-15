@@ -55,7 +55,7 @@ For directions and more information please visit our website:
 http://psych.colorado.edu/~colungalab/CULanguage/CU-LANGUAGE_parents.html
 '''
 
-URL_TEMPLATE = 'https://daxlab.colorado.edu/base/parent_mcdi/%s'
+URL_TEMPLATE = 'https://cdi.colorado.edu/base/parent_mcdi/%s'
 EMAIL_REGEX = re.compile('^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$',
     re.IGNORECASE)
 

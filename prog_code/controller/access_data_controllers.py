@@ -34,7 +34,7 @@ from ..util import session_util
 
 from ..struct import models
 
-from daxlabbase import app
+from cdibase import app
 
 NO_FILTER_MESSAGE = 'No filters selected! Please add at least one filter.'
 NO_MATCHING_DATA_MSG = 'No matching data found.'

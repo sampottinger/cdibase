@@ -87,7 +87,7 @@ class SharedConnection:
         wrapper / singleton. This should only be called by SharedConnection
         itself.
         """
-        self.__connection = sqlite3.connect('./db/daxlab.db')
+        self.__connection = sqlite3.connect('./db/cdi.db')
         self.__lock = threading.Lock()
 
     def cursor(self):
@@ -182,7 +182,7 @@ def load_mcdi_model(name):
 
     @param name: The name of the MCDI format to load.
     @type name: str
-    @return: MCDI format details and metadata.  None if MCDI format
+    @return: MCDI format details and metadata. None if MCDI format
         by the given name could not be found.
     @rtype: models.MCDIFormat
     """

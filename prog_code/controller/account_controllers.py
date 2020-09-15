@@ -25,7 +25,7 @@ from ..util import constants
 from ..util import session_util
 from ..util import user_util
 
-from daxlabbase import app
+from cdibase import app
 
 WRONG_CREDENTIALS_MSG = 'Whoops! Either your username or password was wrong.'
 CONFIRM_PASSWORD_MISMATCH_MSG = 'New password and confirmation of new ' \

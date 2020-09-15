@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
 
-import daxlabbase
+import cdibase
 
 from prog_code.controller.access_data_controllers_test import TestAccessDataControllers
 from prog_code.controller.account_controllers_test import TestAccountControllers
@@ -44,5 +44,5 @@ from prog_code.util.report_util_test import ReportUtilTest
 
 
 if __name__ == '__main__':
-    daxlabbase.disable_email()
+    cdibase.disable_email()
     unittest.main()

@@ -31,7 +31,7 @@ import prog_code.util.mail_util as mail_util
 
 SIGN_UP_MSG = '''Hello!
 
-You can access DaxlabBase with the following credentials:
+You can access CdiBase with the following credentials:
 
 Email: %s
 Password: %s
@@ -40,23 +40,23 @@ Please don't forget to change your password after logging in!
 
 All the best,
 Sam
-DaxlabBase Application Curator
-sam@gleap.org / daxlab@gleap.org
+CdiBase Application Curator
+sam@gleap.org / cdi@gleap.org
 '''
 
 RESET_PASSWORD_MSG = '''Hello!
 
-You (or someone pretending to be you) reset your password on DaxlabBase. You can now log in with the following credentials:
+You (or someone pretending to be you) reset your password on CdiBase. You can now log in with the following credentials:
 
 Email: %s
 Password: %s
 
-Please don't forget to change your password after logging in! If you didn't request a change in password, please email daxlab@gleap.org.
+Please don't forget to change your password after logging in! If you didn't request a change in password, please email cdi@gleap.org.
 
 All the best,
 Sam
-DaxlabBase Application Curator
-sam@gleap.org / daxlab@gleap.org
+CdiBase Application Curator
+sam@gleap.org / cdi@gleap.org
 '''
 
 
@@ -118,7 +118,7 @@ def create_new_user(email, can_enter_data, can_delete_data, can_import_data,
 
     mail_util.send_msg(
         email,
-        'Your DaxlabBase Account',
+        'Your CdiBase Account',
         SIGN_UP_MSG % (email, password)
     )
 
@@ -215,7 +215,7 @@ def reset_password(email, pass_len=10):
 
     mail_util.send_msg(
         email,
-        'Your DaxlabBase Account',
+        'Your CdiBase Account',
         RESET_PASSWORD_MSG % (email, new_pass)
     )
 

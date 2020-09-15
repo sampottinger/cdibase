@@ -388,7 +388,7 @@ class Filter:
 
 
 class User:
-    """Record of a user account providing someone access to DaxlabBase."""
+    """Record of a user account providing someone access to CdiBase."""
 
     def __init__(self, db_id, email, password_hash, can_enter_data,
         can_delete_data, can_import_data, can_edit_parents, can_access_data,

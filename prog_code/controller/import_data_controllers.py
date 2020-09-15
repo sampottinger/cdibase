@@ -24,7 +24,7 @@ import json
 
 import flask
 
-from daxlabbase import app
+from cdibase import app
 
 from ..util import constants
 from ..util import legacy_csv_import_util

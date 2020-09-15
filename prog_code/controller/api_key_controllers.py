@@ -35,7 +35,7 @@ from ..util import parent_account_util
 from ..util import session_util
 from ..util import user_util
 
-from daxlabbase import app
+from cdibase import app
 
 SPECIAL_API_QUERY_FIELDS = {
     'min_percentile': {'field': 'percentile', 'op': 'gteq'},

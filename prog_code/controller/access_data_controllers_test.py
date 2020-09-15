@@ -21,7 +21,7 @@ import unittest.mock
 
 import flask
 
-import daxlabbase
+import cdibase
 from ..controller import access_data_controllers
 from ..struct import models
 from ..util import constants
@@ -62,7 +62,7 @@ class TestCSVFile:
 class TestAccessDataControllers(unittest.TestCase):
 
     def setUp(self):
-        self.app = daxlabbase.app
+        self.app = cdibase.app
         self.app.debug = True
         self.__callback_called = False
 

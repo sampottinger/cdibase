@@ -22,7 +22,7 @@ import json
 import unittest
 import unittest.mock
 
-import daxlabbase
+import cdibase
 from ..struct import models
 from ..util import constants
 from ..util import db_util
@@ -183,7 +183,7 @@ TEST_EXPECTED_WORD_ENTRIES = {
 class EnterDataControllersTests(unittest.TestCase):
 
     def setUp(self):
-        self.app = daxlabbase.app
+        self.app = cdibase.app
         self.app.debug = True
         self.__callback_called = False
 
@@ -198,24 +198,26 @@ class EnterDataControllersTests(unittest.TestCase):
                                     with unittest.mock.patch('prog_code.util.db_util.lookup_global_participant_id') as mock_lookup_global_participant_id:
                                         with unittest.mock.patch('prog_code.util.db_util.update_participant_metadata') as mock_update_participant_metadata:
                                             with unittest.mock.patch('prog_code.util.recalc_util.recalculate_ages_and_percentiles') as mock_recalculate_ages_and_percentiles:
-                                                mocks = {
-                                                    'get_user': mock_get_user,
-                                                    'load_mcdi_model': mock_load_mcdi_model,
-                                                    'insert_snapshot': mock_insert_snapshot,
-                                                    'report_usage': mock_report_usage,
-                                                    'load_percentile_model': mock_load_percentile_model,
-                                                    'find_percentile': mock_find_percentile,
-                                                    'run_search_query': mock_run_search_query,
-                                                    'lookup_global_participant_id': mock_lookup_global_participant_id,
-                                                    'update_participant_metadata': mock_update_participant_metadata,
-                                                    'recalculate_ages_and_percentiles': mock_recalculate_ages_and_percentiles
-                                                }
+                                                with unittest.mock.patch('prog_code.util.db_util.load_mcdi_model_listing') as mock_load_mcdi_model_listing:
+                                                    mocks = {
+                                                        'get_user': mock_get_user,
+                                                        'load_mcdi_model': mock_load_mcdi_model,
+                                                        'insert_snapshot': mock_insert_snapshot,
+                                                        'report_usage': mock_report_usage,
+                                                        'load_percentile_model': mock_load_percentile_model,
+                                                        'find_percentile': mock_find_percentile,
+                                                        'run_search_query': mock_run_search_query,
+                                                        'lookup_global_participant_id': mock_lookup_global_participant_id,
+                                                        'update_participant_metadata': mock_update_participant_metadata,
+                                                        'recalculate_ages_and_percentiles': mock_recalculate_ages_and_percentiles,
+                                                        'load_mcdi_model_listing': mock_load_mcdi_model_listing
+                                                    }
 
-                                                on_start(mocks)
-                                                body()
-                                                on_end(mocks)
+                                                    on_start(mocks)
+                                                    body()
+                                                    on_end(mocks)
 
-                                                self.__callback_called = True
+                                                    self.__callback_called = True
 
     def __default_on_start(self, mocks):
         mocks['get_user'].return_value = TEST_USER

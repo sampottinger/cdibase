@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
 import unittest.mock
 
-import daxlabbase
+import cdibase
 from ..struct import models
 from ..util import constants
 from ..util import user_util
@@ -44,7 +44,7 @@ TEST_USER = models.User(
 class TestAccountControllers(unittest.TestCase):
 
     def setUp(self):
-        self.app = daxlabbase.app
+        self.app = cdibase.app
 
     def test_login(self):
         with unittest.mock.patch('prog_code.util.user_util.check_user_password') as mock:

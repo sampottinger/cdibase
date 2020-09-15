@@ -20,7 +20,7 @@ import math
 import unittest
 import urllib
 
-import daxlabbase
+import cdibase
 from ..controller import api_key_controllers
 from ..struct import models
 from ..util import api_key_util
@@ -164,7 +164,7 @@ EXPECTED_MODIFIED_PARENT_FORM = models.ParentForm(
 class TestAPIKeyControllers(unittest.TestCase):
 
     def setUp(self):
-        self.app = daxlabbase.app
+        self.app = cdibase.app
         self.app.debug = True
         self.__callback_called = False
 
