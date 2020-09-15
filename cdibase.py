@@ -19,11 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @license: GNU GPL v3
 """
 
-# TODO(apottinger): Change to cdibase.py
+import flask
 
-import flask # type: ignore
-
-from flask_mail import Mail
+from flask_mail import Mail # type: ignore
 
 from prog_code.util import session_util
 from prog_code.util import file_util

@@ -25,6 +25,7 @@ import os
 import json
 import sqlite3
 import threading
+import typing
 
 import yaml
 
@@ -67,7 +68,7 @@ class SharedConnection:
     instance = None
 
     @classmethod
-    def get_instance(cls):
+    def get_instance(cls) -> 'SharedConnection':
         """Get a shared instance of this database connection singleton.
 
         Get a shared instance of this class-wide singleton that encloses a
@@ -90,7 +91,7 @@ class SharedConnection:
         self.__connection = sqlite3.connect('./db/cdi.db')
         self.__lock = threading.Lock()
 
-    def cursor(self):
+    def cursor(self) -> sqlite3.Cursor:
         """With thread-saftey, acquire a database cursor for the application DB.
 
         @return: Cursor for the application database.
@@ -99,7 +100,7 @@ class SharedConnection:
         self.__lock.acquire(True)
         return self.__connection.cursor()
 
-    def commit(self):
+    def commit(self) -> None:
         """Commit changes made to the database.
 
         Commit / save changes made to the database. This must be called for
@@ -107,7 +108,7 @@ class SharedConnection:
         """
         self.__connection.commit()
 
-    def close(self):
+    def close(self) -> None:
         """Release the current thread's aquired connection.
 
         Release the current thread's acquired connection back to the connection
@@ -116,7 +117,7 @@ class SharedConnection:
         self.__lock.release()
 
 
-def get_db_connection():
+def get_db_connection() -> SharedConnection:
     """Get an open connection to the application database.
 
     @note: May come from connection pool.
@@ -125,7 +126,7 @@ def get_db_connection():
     """
     return SharedConnection.get_instance()
 
-def save_cdi_model(newMetadataModel):
+def save_cdi_model(newMetadataModel: models.CDIFormatMetadata) -> None:
     """Save a metadata for a CDI format.
 
     @param newMetadataModel: Model containing format metadata.
@@ -145,7 +146,7 @@ def save_cdi_model(newMetadataModel):
     connection.close()
 
 
-def delete_cdi_model(metadataModelName):
+def delete_cdi_model(metadataModelName: str) -> None:
     """Delete an existing saved CDI format.
 
     @param metadataModelName: The name of the CDI format to delete.
@@ -161,7 +162,7 @@ def delete_cdi_model(metadataModelName):
     connection.close()
 
 
-def load_cdi_model_listing():
+def load_cdi_model_listing() -> typing.List[models.CDIFormatMetadata]:
     """Load metadata for all CDI formats.
 
     @return: Iterable over metadata for all CDI formats..
@@ -172,12 +173,15 @@ def load_cdi_model_listing():
     cursor.execute(
         'SELECT human_name,safe_name,filename FROM cdi_formats'
     )
-    ret_val = map(lambda x: models.CDIFormatMetadata(x[0], x[1], x[2]), cursor)
+    ret_val = list(map(
+        lambda x: models.CDIFormatMetadata(x[0], x[1], x[2]),
+        cursor
+    ))
     connection.close()
     return ret_val
 
 
-def load_cdi_model(name):
+def load_cdi_model(name: str) -> typing.Optional[models.CDIFormat]:
     """Load a complete CDI format.
 
     @param name: The name of the CDI format to load.
@@ -208,7 +212,8 @@ def load_cdi_model(name):
     return models.CDIFormat(metadata[0], metadata[1], metadata[2], spec)
 
 
-def save_presentation_model(newMetadataModel):
+def save_presentation_model(
+        newMetadataModel: models.PresentationFormatMetadata) -> None:
     """Save a presentation format.
 
     @param newMetadataModel: Model containing format metadata.
@@ -228,7 +233,7 @@ def save_presentation_model(newMetadataModel):
     connection.close()
 
 
-def delete_presentation_model(metadataModelName):
+def delete_presentation_model(metadataModelName: str) -> None:
     """Delete an existing saved presentation format.
 
     @param metadataModelName: The name of the presentation format to delete.
@@ -244,10 +249,10 @@ def delete_presentation_model(metadataModelName):
     connection.close()
 
 
-def load_presentation_model_listing():
+def load_presentation_model_listing() -> typing.List[models.PresentationFormatMetadata]:
     """Load metadata for all presentation formats.
 
-    @return: Iterable over metadata for all CDI formats..
+    @return: Iterable over metadata for all CDI formats.
     @rtype: Iterable over models.PresentationFormatMetadata
     """
     connection = get_db_connection()
@@ -255,13 +260,16 @@ def load_presentation_model_listing():
     cursor.execute(
         'SELECT human_name,safe_name,filename FROM presentation_formats'
     )
-    ret_val = map(lambda x: models.PresentationFormatMetadata(x[0], x[1], x[2]),
-        cursor)
+    ret_val = list(map(
+        lambda x: models.PresentationFormatMetadata(x[0], x[1], x[2]),
+        cursor
+    ))
     connection.close()
     return ret_val
 
 
-def load_presentation_model(name):
+def load_presentation_model(
+        name: str) -> typing.Optional[models.PresentationFormat]:
     """Load a complete CDI format.
 
     @param name: The name of the CDI format to load.
@@ -293,13 +301,12 @@ def load_presentation_model(name):
         spec)
 
 
-def save_percentile_model(newMetadataModel):
+def save_percentile_model(
+        newMetadataModel: models.PercentileTableMetadata) -> None:
     """Save a table of values necessary for calcuating child CDI percentiles.
 
-    @param name: The name of the precentile table model to load.
-    @type name: str
-    @return: CDI format details and metadata.
-    @rtype: models.PercentileTableMetadata
+    @param newMetadataModel: CDI format details and metadata.
+    @type newMetadataModel: models.PercentileTableMetadata
     """
     connection = get_db_connection()
     cursor = connection.cursor()
@@ -315,7 +322,7 @@ def save_percentile_model(newMetadataModel):
     connection.close()
 
 
-def delete_percentile_model(metadataModelName):
+def delete_percentile_model(metadataModelName: str) -> None:
     """Delete an existing saved percentile data table.
 
     @param metadataModelName: The name of the precentile table to delete.
@@ -331,7 +338,7 @@ def delete_percentile_model(metadataModelName):
     connection.close()
 
 
-def load_percentile_model_listing():
+def load_percentile_model_listing() -> typing.List[models.PercentileTableMetadata]:
     """Load metadata for all percentile tables.
 
     @return: Iterable over metadata for all percentile tables.
@@ -342,13 +349,15 @@ def load_percentile_model_listing():
     cursor.execute(
         'SELECT human_name,safe_name,filename FROM percentile_tables'
     )
-    ret_val = map(lambda x: models.PercentileTableMetadata(x[0], x[1], x[2]),
-        cursor)
+    ret_val = list(map(
+        lambda x: models.PercentileTableMetadata(x[0], x[1], x[2]),
+        cursor
+    ))
     connection.close()
     return ret_val
 
 
-def load_percentile_model(name):
+def load_percentile_model(name: str) -> typing.Optional[models.PercentileTable]:
     """Load a complete percentile table.
 
     @param name: The name of the percentile table to load.
@@ -378,18 +387,23 @@ def load_percentile_model(name):
     return models.PercentileTable(metadata[0], metadata[1], metadata[2], spec)
 
 
-def list_stuides():
+def list_stuides() -> typing.List[str]:
+    """Get the name of all studies available in the application.
+
+    @return: List of study names.
+    @rtype: Iterable over str.
+    """
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute(
         'SELECT DISTINCT study FROM snapshots WHERE deleted = 0',
     )
-    ret_val = map(lambda x: x[0], cursor.fetchall())
+    ret_val = list(map(lambda x: x[0], cursor.fetchall()))
     connection.close()
     return ret_val
 
 
-def load_snapshot_contents(snapshot):
+def load_snapshot_contents(snapshot: models.SnapshotMetadata) -> typing.List[models.SnapshotContent]:
     """Load reports of individual statuses for words.
 
     Load status for individual / state of words as part of an CDI snapshot.
@@ -405,17 +419,21 @@ def load_snapshot_contents(snapshot):
         'SELECT * FROM snapshot_content WHERE snapshot_id=?',
         (snapshot.database_id,)
     )
-    ret_val = map(lambda x: models.SnapshotContent(*x), cursor.fetchall())
+    ret_val = list(map(
+        lambda x: models.SnapshotContent(*x),
+        cursor.fetchall()
+    ))
     connection.close()
     return ret_val
 
 
-def load_user_model(identifier):
+def load_user_model(
+        identifier: typing.Union[int, str]) -> typing.Optional[models.User]:
     """Load the user model for a user account with the given email address.
 
     @param identifier: The email of the user for which a user model should be
         retrieved. Can also be integer ID.
-    @type email: str or int
+    @type identifier: str or int
     @return: The user account information for the user with the given email
         address. None if corresponding user account cannot be found.
     @rtype: models.User
@@ -443,7 +461,9 @@ def load_user_model(identifier):
     return models.User(*(result))
 
 
-def save_user_model(user, existing_email=None):
+def save_user_model(
+        user: models.User,
+        existing_email: typing.Optional[str] = None) -> None:
     """Save data about a user account.
 
     @param user: The user model to save to the database.
@@ -477,7 +497,7 @@ def save_user_model(user, existing_email=None):
     connection.close()
 
 
-def create_user_model(user):
+def create_user_model(user: models.User) -> None:
     """Create a new user account.
 
     @param user: The new user account to persist to the database.
@@ -507,7 +527,7 @@ def create_user_model(user):
     connection.close()
 
 
-def delete_user_model(email):
+def delete_user_model(email: str) -> None:
     """Delete the user account with the given email address.
 
     @param email: The email address of the user account to delete.
@@ -523,7 +543,7 @@ def delete_user_model(email):
     connection.close()
 
 
-def get_all_user_models():
+def get_all_user_models() -> typing.List[models.User]:
     """Get a listing of all user accounts for the web application.
 
     @return: Iterable over user account information.
@@ -534,12 +554,14 @@ def get_all_user_models():
     cursor.execute('''SELECT id, email, password_hash, can_enter_data,
         can_delete_data, can_import_data, can_edit_parents, can_access_data,
         can_change_formats, can_use_api_key, can_admin FROM users''')
-    ret_val = map(lambda x: models.User(*x), cursor.fetchall())
+    ret_val = list(map(lambda x: models.User(*x), cursor.fetchall()))
     connection.close()
     return ret_val
 
 
-def lookup_global_participant_id(study, participant_study_id):
+def lookup_global_participant_id(
+        study: str,
+        participant_study_id: str) -> typing.Optional[int]:
     """Get the global participant ID given study information.
 
     Get the global participant ID for a child given that child's study ID and
@@ -569,7 +591,7 @@ def lookup_global_participant_id(study, participant_study_id):
     return ret_val
 
 
-def get_api_key_by_user(user_id):
+def get_api_key_by_user(user_id: int) -> typing.Optional[models.APIKey]:
     """Get the API key for a user.
 
     @param user_id: The ID of a user account. This function will return the API
@@ -595,7 +617,7 @@ def get_api_key_by_user(user_id):
         return None
 
 
-def get_api_key_by_key(api_key):
+def get_api_key_by_key(api_key: str) -> typing.Optional[models.APIKey]:
     """Get the record for an API key.
 
     @param api_key: The API key to find a record for.
@@ -620,7 +642,8 @@ def get_api_key_by_key(api_key):
         return None
 
 
-def get_api_key(identifier):
+def get_api_key(
+        identifier: typing.Union[int, str]) -> typing.Optional[models.APIKey]:
     """Get the record for an API key for a user ID or the API key iteself.
 
     Given either an integer user ID or a string API key, this function returns
@@ -639,7 +662,7 @@ def get_api_key(identifier):
         return get_api_key_by_user(identifier)
 
 
-def delete_api_key(user_id):
+def delete_api_key(user_id: int) -> None:
     """Delete a record of an API key for a user.
 
     @param user_id: The integer ID of the user to delete an API key for.
@@ -654,13 +677,14 @@ def delete_api_key(user_id):
     connection.close()
 
 
-def create_new_api_key(user_id, api_key):
+def create_new_api_key(user_id: int, api_key: str) -> models.APIKey:
     """Create a new record of an API key.
 
     @param user_id: The integer ID of the user to create an API key record for.
     @type user_id: int
     @param api_key: The string API key to assign to this user.
     @type api_key: str
+    @returns: Newly created API key record.
     """
     connection = get_db_connection()
     cursor = connection.cursor()
@@ -673,7 +697,13 @@ def create_new_api_key(user_id, api_key):
     return models.APIKey(user_id, api_key)
 
 
-def clean_up_date(target_val):
+def clean_up_date(target_val: str) -> typing.Optional[str]:
+    """Standardize string date format to YYYY/MM/DD
+
+    @param target_val: The value to standardize.
+    @returns: Standardized string date serialization or None if target_val is
+        invalid.
+    """
     parts = target_val.split('/')
     if len(parts) != 3:
         return None
@@ -694,9 +724,62 @@ def clean_up_date(target_val):
     return '%d/%02d/%02d' % (year, month, day)
 
 
-def update_participant_metadata(child_id, gender, birthday_str,
-    hard_of_hearing, languages, snapshot_ids=None, cursor=None):
-    """Update the participant metadata for all his / her snapshots.
+class RealizedCursor:
+
+    def __init__(self, cursor: typing.Optional[sqlite3.Cursor]):
+        """Use a default DB cursor if the cursor is not given.
+
+        @param cursor: The cursor to prefer. If None, will create a default.
+        @returns: Given cursor if cursor_maybe != None or, otherwise, a default
+            cursor.
+        """
+        cursor_realized: sqlite3.Cursor
+
+        self.__cursor_provided = cursor != None
+        if self.__cursor_provided:
+            cursor_realized = cursor # type: ignore
+        else:
+            self.__connection = get_db_connection()
+            cursor_realized = self.__connection.cursor()
+
+        self.__cursor = cursor_realized
+
+    def __enter__(self) -> sqlite3.Cursor:
+        """Provide the realized cursor to the target function.
+
+        @returns: Realized cursor.
+        """
+        return self.__cursor
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Clean up the cursor allocation if it was needed."""
+        if not self.__cursor_provided:
+            self.__connection.commit()
+            self.__connection.close()
+
+
+def get_realized_cursor(
+        cursor: typing.Optional[sqlite3.Cursor]) -> RealizedCursor:
+    """Ensure a cursor is available.
+
+    @param cursor: The cursor to prefer. If None, will create a default.
+    """
+    return RealizedCursor(cursor)
+
+
+def get_cursor() -> RealizedCursor:
+    """Get the default cursor.
+
+    @returns: Default database cursor.
+    """
+    return get_realized_cursor(None)
+
+
+def update_participant_metadata(child_id: int, gender: int, birthday_str: str,
+        hard_of_hearing: int, languages: typing.Iterable[str],
+        snapshot_ids: typing.Iterable[dict] = None,
+        cursor: sqlite3.Cursor = None) -> None:
+    """Update the participant metadata for all their snapshots.
 
     Update the "transient" metadata (metadata more likely needed to be changed
     due to clerical error or new information based on user interviews) for a
@@ -717,99 +800,107 @@ def update_participant_metadata(child_id, gender, birthday_str,
     @param languages: Comma separated list of languages the participant speaks.
     @type languages: list of str
     """
+    with get_realized_cursor(cursor) as cursor_realized:
+        cols = ['gender', 'birthday', 'hard_of_hearing', 'languages']
+        cmd_template = None
+        if snapshot_ids:
+            cmd_template = 'UPDATE snapshots SET %s WHERE child_id=? AND '
+            cmd_template += 'study=? AND session_num=?'
+        else:
+            cmd_template = 'UPDATE snapshots SET %s WHERE child_id=?'
 
-    cursor_provided = cursor != None
-    if not cursor_provided:
-        connection = get_db_connection()
-        cursor = connection.cursor()
+        params: typing.Tuple
 
-    cols = ['gender', 'birthday', 'hard_of_hearing', 'languages']
-    cmd_template = None
-    if snapshot_ids:
-        cmd_template = 'UPDATE snapshots SET %s WHERE child_id=? AND '
-        cmd_template += 'study=? AND session_num=?'
-    else:
-        cmd_template = 'UPDATE snapshots SET %s WHERE child_id=?'
-
-    col_statements = map(lambda x: x + '=?', cols)
-    col_strs = ','.join(col_statements)
-    cmd_final = cmd_template % col_strs
-    run_metadata_update = lambda params: cursor.execute(cmd_final, params)
-
-    if snapshot_ids:
-        for snapshot_id in snapshot_ids:
-            params = (gender, birthday_str, hard_of_hearing,
-                ','.join(languages), child_id, snapshot_id['study'],
-                snapshot_id['id'])
-            run_metadata_update(params)
-    else:
-        params = (gender, birthday_str, hard_of_hearing, ','.join(languages),
-            child_id)
-        run_metadata_update(params)
-
-    if not cursor_provided:
-        connection.commit()
-        connection.close()
-
-
-def update_snapshot(snapshot_metadata, cursor=None):
-    cursor_provided = cursor != None
-    if not cursor_provided:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-
-    if snapshot_metadata.child_id == None:
-        cursor.execute('SELECT MAX(child_id) FROM snapshots')
-        child_id = cursor.fetchone()[0] + 1
-    else:
-        child_id = snapshot_metadata.child_id
-
-    # Standardize date
-    snapshot_metadata.birthday = clean_up_date(snapshot_metadata.birthday)
-    snapshot_metadata.session_date = clean_up_date(
-        snapshot_metadata.session_date)
-
-    if isinstance(snapshot_metadata.languages, str):
-        languages_val = snapshot_metadata.languages
-    else:
-        languages_val = ','.join(snapshot_metadata.languages)
-
-    non_db_id_cols = SNAPSHOT_METADATA_COLS[1:]
-    col_statements = map(lambda x: x + '=?', non_db_id_cols)
-    cmd = 'UPDATE snapshots SET %s WHERE id=?' % ','.join(col_statements)
-    cursor.execute(
-        cmd,
-        (
-            child_id,
-            snapshot_metadata.study_id,
-            snapshot_metadata.study,
-            snapshot_metadata.gender,
-            snapshot_metadata.age,
-            snapshot_metadata.birthday,
-            snapshot_metadata.session_date,
-            snapshot_metadata.session_num,
-            snapshot_metadata.total_num_sessions,
-            snapshot_metadata.words_spoken,
-            snapshot_metadata.items_excluded,
-            snapshot_metadata.percentile,
-            snapshot_metadata.extra_categories,
-            snapshot_metadata.revision,
-            languages_val,
-            snapshot_metadata.num_languages,
-            snapshot_metadata.cdi_type,
-            snapshot_metadata.hard_of_hearing,
-            snapshot_metadata.deleted,
-            snapshot_metadata.database_id
+        col_statements = map(lambda x: x + '=?', cols)
+        col_strs = ','.join(col_statements)
+        cmd_final = cmd_template % col_strs
+        run_metadata_update = lambda params: cursor_realized.execute(
+            cmd_final,
+            params
         )
-    )
 
-    if not cursor_provided:
-        connection.commit()
-        connection.close()
+        if snapshot_ids:
+            for snapshot_id in snapshot_ids:
+                params = (gender, birthday_str, hard_of_hearing,
+                    ','.join(languages), child_id, snapshot_id['study'],
+                    snapshot_id['id'])
+                run_metadata_update(params)
+        else:
+            params = (
+                gender,
+                birthday_str,
+                hard_of_hearing,
+                ','.join(languages),
+                child_id
+            )
+            run_metadata_update(params)
+
+
+def update_snapshot(snapshot_metadata: models.SnapshotMetadata,
+        cursor: typing.Optional[sqlite3.Cursor] = None) -> None:
+    """Update the participant metadata for all their snapshots.
+
+    Update the "transient" metadata (metadata more likely needed to be changed
+    due to clerical error or new information based on user interviews) for a
+    participant across all of his or her snapshots.
+
+    @param snapshot_metadata: The metadata to update.
+    @param cursor: The cursor to use to execute the operation.
+    """
+    with get_realized_cursor(cursor) as cursor_realized:
+        if snapshot_metadata.child_id == None:
+            cursor_realized.execute('SELECT MAX(child_id) FROM snapshots')
+            child_id = cursor_realized.fetchone()[0] + 1
+        else:
+            child_id = snapshot_metadata.child_id
+
+        # Standardize date
+        snapshot_metadata.birthday = clean_up_date(snapshot_metadata.birthday)
+        snapshot_metadata.session_date = clean_up_date(
+            snapshot_metadata.session_date)
+
+        if isinstance(snapshot_metadata.languages, str):
+            languages_val = snapshot_metadata.languages
+        else:
+            languages_val = ','.join(snapshot_metadata.languages)
+
+        non_db_id_cols = SNAPSHOT_METADATA_COLS[1:]
+        col_statements = map(lambda x: x + '=?', non_db_id_cols)
+        cmd = 'UPDATE snapshots SET %s WHERE id=?' % ','.join(col_statements)
+        cursor_realized.execute(
+            cmd,
+            (
+                child_id,
+                snapshot_metadata.study_id,
+                snapshot_metadata.study,
+                snapshot_metadata.gender,
+                snapshot_metadata.age,
+                snapshot_metadata.birthday,
+                snapshot_metadata.session_date,
+                snapshot_metadata.session_num,
+                snapshot_metadata.total_num_sessions,
+                snapshot_metadata.words_spoken,
+                snapshot_metadata.items_excluded,
+                snapshot_metadata.percentile,
+                snapshot_metadata.extra_categories,
+                snapshot_metadata.revision,
+                languages_val,
+                snapshot_metadata.num_languages,
+                snapshot_metadata.cdi_type,
+                snapshot_metadata.hard_of_hearing,
+                snapshot_metadata.deleted,
+                snapshot_metadata.database_id
+            )
+        )
 
 
 # TODO: Combined for transaction
-def insert_snapshot(snapshot_metadata, word_entries, cursor=None):
+def insert_snapshot(snapshot_metadata: models.SnapshotMetadata,
+        word_entries: typing.Union[
+            typing.Iterable[dict],
+            typing.Iterable[models.SnapshotContent]
+        ],
+        cursor : typing.Optional[sqlite3.Cursor] = None):
     """Insert a new CDI snapshot.
 
     @param snapshot_metadata: The metadata for this snapshot that should be
@@ -821,116 +912,107 @@ def insert_snapshot(snapshot_metadata, word_entries, cursor=None):
         Othwerwise should be collection of models.SnapshotContent
     @type: dict or list
     """
-    cursor_provided = cursor != None
-    if not cursor_provided:
-        connection = get_db_connection()
-        cursor = connection.cursor()
+    with get_realized_cursor(cursor) as cursor_realized:
+        if snapshot_metadata.child_id == None:
+            cursor_realized.execute('SELECT MAX(child_id) FROM snapshots')
+            child_id = cursor_realized.fetchone()[0] + 1
+        else:
+            child_id = snapshot_metadata.child_id
 
-    if snapshot_metadata.child_id == None:
-        cursor.execute('SELECT MAX(child_id) FROM snapshots')
-        child_id = cursor.fetchone()[0] + 1
-    else:
-        child_id = snapshot_metadata.child_id
+        # Standardize date
+        snapshot_metadata.birthday = clean_up_date(snapshot_metadata.birthday)
+        snapshot_metadata.session_date = clean_up_date(
+            snapshot_metadata.session_date)
 
-    # Standardize date
-    snapshot_metadata.birthday = clean_up_date(snapshot_metadata.birthday)
-    snapshot_metadata.session_date = clean_up_date(
-        snapshot_metadata.session_date)
-
-    cmd = 'INSERT INTO snapshots VALUES (%s)' % (', '.join('?' * 20))
-    cursor.execute(
-        cmd,
-        (
-            None,
-            child_id,
-            snapshot_metadata.study_id,
-            snapshot_metadata.study,
-            snapshot_metadata.gender,
-            snapshot_metadata.age,
-            snapshot_metadata.birthday,
-            snapshot_metadata.session_date,
-            snapshot_metadata.session_num,
-            snapshot_metadata.total_num_sessions,
-            snapshot_metadata.words_spoken,
-            snapshot_metadata.items_excluded,
-            snapshot_metadata.percentile,
-            snapshot_metadata.extra_categories,
-            snapshot_metadata.revision,
-            ','.join(snapshot_metadata.languages),
-            snapshot_metadata.num_languages,
-            snapshot_metadata.cdi_type,
-            snapshot_metadata.hard_of_hearing,
-            snapshot_metadata.deleted
+        cmd = 'INSERT INTO snapshots VALUES (%s)' % (', '.join('?' * 20))
+        cursor_realized.execute(
+            cmd,
+            (
+                None,
+                child_id,
+                snapshot_metadata.study_id,
+                snapshot_metadata.study,
+                snapshot_metadata.gender,
+                snapshot_metadata.age,
+                snapshot_metadata.birthday,
+                snapshot_metadata.session_date,
+                snapshot_metadata.session_num,
+                snapshot_metadata.total_num_sessions,
+                snapshot_metadata.words_spoken,
+                snapshot_metadata.items_excluded,
+                snapshot_metadata.percentile,
+                snapshot_metadata.extra_categories,
+                snapshot_metadata.revision,
+                ','.join(snapshot_metadata.languages),
+                snapshot_metadata.num_languages,
+                snapshot_metadata.cdi_type,
+                snapshot_metadata.hard_of_hearing,
+                snapshot_metadata.deleted
+            )
         )
-    )
-    new_snapshot_id = cursor.lastrowid
-    snapshot_metadata.database_id=new_snapshot_id
+        new_snapshot_id = cursor_realized.lastrowid
+        snapshot_metadata.database_id=new_snapshot_id
 
-    # Put in snapshot contents
-    if type(word_entries) is dict:
-        for (word, val) in word_entries.items():
-            cursor.execute(
-                'INSERT INTO snapshot_content VALUES (?, ?, ?, ?)',
-                (
-                    new_snapshot_id,
-                    word.lower(),
-                    val,
-                    0
+        # Put in snapshot contents
+        if type(word_entries) is dict:
+            word_entries_dict: dict
+            word_entries_dict = word_entries # type: ignore
+            for (word, val) in word_entries_dict.items():
+                cursor_realized.execute(
+                    'INSERT INTO snapshot_content VALUES (?, ?, ?, ?)',
+                    (
+                        new_snapshot_id,
+                        word.lower(),
+                        val,
+                        0
+                    )
                 )
-            )
-    else:
-        for word_entry in word_entries:
-            cursor.execute(
-                'INSERT INTO snapshot_content VALUES (?, ?, ?, ?)',
-                (
-                    new_snapshot_id,
-                    word_entry.word.lower(),
-                    word_entry.value,
-                    word_entry.revision
+        else:
+            word_entries_obj: typing.Iterable[models.SnapshotContent]
+            word_entries_obj = word_entries # type: ignore
+            for word_entry in word_entries_obj:
+                cursor_realized.execute(
+                    'INSERT INTO snapshot_content VALUES (?, ?, ?, ?)',
+                    (
+                        new_snapshot_id,
+                        word_entry.word.lower(),
+                        word_entry.value,
+                        word_entry.revision
+                    )
                 )
-            )
-
-    if not cursor_provided:
-        connection.commit()
-        connection.close()
 
 
-def insert_parent_form(form_metadata):
+def insert_parent_form(form_metadata: models.ParentForm):
     """Create a record of a parent form.
 
     @param form_metadata: Information about the parent form to persist.
     @type form_metadata: models.ParentForm
     """
-    connection = get_db_connection()
-    cursor = connection.cursor()
-
-    cmd = 'INSERT INTO parent_forms VALUES (%s)' % (', '.join('?' * 15))
-    cursor.execute(
-        cmd,
-        (
-            form_metadata.form_id,
-            form_metadata.child_name,
-            form_metadata.parent_email,
-            form_metadata.cdi_type,
-            form_metadata.database_id,
-            form_metadata.study_id,
-            form_metadata.study,
-            form_metadata.gender,
-            form_metadata.birthday,
-            form_metadata.items_excluded,
-            form_metadata.extra_categories,
-            form_metadata.languages,
-            form_metadata.num_languages,
-            form_metadata.hard_of_hearing,
-            form_metadata.total_num_sessions
+    with get_cursor() as cursor:
+        cmd = 'INSERT INTO parent_forms VALUES (%s)' % (', '.join('?' * 15))
+        cursor.execute(
+            cmd,
+            (
+                form_metadata.form_id,
+                form_metadata.child_name,
+                form_metadata.parent_email,
+                form_metadata.cdi_type,
+                form_metadata.database_id,
+                form_metadata.study_id,
+                form_metadata.study,
+                form_metadata.gender,
+                form_metadata.birthday,
+                form_metadata.items_excluded,
+                form_metadata.extra_categories,
+                form_metadata.languages,
+                form_metadata.num_languages,
+                form_metadata.hard_of_hearing,
+                form_metadata.total_num_sessions
+            )
         )
-    )
-
-    connection.commit()
-    connection.close()
 
 
-def get_parent_form_by_id(form_id):
+def get_parent_form_by_id(form_id: str) -> typing.Optional[models.ParentForm]:
     """Get information about a parent CDI form.
 
     @param form_id: The ID of the parent CDI form to get the record for.
@@ -939,15 +1021,12 @@ def get_parent_form_by_id(form_id):
         form could not be found.
     @rtype: models.ParentForm
     """
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute(
-        'SELECT * FROM parent_forms WHERE form_id=?',
-        (form_id,)
-    )
-    form_info = cursor.fetchone()
-    connection.commit()
-    connection.close()
+    with get_cursor() as cursor:
+        cursor.execute(
+            'SELECT * FROM parent_forms WHERE form_id=?',
+            (form_id,)
+        )
+        form_info = cursor.fetchone()
 
     if form_info:
         return models.ParentForm(*form_info)
@@ -955,63 +1034,64 @@ def get_parent_form_by_id(form_id):
         return None
 
 
-def remove_parent_form(form_id):
+def remove_parent_form(form_id: str):
     """Delete the record of a parent CDI form.
 
     @param form_id: The ID of the parent CDI form to delete.
     @type form_id: str
     """
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute(
-        'DELETE FROM parent_forms WHERE form_id=?',
-        (form_id,)
-    )
-    form_info = cursor.fetchone()
-    connection.commit()
-    connection.close()
+    with get_cursor() as cursor:
+        cursor.execute(
+            'DELETE FROM parent_forms WHERE form_id=?',
+            (form_id,)
+        )
 
 
-def get_counts():
-    """Get the number of CDIs completed by study by child ID"""
+def get_counts() -> typing.Mapping[str, typing.Mapping[str, int]]:
+    """Get the number of CDIs completed by study by child ID.
+
+    @returns: Nested dictionary where outer key is child id and inner key is
+        study.
+    """
+    by_study: typing.Dict[str, typing.Dict[str, int]]
     by_study = {}
 
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute('SELECT study,child_id FROM snapshots WHERE deleted=0')
-
-    metadata = cursor.fetchone()
-    while metadata != None:
-
-        study = metadata[0]
-        child_id = metadata[1]
-        if not study in by_study:
-            by_study[study] = {}
-
-        study_info = by_study[study]
-        if not child_id in study_info:
-            study_info[child_id] = 0
-
-        study_info[child_id] = study_info[child_id] + 1
+    with get_cursor() as cursor:
+        cursor.execute('SELECT study,child_id FROM snapshots WHERE deleted=0')
 
         metadata = cursor.fetchone()
+        while metadata != None:
 
-    connection.close()
+            study = metadata[0]
+            child_id = metadata[1]
+            if not study in by_study:
+                by_study[study] = {}
+
+            study_info = by_study[study]
+            if not child_id in study_info:
+                study_info[child_id] = 0
+
+            study_info[child_id] = study_info[child_id] + 1
+
+            metadata = cursor.fetchone()
 
     return by_study
 
 
-def report_usage(email_address, action_name, args_snapshot):
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute(
-        'INSERT INTO usage_report VALUES (?, ?, ?, ?)',
-        (
-            email_address,
-            action_name,
-            args_snapshot,
-            datetime.datetime.now().isoformat()
+def report_usage(email_address: str, action_name: str, args_snapshot: str):
+    """Record that a user took an action.
+
+    @param email_address: The email address of the user.
+    @param action_name: The name of the action taken.
+    @param args_snapshot: Description of the arguments used in the action
+    """
+    with get_cursor() as cursor:
+        cursor.execute(
+            'INSERT INTO usage_report VALUES (?, ?, ?, ?)',
+            (
+                email_address,
+                action_name,
+                args_snapshot,
+                datetime.datetime.now().isoformat()
+            )
         )
-    )
-    connection.commit()
-    connection.close()
