@@ -26,7 +26,7 @@ from prog_code.controller.api_key_controllers_test import *
 from prog_code.controller.delete_data_controllers_test import *
 from prog_code.controller.edit_parent_controllers_test import *
 from prog_code.controller.edit_user_controllers_test import *
-#from prog_code.controller.enter_data_controllers_test import *
+from prog_code.controller.enter_data_controllers_test import *
 
 from prog_code.util.api_key_util_test import *
 from prog_code.util.legacy_csv_import_util_test import *
