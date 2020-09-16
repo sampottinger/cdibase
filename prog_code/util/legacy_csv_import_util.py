@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @license: GNU GPL v3
 """
 import typing
+import sqlite3
 
 STATE_PARSE_CHILD_DB_ID = 0
 STATE_PARSE_CHILD_STUDY_ID = 1
@@ -59,10 +60,9 @@ import prog_code.util.constants as constants
 import prog_code.util.db_util as db_util
 import prog_code.util.math_util as math_util
 
-PercentileTableMapping = typing.Dict[str, models.PercentileTable]
+PercentileTableMapping = typing.Dict[int, models.PercentileTable]
+AutomatonStepHandler = typing.Callable[[typing.List[str], int], None]
 
-# TODO (sampottinger): This is legacy code so is excluded from doc requirements
-#                      but it would be ideal to document.
 
 class UploadParserAutomaton:
     """Automaton which processes CSV files to import into the lab database."""
@@ -80,7 +80,7 @@ class UploadParserAutomaton:
         self.__needing_percentiles: typing.List[int]
         self.__state_matrix: typing.Mapping[
             int,
-            typing.Callable[[typing.Any, typing.Any], typing.Any]
+            AutomatonStepHandler
         ]
         self.__state: int
         self.__error: typing.Optional[str]
@@ -111,11 +111,23 @@ class UploadParserAutomaton:
         self.__prototypes = []
 
     def enter_error_state(self, message: str) -> None:
+        """Indicate that we've encountered an error.
+
+        @param message: Message describing the error.
+        """
         self.__state = STATE_FOUND_ERROR
         self.__error = message
 
     def sanity_check(self, step_val: typing.List[str], expected: str,
             row_num: int) -> bool:
+        """Check that a known identifier is found on a row.
+
+        @param step_val: The row being processed.
+        @param exepcted: The identifier on the row expected.
+        @param row_num: The current row number being processed.
+        @returns: True if the row is ready for processing and false otherwise.
+            Will enter error state if false.
+        """
         if step_val[1] == expected:
             return True
         else:
@@ -125,6 +137,12 @@ class UploadParserAutomaton:
 
     def safe_parse_float(self, target_val: str,
             row_num: int) -> typing.Optional[float]:
+        """Parse a float or enter error state if parsing fails.
+
+        @param target_val: The value to parse.
+        @param row_num: The row number being processed.
+        @returns: Parsed value or None if not parseable.
+        """
         try:
             return float(target_val)
         except ValueError:
@@ -133,6 +151,12 @@ class UploadParserAutomaton:
 
     def safe_parse_int(self, target_val: str,
             row_num: int) -> typing.Optional[float]:
+        """Parse a float or enter error state if parsing fails.
+
+        @param target_val: The value to parse.
+        @param row_num: The row number being processed.
+        @returns: Parsed value or None if not parseable.
+        """
         try:
             return int(target_val)
         except ValueError:
@@ -141,6 +165,12 @@ class UploadParserAutomaton:
 
     def safe_parse_date(self, target_val: str,
             row_num: int) -> typing.Optional[str]:
+        """Parse a float or enter error state if parsing fails.
+
+        @param target_val: The value to parse.
+        @param row_num: The row number being processed.
+        @returns: Parsed value or None if not parseable.
+        """
         parts = target_val.split('/')
         if len(parts) != 3:
             self.enter_error_state(DATE_EXPECTED_ERR % (target_val, row_num))
@@ -164,12 +194,22 @@ class UploadParserAutomaton:
         return '%d/%d/%d' % (year, month, day)
 
     def step(self, step_val: typing.List[str], row_num: int) -> None:
+        """Process the next row.
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         for i in range(0, len(step_val)):
             step_val[i] = step_val[i].strip()
         self.__state_matrix[self.__state](step_val, row_num)
 
     def parse_child_db_id(self, step_val: typing.List[str],
             row_num: int) -> None:
+        """Parse the child's database ID.
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         passed_sanity_check = self.sanity_check(
             step_val,
             'Child\'s ID (from database)',
@@ -188,6 +228,11 @@ class UploadParserAutomaton:
 
     def parse_child_study_id(self, step_val: typing.List[str],
             row_num: int) -> None:
+        """Parse the child's study ID.
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         if not self.sanity_check(step_val, 'Name / Number', row_num):
             return
 
@@ -198,6 +243,11 @@ class UploadParserAutomaton:
 
     def parse_study_and_source(self, step_val: typing.List[str],
             row_num: int) -> None:
+        """Parse the study name.
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         if not self.sanity_check(step_val, 'Study / Source', row_num):
             return
 
@@ -207,6 +257,11 @@ class UploadParserAutomaton:
         self.__state += 1
 
     def parse_gender(self, step_val: typing.List[str], row_num: int) -> None:
+        """Parse the participant gender.
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         if not self.sanity_check(step_val, 'Gender', row_num):
             return
 
@@ -225,6 +280,11 @@ class UploadParserAutomaton:
         self.__state += 1
 
     def parse_age(self, step_val: typing.List[str], row_num: int) -> None:
+        """Parse the participant age.
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         if not self.sanity_check(step_val, 'Age (months)', row_num):
             return
 
@@ -237,6 +297,11 @@ class UploadParserAutomaton:
 
     def parse_date_of_birth(self, step_val: typing.List[str],
             row_num: int) -> None:
+        """Parse the participant date of birth.
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         if not self.sanity_check(step_val, 'Date of Birth', row_num):
             return
 
@@ -249,6 +314,11 @@ class UploadParserAutomaton:
 
     def parse_date_of_session(self, step_val: typing.List[str],
             row_num: int) -> None:
+        """Parse the date when the data were collected.
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         if not self.sanity_check(step_val, 'Date of Session', row_num):
             return
 
@@ -261,6 +331,14 @@ class UploadParserAutomaton:
 
     def parse_session_num(self, step_val: typing.List[str],
             row_num: int) -> None:
+        """Parse the index of the session.
+
+        Parse the index of the session (number of prior record for child in
+        study + 1).
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         if not self.sanity_check(step_val, 'Session #', row_num):
             return
 
@@ -273,6 +351,11 @@ class UploadParserAutomaton:
 
     def parse_total_session_num(self, step_val: typing.List[str],
             row_num: int) -> None:
+        """Parse the total number of sessions expected.
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         if not self.sanity_check(step_val, 'Total # of Sessions', row_num):
             return
 
@@ -285,6 +368,11 @@ class UploadParserAutomaton:
 
     def parse_words_spoken(self, step_val: typing.List[str],
             row_num: int) -> None:
+        """Parse the total number of words reported as spoken.
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         if not self.sanity_check(step_val, 'Words Spoken', row_num):
             return
 
@@ -297,6 +385,11 @@ class UploadParserAutomaton:
 
     def parse_items_excluded(self, step_val: typing.List[str],
             row_num: int) -> None:
+        """Parse the total number of words skipped.
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         if not self.sanity_check(step_val, 'Items Excluded', row_num):
             return
 
@@ -309,6 +402,11 @@ class UploadParserAutomaton:
 
     def parse_percentile(self, step_val: typing.List[str],
             row_num: int) -> None:
+        """Parse the pariticpant calculated percentile.
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         if not self.sanity_check(step_val, 'Percentile', row_num):
             return
 
@@ -337,6 +435,11 @@ class UploadParserAutomaton:
 
     def parse_extra_categories(self, step_val: typing.List[str],
             row_num: int) -> None:
+        """Parse the extra categories.
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         if not self.sanity_check(step_val, 'Extra Categories?', row_num):
             return
 
@@ -355,6 +458,11 @@ class UploadParserAutomaton:
 
     def parse_section_word_heading(self, step_val: typing.List[str],
             row_num: int) -> None:
+        """Parse the spreadsheet "header" row.
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         if not self.sanity_check(step_val, 'Word', row_num): return
         else: self.__state += 1
 
@@ -362,6 +470,11 @@ class UploadParserAutomaton:
             prototype['words'] = []
 
     def parse_words(self, step_val: typing.List[str], row_num: int) -> None:
+        """Parse individual word reports.
+
+        @param step_val: The current row.
+        @param row_num: The row index being processed.
+        """
         word = step_val[1]
 
         for (val, prototype) in zip(step_val[2:], self.__prototypes):
@@ -391,6 +504,7 @@ class UploadParserAutomaton:
                 })
 
     def finish(self) -> None:
+        """Complete parsing the input CSV."""
         if self.__state == STATE_FOUND_ERROR:
             return
 
@@ -418,30 +532,70 @@ class UploadParserAutomaton:
 
     def handle_found_error(self, step_val: typing.List[str],
             row_num: int) -> None:
+        """Take a step while in the error state.
+
+        @param step_val: The current row being processed.
+        @param row_num: Index of the row being processed.
+        """
         pass
 
     def get_state(self) -> int:
+        """Get the current state of the automaton.
+
+        @returns: Integer describing the state of the automaton.
+        """
         return self.__state
 
     def set_state(self, new_state: int) -> None:
+        """Manually set the state of the automaton.
+
+        @params new_state: Integer describing the new automaton state.
+        """
         self.__state = new_state
 
     def get_error(self) -> typing.Optional[str]:
+        """Get the error encountered by this automaton.
+
+        @returns: String describing the error or None if no error.
+        """
         return self.__error
 
     def get_prototypes(self) -> typing.List[dict]:
+        """Get the rows as dictionaries with keys describing each value.
+
+        @returns: Each item is a dictionary describing a single participant CDI.
+        """
         return self.__prototypes
 
     def get_list_needing_precentile(self) -> typing.List[int]:
+        """Get the list of row ids needing percentile calculation.
+
+        @returns: List of rows needing percentile calculations.
+        """
         return self.__needing_percentiles
 
     def set_prototypes(self, prototypes: typing.List[dict]) -> None:
+        """Manually set the prototypes recorded by this automaton.
+
+        @param prototypes: The prototypes to house within this automaton,
+            overwritting the prototypes already found by this automaton.
+        """
         self.__prototypes = prototypes
 
 
 def parse_csv_prototypes(contents: typing.Union[str, typing.IO[str]],
         percentile_table: PercentileTableMapping,
-        act_as_file: bool = False):
+        act_as_file: bool = False) -> typing.Dict:
+    """Parse a CSV into a dictionary of primitives.
+
+    @param contents: The content of the CSV to be parsed.
+    @param percentile_table: Table to use to calculate missing percentiles.
+    @param act_as_file: Flag indicating if contents should be treated as a
+        string or file-like. If true, treats it as a file-like. If false,
+        treats it as a string.
+    @returns: Dictionary describing the error found and the primitive prototypes
+        parsed.
+    """
 
     target_buffer: typing.IO[str]
 
@@ -467,7 +621,20 @@ def parse_csv_prototypes(contents: typing.Union[str, typing.IO[str]],
     }
 
 
-def build_snapshot(prototype, cdi_type, languages, hard_of_hearing, cursor):
+def build_snapshot(prototype: typing.Dict,
+        cdi_type: str,
+        languages: typing.List[str],
+        hard_of_hearing: bool,
+        cursor: sqlite3.Cursor):
+    """Save a snapshot and return its metadata.
+
+    @param prototype: The primtive prototype parsed.
+    @param cdi_type: The type of CDI being saved.
+    @param hard_of_hearing: Flag indicating if the participant is hard of
+        hearing.
+    @param cursor: Cursor to use to save the record.
+    @returns: Metadata of newly saved snapshot.
+    """
     metadata = models.SnapshotMetadata(
         -1,
         prototype['child_id'],
@@ -499,19 +666,63 @@ def build_snapshot(prototype, cdi_type, languages, hard_of_hearing, cursor):
     return metadata
 
 
-def parse_csv(contents, cdi_type, languages, hard_of_hearing,
-    act_as_file=False):
+def parse_csv(contents: typing.Union[str, typing.IO[str]],
+        cdi_type: str,
+        languages: typing.List[str],
+        hard_of_hearing: bool,
+        act_as_file: bool = False) -> typing.Dict:
+    """Create and save snapshots from a CSV.
 
-    cdi_model = db_util.load_cdi_model(cdi_type)
+    @param contents: The content of the CSV to be parsed.
+    @param cdi_type: The type of CDI being saved.
+    @param hard_of_hearing: Flag indicating if the participant is hard of
+        hearing.
+    @param act_as_file: Flag indicating if contents should be treated as a
+        string or file-like. If true, treats it as a file-like. If false,
+        treats it as a string.
+    @returns: Dictionary describing any error encountered and the ids of the
+        children for which records were created.
+    """
+    cdi_model: models.CDIFormat
+    cdi_model_maybe = db_util.load_cdi_model(cdi_type)
+
+    if cdi_model_maybe == None:
+        return {'error': 'Unknown CDI type.', 'ids': []}
+
+    cdi_model = cdi_model_maybe #type: ignore
+
     percentile_names = cdi_model.details['percentiles']
 
     male_percentiles_name = percentile_names['male']
     female_percentiles_name = percentile_names['female']
     other_percentiles_name = percentile_names['other']
 
-    male_percentiles = db_util.load_percentile_model(male_percentiles_name)
-    female_percentiles = db_util.load_percentile_model(female_percentiles_name)
-    other_percentiles = db_util.load_percentile_model(other_percentiles_name)
+    male_percentiles_maybe = db_util.load_percentile_model(
+        male_percentiles_name
+    )
+    female_percentiles_maybe = db_util.load_percentile_model(
+        female_percentiles_name
+    )
+    other_percentiles_maybe = db_util.load_percentile_model(
+        other_percentiles_name
+    )
+
+    all_percentiles = [
+        male_percentiles_maybe,
+        female_percentiles_maybe,
+        other_percentiles_maybe
+    ]
+
+    if None in all_percentiles:
+        return {'error': 'Missing percentile tables.', 'ids': []}
+
+    male_percentiles: models.PercentileTable
+    female_percentiles: models.PercentileTable
+    other_percentiles: models.PercentileTable
+
+    male_percentiles = male_percentiles_maybe # type: ignore
+    female_percentiles = female_percentiles_maybe # type: ignore
+    other_percentiles = other_percentiles_maybe # type: ignore
 
     percentile_tables = {
         constants.MALE: male_percentiles,
@@ -519,21 +730,26 @@ def parse_csv(contents, cdi_type, languages, hard_of_hearing,
         constants.OTHER_GENDER: other_percentiles
     }
 
-    connection = db_util.get_db_connection()
-    cursor = connection.cursor()
+    with db_util.get_cursor() as cursor:
+        parse_info = parse_csv_prototypes(
+            contents,
+            percentile_tables,
+            act_as_file
+        )
 
-    parse_info = parse_csv_prototypes(contents, percentile_tables, act_as_file)
-    if parse_info['error']:
-        connection.commit()
-        connection.close()
-        return {'error': parse_info['error']}
+        if parse_info['error']:
+            return {'error': parse_info['error']}
 
-    prototypes = parse_info['prototypes']
-    ids = map(lambda x: x['child_id'], prototypes)
+        prototypes = parse_info['prototypes']
+        ids = map(lambda x: x['child_id'], prototypes)
 
-    for prototype in prototypes:
-        build_snapshot(prototype, cdi_type, languages, hard_of_hearing, cursor)
+        for prototype in prototypes:
+            build_snapshot(
+                prototype,
+                cdi_type,
+                languages,
+                hard_of_hearing,
+                cursor
+            )
 
-    connection.commit()
-    connection.close()
     return {'error': None, 'ids': ids}
