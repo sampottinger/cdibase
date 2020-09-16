@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v3
 """
-
 import os
 import random
 import string
+import typing
 
 ALLOWED_EXTENSIONS = set(['yaml', 'csv'])
 UTIL_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -29,7 +29,7 @@ ROOT_DIR = os.path.abspath(os.path.join(UTIL_DIR, os.pardir, os.pardir))
 UPLOAD_FOLDER = os.path.join(ROOT_DIR, 'uploads')
 
 
-def upload_exists(filename):
+def upload_exists(filename: str) -> bool:
     """Check if a file already exists in the uploads directory.
 
     @param filename: The name of the file to check for.
@@ -46,7 +46,8 @@ def upload_exists(filename):
         return False
 
 
-def generate_filename(format, length=8, chars=string.ascii_letters):
+def generate_filename(format: str, length: int = 8,
+        chars: typing.Sequence[str] = string.ascii_letters) -> str:
     """Generate a random filename.
 
     @param format: The file extension to use (ex. ".yaml")
@@ -62,7 +63,8 @@ def generate_filename(format, length=8, chars=string.ascii_letters):
     return ''.join([random.choice(chars) for i in range(length)]) + format
 
 
-def generate_unique_filename(format, length=8, chars=string.ascii_letters):
+def generate_unique_filename(format: str, length: int = 8,
+        chars: typing.Sequence[str] = string.ascii_letters) -> str:
     """Generate a random filename that no other existing file uploads have.
 
     Generate a filename such that no file in the uploads directory exists with
@@ -83,10 +85,10 @@ def generate_unique_filename(format, length=8, chars=string.ascii_letters):
     while not found:
         possibility = generate_filename(format, length, chars)
         found = not upload_exists(possibility)
-    return possibility
+    return possibility # type: ignore
 
 
-def allowed_file(filename):
+def allowed_file(filename: str) -> bool:
     """Check that the server will accept the file of the given type.
 
     @param filename: The filename to check for acceptability.

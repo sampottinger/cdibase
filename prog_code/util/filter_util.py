@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v3
 """
+import typing
 
 from ..struct import models
 
@@ -60,7 +61,8 @@ OPERATOR_MAP = {
 class QueryInfo:
     """Information necessary to execute a user generated SQL select."""
 
-    def __init__(self, filter_fields, query_str):
+    def __init__(self, filter_fields: typing.List[oper_interp.FieldInfo],
+            query_str:str):
         """Create a structure containing info needed to run SQL select.
 
         @param filter_fields: The filters that are included in this select
@@ -74,7 +76,18 @@ class QueryInfo:
         self.query_str = query_str
 
 
-def build_query_component(field, operator, operand):
+def build_query_component(field: oper_interp.FieldInfo, operator: str,
+        operand: str) -> str:
+    """Generate part of a query for SQL.
+
+    Generate part of a query for SQL without checking for security issues,
+    issues which can be found through build_query.
+
+    @param field: The field to query.
+    @param operator: The operator to use in comparison.
+    @param operand: The value to compare against.
+    @returns: Query component.
+    """
     if isinstance(operand, str):
         operands = operand.split(',')
     else:
@@ -90,22 +103,33 @@ def build_query_component(field, operator, operand):
         return query_subcomponents[0]
 
 
-def build_query(filters, table, statement_template):
+def build_query(filters: typing.Iterable[models.Filter], table: str,
+        statement_template: str) -> QueryInfo:
+    """Build a SQL query to look up existing data.
+
+    @param filters: The filters to apply within the query.
+    @param table: The name of the table to query.
+    @param statement_template: SQL template to fill in.
+    """
     filters_realized = list(filters)
 
     filter_fields = map(lambda x: x.field, filters_realized)
     # TODO: might want to log this
     filter_fields = filter(lambda x: x in FIELD_MAP, filter_fields)
-    filter_fields = list(map(lambda x: FIELD_MAP[x], filter_fields))
+    filter_fields_realized = list(map(lambda x: FIELD_MAP[x], filter_fields))
 
     operators = map(lambda x: x.operator, filters_realized)
     operators = map(lambda x: str(x), operators)
     operators = filter(lambda x: x in OPERATOR_MAP, operators)
-    operators = list(map(lambda x: OPERATOR_MAP[x], operators))
+    operators_realized = list(map(lambda x: OPERATOR_MAP[x], operators))
 
-    operands = list(map(lambda x: x.operand, filters_realized))
+    operands_realized = list(map(lambda x: x.operand, filters_realized))
 
-    fields_and_extraneous = zip(filter_fields, operators, operands)
+    fields_and_extraneous = zip(
+        filter_fields_realized,
+        operators_realized,
+        operands_realized
+    )
 
     fields_and_extraneous_named = map(
         lambda x: {
@@ -128,10 +152,11 @@ def build_query(filters, table, statement_template):
 
     stmt = statement_template % (table, clause)
 
-    return QueryInfo(filter_fields, stmt)
+    return QueryInfo(filter_fields_realized, stmt)
 
 
-def build_search_query(filters, table):
+def build_search_query(filters: typing.Iterable[models.Filter],
+        table: str) -> QueryInfo:
     """Build a string SQL query from the given filters.
 
     @param filters: The filters to build the query out of.
@@ -139,23 +164,37 @@ def build_search_query(filters, table):
     @param table: The name of the table to query.
     @type table: str
     @return: SQL select query for the given table with the given filters.
-    @rtype: str
     """
     return build_query(filters, table, 'SELECT * FROM %s WHERE %s')
 
 
-def build_delete_query(filters, table, restore):
+def build_delete_query(filters: typing.Iterable[models.Filter], table: str,
+        restore: bool, hard_delete: bool = False):
+    """Create a delete related query (either to delete or to restore).
+
+    @param filters: The filters through which to target the action.
+    @param table: The name of the table on which to operate.
+    @param restore: Flag indicating if records are being restored. If true, data
+        are being restored. If false, being deleted.
+    @param hard_delete: Flag indicating if the delete should be permanent. If
+        true, the data are permanently deleted. If false, will only be set to
+        deleted but not actually removed. Ignored if restore == True.
+    @returns: Newly generated SQL.
+    """
     if restore:
         return build_query(filters, table, 'UPDATE %s SET deleted=0 WHERE %s')
+    elif hard_delete:
+        return build_query(filters, table, 'DELETE FROM %s WHERE %s')
     else:
         return build_query(filters, table, 'UPDATE %s SET deleted=1 WHERE %s')
 
 
-def run_search_query(filters, table, exclude_deleted=True):
+def run_search_query(filters_iter: typing.Iterable[models.Filter], table: str,
+        exclude_deleted: bool = True):
     """Builds and runs a SQL select query on the given table with given filters.
 
-    @param filters: The filters to build the query out of.
-    @type: Iterable over models.Filter
+    @param filters_iter: The filters to build the query out of.
+    @type filters_iter: Iterable over models.Filter
     @param table: The name of the table to query.
     @type table: str
     @return: Results of SQL select query for the given table with the given
@@ -164,6 +203,8 @@ def run_search_query(filters, table, exclude_deleted=True):
     """
     db_connection = db_util.get_db_connection()
     db_cursor = db_connection.cursor()
+
+    filters = list(filters_iter)
 
     if exclude_deleted:
         filters.append(models.Filter('deleted', 'eq', 0))
@@ -197,13 +238,17 @@ def run_search_query(filters, table, exclude_deleted=True):
     return ret_val
 
 
-def run_delete_query(filters, table, restore):
+def run_delete_query(filters: typing.Iterable[models.Filter], table: str,
+        restore: bool, hard_delete: bool = False):
     """Builds and runs a SQL select query on the given table with given filters.
 
     @param filters: The filters to build the query out of.
     @type: Iterable over models.Filter
     @param table: The name of the table to query.
     @type table: str
+    @param hard_delete: Flag indicating if the delete should be permanent. If
+        true, the data are permanently deleted. If false, will only be set to
+        deleted but not actually removed. Ignored if restore == True.
     @return: Results of SQL select query for the given table with the given
         filters.
     @rtype: Iterable over models.SnapshotMetadata
@@ -211,7 +256,12 @@ def run_delete_query(filters, table, restore):
     db_connection = db_util.get_db_connection()
     db_cursor = db_connection.cursor()
 
-    query_info = build_delete_query(filters, table, restore)
+    query_info = build_delete_query(
+        filters,
+        table,
+        restore,
+        hard_delete=hard_delete
+    )
     raw_operands = map(lambda x: x.operand, filters)
 
     filter_fields_and_operands = zip(query_info.filter_fields, raw_operands)

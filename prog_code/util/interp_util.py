@@ -18,25 +18,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v3
 """
-from calendar import monthrange
-from datetime import datetime, timedelta, date
+import datetime
+import typing
+
+from ..struct import models
 
 DAYS_PER_MONTH = 30.42
 
 
-def interpret_date(target_val):
+def interpret_date(target_val: str) -> datetime.date:
+    """Interpret a date of form YYYY/MM/DD as a datetime.date.
+
+    @param target_val: The string to interpret.
+    @returns: Newly parsed date.
+    """
     parts = list(map(lambda x: int(x), target_val.split('/')))
-    return date(parts[0], parts[1], parts[2])
+    return datetime.date(parts[0], parts[1], parts[2])
 
 
-def monthdelta(d1, d2):
+def monthdelta(d1: datetime.date, d2: datetime.date) -> float:
+    """Determine the number of normalized months between two dates.
+
+    @param d1: The first date.
+    @param d2: The second date.
+    @returns: The number of normalized months between the two given dates.
+    """
     if d1 >= d2:
         return 0
 
     return float((d2 - d1).days) / DAYS_PER_MONTH
 
 
-def safe_int_interpret(target):
+def safe_int_interpret(target: str) -> typing.Optional[int]:
     """Interpret a value as an integer.
 
     @param target: The value to interpret.
@@ -51,7 +64,7 @@ def safe_int_interpret(target):
     except ValueError:
         return None
 
-def safe_float_interpret(target):
+def safe_float_interpret(target: str) -> typing.Optional[float]:
     """Interpret a value as an floating point value.
 
     @param target: The value to interpet.
@@ -66,7 +79,7 @@ def safe_float_interpret(target):
     except ValueError:
         return None
 
-def operator_to_str(operator):
+def operator_to_str(operator: str) -> str:
     """Convert a operator abreviation to a code description of it.
 
     @param operator: The abreviation to convert (ex. "eq")
@@ -89,7 +102,7 @@ def operator_to_str(operator):
     else:
         return '?'
 
-def filter_to_str(target):
+def filter_to_str(target: models.Filter) -> str:
     """Convert a filter to a SQL clause.
 
     @param target: The filter to convert.

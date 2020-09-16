@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v3
 """
+import typing
 
 STATE_PARSE_CHILD_DB_ID = 0
 STATE_PARSE_CHILD_STUDY_ID = 1
@@ -58,17 +59,33 @@ import prog_code.util.constants as constants
 import prog_code.util.db_util as db_util
 import prog_code.util.math_util as math_util
 
+PercentileTableMapping = typing.Dict[str, models.PercentileTable]
+
+# TODO (sampottinger): This is legacy code so is excluded from doc requirements
+#                      but it would be ideal to document.
 
 class UploadParserAutomaton:
     """Automaton which processes CSV files to import into the lab database."""
 
-    def __init__(self, percentile_table=None, state=STATE_PARSE_CHILD_DB_ID):
+    def __init__(self,
+            percentile_table: PercentileTableMapping,
+            state: int = STATE_PARSE_CHILD_DB_ID):
         """Create a new upload parser automaton.
 
         @keyword percentile_table: The raw percentile tables to use
             while calculating children percentiles.
         @type percentile_table: 2D float array
         """
+        self.__percentile_table: PercentileTableMapping
+        self.__needing_percentiles: typing.List[int]
+        self.__state_matrix: typing.Mapping[
+            int,
+            typing.Callable[[typing.Any, typing.Any], typing.Any]
+        ]
+        self.__state: int
+        self.__error: typing.Optional[str]
+        self.__prototypes: typing.List[dict]
+
         self.__percentile_table = percentile_table
         self.__needing_percentiles = []
         self.__state_matrix = {
@@ -93,11 +110,12 @@ class UploadParserAutomaton:
         self.__error = None
         self.__prototypes = []
 
-    def enter_error_state(self, message):
+    def enter_error_state(self, message: str) -> None:
         self.__state = STATE_FOUND_ERROR
         self.__error = message
 
-    def sanity_check(self, step_val, expected, row_num):
+    def sanity_check(self, step_val: typing.List[str], expected: str,
+            row_num: int) -> bool:
         if step_val[1] == expected:
             return True
         else:
@@ -105,25 +123,28 @@ class UploadParserAutomaton:
             self.enter_error_state(msg)
             return False
 
-    def safe_parse_float(self, target_val, row_num):
+    def safe_parse_float(self, target_val: str,
+            row_num: int) -> typing.Optional[float]:
         try:
             return float(target_val)
         except ValueError:
             self.enter_error_state(FLOAT_EXPECTED_ERR % (target_val, row_num))
             return None
 
-    def safe_parse_int(self, target_val, row_num):
+    def safe_parse_int(self, target_val: str,
+            row_num: int) -> typing.Optional[float]:
         try:
             return int(target_val)
         except ValueError:
             self.enter_error_state(INT_EXPECTED_ERR % (target_val, row_num))
             return None
 
-    def safe_parse_date(self, target_val, row_num):
+    def safe_parse_date(self, target_val: str,
+            row_num: int) -> typing.Optional[str]:
         parts = target_val.split('/')
         if len(parts) != 3:
             self.enter_error_state(DATE_EXPECTED_ERR % (target_val, row_num))
-            return
+            return None
 
         try:
             month = int(parts[0])
@@ -142,12 +163,13 @@ class UploadParserAutomaton:
 
         return '%d/%d/%d' % (year, month, day)
 
-    def step(self, step_val, row_num):
+    def step(self, step_val: typing.List[str], row_num: int) -> None:
         for i in range(0, len(step_val)):
             step_val[i] = step_val[i].strip()
         self.__state_matrix[self.__state](step_val, row_num)
 
-    def parse_child_db_id(self, step_val, row_num):
+    def parse_child_db_id(self, step_val: typing.List[str],
+            row_num: int) -> None:
         passed_sanity_check = self.sanity_check(
             step_val,
             'Child\'s ID (from database)',
@@ -164,7 +186,8 @@ class UploadParserAutomaton:
 
         self.__state += 1
 
-    def parse_child_study_id(self, step_val, row_num):
+    def parse_child_study_id(self, step_val: typing.List[str],
+            row_num: int) -> None:
         if not self.sanity_check(step_val, 'Name / Number', row_num):
             return
 
@@ -173,7 +196,8 @@ class UploadParserAutomaton:
 
         self.__state += 1
 
-    def parse_study_and_source(self, step_val, row_num):
+    def parse_study_and_source(self, step_val: typing.List[str],
+            row_num: int) -> None:
         if not self.sanity_check(step_val, 'Study / Source', row_num):
             return
 
@@ -182,7 +206,7 @@ class UploadParserAutomaton:
 
         self.__state += 1
 
-    def parse_gender(self, step_val, row_num):
+    def parse_gender(self, step_val: typing.List[str], row_num: int) -> None:
         if not self.sanity_check(step_val, 'Gender', row_num):
             return
 
@@ -200,7 +224,7 @@ class UploadParserAutomaton:
 
         self.__state += 1
 
-    def parse_age(self, step_val, row_num):
+    def parse_age(self, step_val: typing.List[str], row_num: int) -> None:
         if not self.sanity_check(step_val, 'Age (months)', row_num):
             return
 
@@ -211,7 +235,8 @@ class UploadParserAutomaton:
 
         self.__state += 1
 
-    def parse_date_of_birth(self, step_val, row_num):
+    def parse_date_of_birth(self, step_val: typing.List[str],
+            row_num: int) -> None:
         if not self.sanity_check(step_val, 'Date of Birth', row_num):
             return
 
@@ -222,7 +247,8 @@ class UploadParserAutomaton:
 
         self.__state += 1
 
-    def parse_date_of_session(self, step_val, row_num):
+    def parse_date_of_session(self, step_val: typing.List[str],
+            row_num: int) -> None:
         if not self.sanity_check(step_val, 'Date of Session', row_num):
             return
 
@@ -233,7 +259,8 @@ class UploadParserAutomaton:
 
         self.__state += 1
 
-    def parse_session_num(self, step_val, row_num):
+    def parse_session_num(self, step_val: typing.List[str],
+            row_num: int) -> None:
         if not self.sanity_check(step_val, 'Session #', row_num):
             return
 
@@ -244,7 +271,8 @@ class UploadParserAutomaton:
 
         self.__state += 1
 
-    def parse_total_session_num(self, step_val, row_num):
+    def parse_total_session_num(self, step_val: typing.List[str],
+            row_num: int) -> None:
         if not self.sanity_check(step_val, 'Total # of Sessions', row_num):
             return
 
@@ -255,7 +283,8 @@ class UploadParserAutomaton:
 
         self.__state += 1
 
-    def parse_words_spoken(self, step_val, row_num):
+    def parse_words_spoken(self, step_val: typing.List[str],
+            row_num: int) -> None:
         if not self.sanity_check(step_val, 'Words Spoken', row_num):
             return
 
@@ -266,7 +295,8 @@ class UploadParserAutomaton:
 
         self.__state += 1
 
-    def parse_items_excluded(self, step_val, row_num):
+    def parse_items_excluded(self, step_val: typing.List[str],
+            row_num: int) -> None:
         if not self.sanity_check(step_val, 'Items Excluded', row_num):
             return
 
@@ -277,7 +307,8 @@ class UploadParserAutomaton:
 
         self.__state += 1
 
-    def parse_percentile(self, step_val, row_num):
+    def parse_percentile(self, step_val: typing.List[str],
+            row_num: int) -> None:
         if not self.sanity_check(step_val, 'Percentile', row_num):
             return
 
@@ -293,7 +324,7 @@ class UploadParserAutomaton:
                         INVALID_PERCENT_ERR % (converted_val, row_num),
                     )
                     return
-                elif converted_val < 0 or converted_val > 100:
+                elif converted_val < 0 or converted_val > 100: # type: ignore
                     self.enter_error_state(
                         INVALID_PERCENT_ERR % (converted_val, row_num),
                     )
@@ -304,7 +335,8 @@ class UploadParserAutomaton:
 
         self.__state += 1
 
-    def parse_extra_categories(self, step_val, row_num):
+    def parse_extra_categories(self, step_val: typing.List[str],
+            row_num: int) -> None:
         if not self.sanity_check(step_val, 'Extra Categories?', row_num):
             return
 
@@ -321,14 +353,15 @@ class UploadParserAutomaton:
 
         self.__state += 1
 
-    def parse_section_word_heading(self, step_val, row_num):
+    def parse_section_word_heading(self, step_val: typing.List[str],
+            row_num: int) -> None:
         if not self.sanity_check(step_val, 'Word', row_num): return
         else: self.__state += 1
 
         for prototype in self.__prototypes:
             prototype['words'] = []
 
-    def parse_words(self, step_val, row_num):
+    def parse_words(self, step_val: typing.List[str], row_num: int) -> None:
         word = step_val[1]
 
         for (val, prototype) in zip(step_val[2:], self.__prototypes):
@@ -357,7 +390,7 @@ class UploadParserAutomaton:
                     'val': converted_val
                 })
 
-    def finish(self):
+    def finish(self) -> None:
         if self.__state == STATE_FOUND_ERROR:
             return
 
@@ -383,35 +416,41 @@ class UploadParserAutomaton:
 
             target_prototype['percentile'] = percentile
 
-    def handle_found_error(self, step_val, row_num):
+    def handle_found_error(self, step_val: typing.List[str],
+            row_num: int) -> None:
         pass
 
-    def get_state(self):
+    def get_state(self) -> int:
         return self.__state
 
-    def set_state(self, new_state):
+    def set_state(self, new_state: int) -> None:
         self.__state = new_state
 
-    def get_error(self):
+    def get_error(self) -> typing.Optional[str]:
         return self.__error
 
-    def get_prototypes(self):
+    def get_prototypes(self) -> typing.List[dict]:
         return self.__prototypes
 
-    def get_list_needing_precentile(self):
+    def get_list_needing_precentile(self) -> typing.List[int]:
         return self.__needing_percentiles
 
-    def set_prototypes(self, prototypes):
+    def set_prototypes(self, prototypes: typing.List[dict]) -> None:
         self.__prototypes = prototypes
 
 
-def parse_csv_prototypes(contents, percentile_table, act_as_file=False):
-    if act_as_file:
-        targetBuffer = contents
-    else:
-        targetBuffer = io.StringIO(contents)
+def parse_csv_prototypes(contents: typing.Union[str, typing.IO[str]],
+        percentile_table: PercentileTableMapping,
+        act_as_file: bool = False):
 
-    reader = csv.reader(targetBuffer)
+    target_buffer: typing.IO[str]
+
+    if act_as_file:
+        target_buffer = contents # type: ignore
+    else:
+        target_buffer = io.StringIO(contents) # type: ignore
+
+    reader = csv.reader(target_buffer)
 
     automaton = UploadParserAutomaton(percentile_table)
     row_num = 1

@@ -82,7 +82,7 @@ class FilterUtilTests(unittest.TestCase):
 
             mock.assert_called()
 
-    def test_delete_search_query(self):
+    def test_delete_search_query_restore(self):
         with unittest.mock.patch('prog_code.util.db_util.get_db_connection') as mock:
             fake_cursor = TestDBCursor()
             fake_connection = TestDBConnection(fake_cursor)
@@ -95,6 +95,50 @@ class FilterUtilTests(unittest.TestCase):
 
             query = fake_cursor.queries[0]
             query_str ='UPDATE test SET deleted=0 WHERE (study == ? OR study == ?)'
+            self.assertEqual(query, query_str)
+
+            operands = fake_cursor.operands[0]
+            self.assertEqual(len(operands), 2)
+            self.assertEqual(operands[0], 'study1')
+            self.assertEqual(operands[1], 'study2')
+
+            mock.assert_called()
+
+    def test_delete_search_query_delete(self):
+        with unittest.mock.patch('prog_code.util.db_util.get_db_connection') as mock:
+            fake_cursor = TestDBCursor()
+            fake_connection = TestDBConnection(fake_cursor)
+            mock.return_value = fake_connection
+
+            filters = [
+                models.Filter('study', 'eq', 'study1,study2')
+            ]
+            filter_util.run_delete_query(filters, 'test', False)
+
+            query = fake_cursor.queries[0]
+            query_str ='UPDATE test SET deleted=1 WHERE (study == ? OR study == ?)'
+            self.assertEqual(query, query_str)
+
+            operands = fake_cursor.operands[0]
+            self.assertEqual(len(operands), 2)
+            self.assertEqual(operands[0], 'study1')
+            self.assertEqual(operands[1], 'study2')
+
+            mock.assert_called()
+
+    def test_delete_search_query_delete_hard(self):
+        with unittest.mock.patch('prog_code.util.db_util.get_db_connection') as mock:
+            fake_cursor = TestDBCursor()
+            fake_connection = TestDBConnection(fake_cursor)
+            mock.return_value = fake_connection
+
+            filters = [
+                models.Filter('study', 'eq', 'study1,study2')
+            ]
+            filter_util.run_delete_query(filters, 'test', False, hard_delete=True)
+
+            query = fake_cursor.queries[0]
+            query_str ='DELETE FROM test WHERE (study == ? OR study == ?)'
             self.assertEqual(query, query_str)
 
             operands = fake_cursor.operands[0]

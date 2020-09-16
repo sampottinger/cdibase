@@ -146,7 +146,7 @@ def enter_data_form(format_name):
                 error = GLOBAL_ID_NOT_INT_MSG
         else:
             global_id = None
-        
+
         if study_id == '':
             error = STUDY_ID_NOT_PROVIDED_MSG
 
