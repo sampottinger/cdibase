@@ -22,11 +22,14 @@ import csv
 import collections
 import datetime
 import functools
+import typing
 
 import prog_code.util.constants as constants
 import prog_code.util.recalc_util as recalc_util
 
 from ..struct import models
+
+T = typing.TypeVar('T')
 
 STATE_PARSE_HEADER = 0
 STATE_PARSE_DATABASE_ID = 1
@@ -144,48 +147,56 @@ CSVResults = collections.namedtuple(
 
 
 class UploadParserAutomaton:
+    """Automaton to parse the "new" CSV format."""
 
-    def __init__(self, cached_adapter):
+    def __init__(self, cached_adapter: recalc_util.CachedCDIAdapter):
+        """Create a new automaton in the STATE_PARSE_HEADER state.
+
+        @params cached_adapter: Caching entry point into information about
+            percentiles and CDI models.
+        """
         self.__cached_adapter = cached_adapter
 
         self.__state = STATE_PARSE_HEADER
-        self.__error = None
+
+        self.__error: typing.Optional[str] = None
 
         self.__columns_processed = 0
-        self.__has_database_id = None
-        self.__expected_words = None
+        self.__has_database_id = False
 
-        self.__child_id = None
-        self.__study_id = None
-        self.__study = None
-        self.__gender = None
-        self.__age = None
-        self.__age_deferred = None
-        self.__birthday = None
-        self.__session_date = None
-        self.__session_num = None
-        self.__session_num_deferred = None
-        self.__total_num_sessions = None
-        self.__num_words_spoken = None
-        self.__num_words_spoken_deferred = None
-        self.__excluded_items = None
-        self.__percentile_deferred = None
-        self.__percentile = None
-        self.__extra_categories = None
-        self.__revision = None
-        self.__languages = None
-        self.__num_languages_deferred = None
-        self.__num_languages = None
-        self.__cdi_name = None
-        self.__hard_of_hearing = None
-        self.__deleted = None
+        self.__expected_words: typing.List[str] = []
+        self.__child_id: typing.Optional[str] = None
+        self.__study_id: typing.Optional[str] = None
+        self.__age: typing.Optional[float] = None
+        self.__study: typing.Optional[str] = None
+        self.__birthday: typing.Optional[str] = None
+        self.__session_date: typing.Optional[str] = None
+        self.__session_num: typing.Optional[int] = None
+        self.__total_num_sessions: typing.Optional[int] = None
+        self.__num_words_spoken: typing.Optional[int] = None
+        self.__excluded_items: typing.Optional[int] = None
+        self.__percentile: typing.Optional[float] = None
+        self.__extra_categories: typing.Optional[int] = None
+        self.__revision: typing.Optional[int] = None
+        self.__num_languages: typing.Optional[int] = None
 
-        self.__expected_word_queue = None
-        self.__allowed_word_values = None
-        self.__count_as_spoken_values = None
-        self.__word_values = None
+        self.__gender = constants.UNKNOWN
+        self.__age_deferred = False
+        self.__session_num_deferred = False
+        self.__num_words_spoken_deferred = False
+        self.__percentile_deferred = False
+        self.__num_languages_deferred = False
+        self.__cdi_name = 'Unknown'
+        self.__hard_of_hearing = constants.UNKNOWN
+        self.__deleted = constants.UNKNOWN
 
-        self.__processed_records = []
+        self.__languages: typing.List[str] = []
+
+        self.__expected_word_queue: typing.Deque[str] = collections.deque()
+        self.__allowed_word_values: typing.Set[str] = set()
+        self.__count_as_spoken_values: typing.Set[str] = set()
+        self.__word_values: typing.Dict[str, typing.Optional[int]] = {}
+        self.__processed_records: typing.List['AutomatonResults'] = []
 
         self.__step_handlers = {
             STATE_PARSE_HEADER: lambda x: self.parse_header(x),
@@ -214,10 +225,19 @@ class UploadParserAutomaton:
             STATE_FOUND_ERROR: lambda x: self.maintain_error_state(x)
         }
 
-    def get_processed_records(self):
+    def get_processed_records(self) -> typing.List['AutomatonResults']:
+        """Get all of the records found.
+
+        @returns: List of porcessed records.
+        """
         return self.__processed_records
 
-    def process_column(self, input_vals):
+    def process_column(self, input_vals: typing.List[str]) -> None:
+        """Process a column representing a single child snapshot.
+
+        @param input_vals: List where each element is a cell going in increasing
+            column number.
+        """
         if self.is_in_error():
             return
 
@@ -226,7 +246,12 @@ class UploadParserAutomaton:
         else:
             self.__process_non_header_col(input_vals)
 
-    def __process_non_header_col(self, input_vals):
+    def __process_non_header_col(self, input_vals: typing.List[str]) -> None:
+        """Process a column which does not have header information.
+
+        @param input_vals: List where each element is a cell going in increasing
+            column number.
+        """
         for input_val in input_vals:
 
             if not self.__state in self.__step_handlers:
@@ -305,7 +330,12 @@ class UploadParserAutomaton:
         else:
             self.__state = STATE_PARSE_CHILD_ID
 
-    def __create_metadata(self):
+    def __create_metadata(self) -> models.SnapshotMetadata:
+        """Create a new metadata record for a snapshot.
+
+        @returns: Newly created snapshot record. Note that this snapshot may
+            or may not be saved. This method will not save it.
+        """
         return models.SnapshotMetadata(
             None,
             self.__child_id,
@@ -329,7 +359,11 @@ class UploadParserAutomaton:
             self.__deleted
         )
 
-    def __create_words(self):
+    def __create_words(self) -> typing.List[models.SnapshotContent]:
+        """Create snapshot content from parsed values.
+
+        @returns: Records describing if words were found or not.
+        """
         named_items = map(
             lambda x: {
                 'word': x[0],
@@ -337,7 +371,7 @@ class UploadParserAutomaton:
             },
             self.__word_values.items()
         )
-        return map(
+        return list(map(
             lambda x: models.SnapshotContent(
                 None,
                 x['word'],
@@ -345,15 +379,24 @@ class UploadParserAutomaton:
                 0
             ),
             named_items
-        )
+        ))
 
-    def __get_percentile(self):
+    def __get_percentile(self) -> float:
+        """Use the found percentile or calculate it if not given in import CSV.
+
+        @returns: Percentile for current record.
+        """
         if self.__percentile_deferred:
             return self.__calculate_percentile()
         else:
-            return self.__percentile
+            return self.__assert_not_none(self.__percentile)
 
-    def __calculate_percentile(self):
+    def __calculate_percentile(self) -> float:
+        """Calculate the percentile for a study participant.
+
+        @returns: Newly calculated percentile, ignoring a percentile if given in
+            an import CSV.
+        """
         return recalc_util.recalculate_percentile_raw(
             self.__cached_adapter,
             self.__cdi_name,
@@ -362,64 +405,166 @@ class UploadParserAutomaton:
             self.__get_age()
         )
 
-    def __get_words_spoken(self):
+    def __get_words_spoken(self) -> int:
+        """Get the num words spoken by the snapshot currently being processed.
+
+        Get the num words spoken by the snapshot currently being processed,
+        calculating it if it was not given by the import CSV.
+
+        @returns: Number of words reported as spoken.
+        """
         if self.__num_words_spoken_deferred:
             return self.__calculate_words_spoken()
         else:
-            return self.__num_words_spoken
+            return self.__assert_not_none(self.__num_words_spoken)
 
-    def __calculate_words_spoken(self):
+    def __calculate_words_spoken(self) -> int:
+        """Calculate the number of words spoken for a study participant.
+
+        @returns: Newly calculated number of words, ignoring a if given in an
+            import CSV.
+        """
         return len(list(filter(
             lambda x: x in self.__count_as_spoken_values,
             self.__word_values.values()
         )))
 
-    def __get_age(self):
+    def __get_age(self) -> float:
+        """Get the age of the child whose snapshot is currently being processed.
+
+        Get the participant age for the snapshot currently being processed,
+        calculating it if it was not given by the import CSV.
+
+        @returns: Participant age.
+        """
         if self.__age_deferred:
             return self.__calculate_age()
         else:
-            return self.__age
+            assert self.__age != None
+            return self.__age # type: ignore
 
-    def __calculate_age(self):
+    def __calculate_age(self) -> float:
+        """Calculate study participant age at time of snapshot.
+
+        @returns: Newly calculated age, ignoring a if given in an import CSV.
+        """
         return recalc_util.recalculate_age_raw(
             self.__birthday,
             self.__session_date
         )
 
-    def __get_num_languages(self):
+    def __get_num_languages(self) -> int:
+        """Get the number of lanauges spoken by a participant.
+
+        Get the number of lanauges spoken by participant currently being
+        processed, calculating it if it was not given by the import CSV.
+
+        @returns: Participant number of languages.
+        """
         if self.__num_languages_deferred:
             return len(self.__languages)
         else:
-            return self.__num_languages
+            return self.__assert_not_none(self.__num_languages)
 
-    def __get_session_num(self):
+    def __get_session_num(self) -> int:
+        """Get the session number for a snapshot.
+
+        Get the index for the snapshot currently being processed, calculating it
+        if it was not given by the import CSV. Session number is the number of
+        prior snapshots captured for the participant in the study plus one.
+
+        @returns: Session number.
+        """
         if self.__session_num_deferred:
             return recalc_util.get_session_number(
                 self.__study,
                 self.__study_id
             )
         else:
-            return self.__session_num
+            return self.__assert_not_none(self.__session_num)
 
-    def waiting_for_header(self):
+    def __is_number_positive(self, target: typing.Optional[float],
+            allow_zero: bool = False) -> bool:
+        """Check that a number is not None and is positive.
+
+        @param target: The value to test.
+        @param allow_zero: If true, assumes values equal to zero are positive.
+            If false, zero is considered negative. Defaults to false.
+        @returns: True if postive number. Otherwise false.
+        """
+        if allow_zero:
+            return target != None and target >= 0 # type: ignore
+        else:
+            return target != None and target > 0 # type: ignore
+
+    def __is_number_in_range(self, target: typing.Optional[float],
+            min_val: float, max_val: float) -> bool:
+        """Check that a number is not None and is in a range.
+
+        @param target: The value to test.
+        @param min_val: Minimum allowed value (inclusive).
+        @param max_val: Maximum allowed value (inclusive).
+        @returns: True if in range. Otherwise false.
+        """
+        return target != None and target >= min_val and target <= max_val # type: ignore
+
+    def __assert_not_none(self, target: typing.Optional[T]) -> T:
+        """Ensure that a value is not None.
+
+        @param target: The value to test.
+        @returns: The input value.
+        """
+        assert target != None
+        return target # type: ignore
+
+    def waiting_for_header(self) -> bool:
+        """Determine if automaton is waiting for header.
+
+        Determine if the automaton is waiting to find the header for a snapshot
+        which indicates when it should start reading information about if words
+        were spoken or not.
+
+        @returns: Floag indicating if the automaton is awaiting header.
+        """
         return self.__state == STATE_PARSE_HEADER
 
-    def is_in_error(self):
+    def is_in_error(self) -> bool:
+        """Determine if automaton enountered an error.
+
+        @returns: True if error encountered and processing has stopped. False
+            otherwise.
+        """
         return self.__state == STATE_FOUND_ERROR
 
-    def get_state(self):
+    def get_state(self) -> int:
+        """Get the current state of the automaton.
+
+        @returns: Integer describing state of current automaton.
+        """
         return self.__state
 
-    def get_error(self):
+    def get_error(self) -> typing.Optional[str]:
+        """Get the error encountered by the automaton.
+
+        @returns: None if no error or message describing the error if error
+            encountered.
+        """
         return self.__error
 
     def expects_db_id_field(self):
+        """
+        Ensure that the database ID was found, raising an error otherwise.
+        """
         if self.__has_database_id is None:
             raise RuntimeError("Unset database ID row flag.")
 
         return self.__has_database_id
 
-    def enter_error_state(self, error_message):
+    def enter_error_state(self, error_message: str):
+        """Indicate that the automaton encountered an error and stop processing.
+
+        @param error_message: Message describing the error encountered.
+        """
         if error_message is None:
             raise RuntimeError(
                 "Unexpected automaton error message: " + error_message
@@ -428,7 +573,11 @@ class UploadParserAutomaton:
         self.__state = STATE_FOUND_ERROR
         self.__error = error_message
 
-    def parse_header(self, header_column_cased):
+    def parse_header(self, header_column_cased: typing.List[str]) -> None:
+        """Parse a header column.
+
+        @param header_column_cased: The header column contents.
+        """
         header_column = list(map(lambda x: x.lower(), header_column_cased))
 
         # Check minimum length
@@ -463,14 +612,26 @@ class UploadParserAutomaton:
         # Accept new state
         self.__prepare_for_new_record()
 
-    def parse_database_id(self, input_val):
+    def parse_database_id(self, input_val: str) -> None:
+        """Parse the database ID for a snapshot.
+
+        @param input_val: Cell to parse.
+        """
         self.__state = STATE_PARSE_CHILD_ID
 
-    def parse_child_id(self, input_val):
+    def parse_child_id(self, input_val: str) -> None:
+        """Parse the child ID used across snapshots.
+
+        @param input_val: Cell to parse.
+        """
         self.__child_id = None if self.__is_empty(input_val) else input_val
         self.__state = STATE_PARSE_STUDY_ID
 
-    def parse_study_id(self, input_val):
+    def parse_study_id(self, input_val: str) -> None:
+        """Parse the study ID used across snapshots.
+
+        @param input_val: Cell to parse.
+        """
         if self.__is_empty(input_val):
             msg = ERROR_NO_STUDY_ID % (self.__columns_processed + 1)
             self.enter_error_state(msg)
@@ -479,7 +640,11 @@ class UploadParserAutomaton:
         self.__study_id = input_val
         self.__state = STATE_PARSE_STUDY
 
-    def parse_study(self, input_val):
+    def parse_study(self, input_val: str) -> None:
+        """Parse the human readable study name.
+
+        @param input_val: Cell to parse.
+        """
         if self.__is_empty(input_val):
             msg = ERROR_NO_STUDY % (self.__columns_processed + 1)
             self.enter_error_state(msg)
@@ -488,7 +653,11 @@ class UploadParserAutomaton:
         self.__study = input_val
         self.__state = STATE_PARSE_GENDER
 
-    def parse_gender(self, input_val_cased):
+    def parse_gender(self, input_val_cased: str) -> None:
+        """Parse the participant gender.
+
+        @param input_val: Cell to parse.
+        """
         input_val = input_val_cased.lower()
 
         col_number = self.__columns_processed + 1
@@ -506,7 +675,11 @@ class UploadParserAutomaton:
         self.__gender = EXPECTED_GENDER_VALUES[input_val]
         self.__state = STATE_PARSE_AGE
 
-    def parse_age(self, input_val):
+    def parse_age(self, input_val: str) -> None:
+        """Parse the participant age.
+
+        @param input_val: Cell to parse.
+        """
         if self.__is_empty(input_val):
             self.__age_deferred = True
             self.__state = STATE_PARSE_BIRTHDAY
@@ -516,7 +689,7 @@ class UploadParserAutomaton:
 
         candidate_age = self.__parse_float(input_val)
 
-        if candidate_age == None or candidate_age <= 0:
+        if not self.__is_number_positive(candidate_age):
             msg = ERROR_UNEXPECTED_AGE_VALUE % (
                 input_val,
                 self.__columns_processed + 1
@@ -527,7 +700,11 @@ class UploadParserAutomaton:
         self.__state = STATE_PARSE_BIRTHDAY
         self.__age = candidate_age
 
-    def parse_birthday(self, input_val):
+    def parse_birthday(self, input_val: str) -> None:
+        """Parse the participant birthday.
+
+        @param input_val: Cell to parse.
+        """
         if self.__is_empty(input_val):
             msg = ERROR_NO_BIRTHDAY % (self.__columns_processed + 1)
             self.enter_error_state(msg)
@@ -545,7 +722,11 @@ class UploadParserAutomaton:
         self.__birthday = candidate_date
         self.__state = STATE_PARSE_SESSION_DATE
 
-    def parse_session_date(self, input_val):
+    def parse_session_date(self, input_val: str) -> None:
+        """Parse the date of the snapshot collection.
+
+        @param input_val: Cell to parse.
+        """
         if self.__is_empty(input_val):
             msg = ERROR_NO_SESSION_DATE % (self.__columns_processed + 1)
             self.enter_error_state(msg)
@@ -563,7 +744,11 @@ class UploadParserAutomaton:
         self.__session_date = candidate_date
         self.__state = STATE_PARSE_SESSION_NUM
 
-    def parse_session_num(self, input_val):
+    def parse_session_num(self, input_val: str) -> None:
+        """Parse the index of the session (number of prior sessions + 1).
+
+        @param input_val: Cell to parse.
+        """
         if self.__is_empty(input_val):
             self.__session_num_deferred = True
             self.__state = STATE_PARSE_TOTAL_NUM_SESSIONS
@@ -571,9 +756,9 @@ class UploadParserAutomaton:
         else:
             self.__session_num_deferred = False
 
-        candidate_session_num = self.__parse_float(input_val)
+        candidate_session_num = self.__parse_int(input_val)
 
-        if candidate_session_num == None or candidate_session_num <= 0:
+        if not self.__is_number_positive(candidate_session_num):
             msg = ERROR_UNEXPECTED_SESSION_NUM_VALUE % (
                 input_val,
                 self.__columns_processed + 1
@@ -584,14 +769,18 @@ class UploadParserAutomaton:
         self.__state = STATE_PARSE_TOTAL_NUM_SESSIONS
         self.__session_num = candidate_session_num
 
-    def parse_total_num_sessions(self, input_val):
+    def parse_total_num_sessions(self, input_val: str) -> None:
+        """Parse the total number of sessions.
+
+        @param input_val: Cell to parse.
+        """
         if self.__is_empty(input_val):
             msg = ERROR_NO_TOTAL_SESSIONS % (self.__columns_processed + 1)
             self.enter_error_state(msg)
             return
 
         candidate_num_sessions = self.__parse_int(input_val)
-        if candidate_num_sessions == None or candidate_num_sessions <= 0:
+        if not self.__is_number_positive(candidate_num_sessions):
             msg = ERROR_UNEXPECTED_TOTAL_SESSIONS_VALUE % (
                 input_val,
                 self.__columns_processed + 1
@@ -602,7 +791,11 @@ class UploadParserAutomaton:
         self.__total_num_sessions = candidate_num_sessions
         self.__state = STATE_PARSE_WORDS_SPOKEN
 
-    def parse_spoken_words(self, input_val):
+    def parse_spoken_words(self, input_val: str) -> None:
+        """Parse the total number of spoken words.
+
+        @param input_val: Cell to parse.
+        """
         if self.__is_empty(input_val):
             self.__num_words_spoken_deferred = True
             self.__state = STATE_PARSE_ITEMS_EXCLUDED
@@ -611,7 +804,7 @@ class UploadParserAutomaton:
             self.__num_words_spoken_deferred = False
 
         candidate_words_spoken = self.__parse_int(input_val)
-        if candidate_words_spoken == None or candidate_words_spoken < 0:
+        if not self.__is_number_positive(candidate_words_spoken, True):
             msg = ERROR_UNEXPECTED_WORDS_SPOKEN % (
                 input_val,
                 self.__columns_processed + 1
@@ -622,13 +815,18 @@ class UploadParserAutomaton:
         self.__num_words_spoken = candidate_words_spoken
         self.__state = STATE_PARSE_ITEMS_EXCLUDED
 
-    def parse_excluded_items(self, input_val):
+    def parse_excluded_items(self, input_val: str) -> None:
+        """Parse the total number of words skipped in collection.
+
+        @param input_val: Cell to parse.
+        """
+        candidate_excluded_items: typing.Optional[int]
+
         if self.__is_empty(input_val):
             candidate_excluded_items = 0
         else:
             candidate_excluded_items = self.__parse_int(input_val)
-            value_missing = candidate_excluded_items == None
-            if value_missing or candidate_excluded_items < 0:
+            if not self.__is_number_positive(candidate_excluded_items, True):
                 msg = ERROR_UNEXPECTED_EXCLUDED_ITEMS % (
                     input_val,
                     self.__columns_processed + 1
@@ -639,7 +837,11 @@ class UploadParserAutomaton:
         self.__excluded_items = candidate_excluded_items
         self.__state = STATE_PARSE_PERCENTILE
 
-    def parse_percentile(self, input_val):
+    def parse_percentile(self, input_val: str) -> None:
+        """Parse the percentile for the snapshot.
+
+        @param input_val: Cell to parse.
+        """
         if self.__is_empty(input_val):
             self.__percentile_deferred = True
             self.__state = STATE_PARSE_EXTRA_CATEGORIES
@@ -648,7 +850,7 @@ class UploadParserAutomaton:
             self.__percentile_deferred = False
 
         percentile = self.__parse_float(input_val)
-        if percentile == None or percentile < 0 or percentile > 100:
+        if not self.__is_number_in_range(percentile, 0, 100):
             msg = ERROR_UNEXPECTED_PERCENTILE % (
                 input_val,
                 self.__columns_processed + 1
@@ -659,13 +861,18 @@ class UploadParserAutomaton:
         self.__percentile = percentile
         self.__state = STATE_PARSE_EXTRA_CATEGORIES
 
-    def parse_extra_categories(self, input_val):
+    def parse_extra_categories(self, input_val: str) -> None:
+        """Parse the extra categories asked.
+
+        @param input_val: Cell to parse.
+        """
+        candidate_extra_categories: typing.Optional[int]
+
         if self.__is_empty(input_val):
             candidate_extra_categories = 0
         else:
             candidate_extra_categories = self.__parse_int(input_val)
-            value_missing = candidate_extra_categories == None
-            if value_missing or candidate_extra_categories < 0:
+            if not self.__is_number_positive(candidate_extra_categories, True):
                 msg = ERROR_UNEXPECTED_EXTRA_CATEGORIES % (
                     input_val,
                     self.__columns_processed + 1
@@ -676,13 +883,18 @@ class UploadParserAutomaton:
         self.__extra_categories = candidate_extra_categories
         self.__state = STATE_PARSE_REVISION
 
-    def parse_revision(self, input_val):
+    def parse_revision(self, input_val: str) -> None:
+        """Parse the number of prior versions of the snapshot plus 1.
+
+        @param input_val: Cell to parse.
+        """
+        candidate_revision: typing.Optional[int]
+
         if self.__is_empty(input_val):
             candidate_revision = 0
         else:
             candidate_revision = self.__parse_int(input_val)
-            value_missing = candidate_revision == None
-            if value_missing or candidate_revision < 0:
+            if not self.__is_number_positive(candidate_revision, True):
                 msg = ERROR_UNEXPECTED_REVISION % (
                     input_val,
                     self.__columns_processed + 1
@@ -693,7 +905,11 @@ class UploadParserAutomaton:
         self.__revision = candidate_revision
         self.__state = STATE_PARSE_LANGUAGES
 
-    def parse_languages(self, input_val):
+    def parse_languages(self, input_val: str) -> None:
+        """Parse the languages spoken by the participant.
+
+        @param input_val: Cell to parse.
+        """
         if self.__is_empty(input_val):
             msg = ERROR_NO_LANGUAGES % (self.__columns_processed + 1)
             self.enter_error_state(msg)
@@ -702,7 +918,11 @@ class UploadParserAutomaton:
         self.__languages = list(map(lambda x: x.strip(), input_val.split(",")))
         self.__state = STATE_PARSE_NUM_LANGUAGES
 
-    def parse_num_languages(self, input_val):
+    def parse_num_languages(self, input_val: str) -> None:
+        """Parse the number of languages spoken by the participant.
+
+        @param input_val: Cell to parse.
+        """
         if self.__is_empty(input_val):
             self.__num_languages_deferred = True
             self.__state = STATE_PARSE_CDI_TYPE
@@ -710,8 +930,8 @@ class UploadParserAutomaton:
         else:
             self.__num_languages_deferred = False
 
-        num_languages = self.__parse_float(input_val)
-        if num_languages == None or num_languages <= 0:
+        num_languages = self.__parse_int(input_val)
+        if not self.__is_number_positive(num_languages):
             msg = ERROR_UNEXPECTED_NUM_LANGUAGES % (
                 input_val,
                 self.__columns_processed + 1
@@ -722,7 +942,11 @@ class UploadParserAutomaton:
         self.__num_languages = num_languages
         self.__state = STATE_PARSE_CDI_TYPE
 
-    def parse_cdi_type(self, cdi_name):
+    def parse_cdi_type(self, cdi_name: str) -> None:
+        """Parse the name of the CDI collected.
+
+        @param input_val: Cell to parse.
+        """
         cdi_model = self.__cached_adapter.load_cdi_model(cdi_name)
 
         # Check CDI was known
@@ -735,7 +959,7 @@ class UploadParserAutomaton:
             return
 
         # Check words were present
-        required_words = set(functools.reduce(
+        required_words: typing.Set[str] = set(functools.reduce(
             lambda last, cur: last + cur["words"],
             cdi_model.details["categories"],
             []
@@ -752,7 +976,7 @@ class UploadParserAutomaton:
             cdi_model.details["options"]
         ))
 
-        prefill_values = set(functools.reduce(
+        prefill_values: typing.Set[str] = set(functools.reduce(
             lambda prev, cur: extend_list(prev, cur.get("prefill_value", [])),
             cdi_model.details["options"],
             []
@@ -774,7 +998,11 @@ class UploadParserAutomaton:
         self.__cdi_name = cdi_name
         self.__state = STATE_PARSE_HARD_OF_HEARING
 
-    def parse_hard_of_hearing(self, input_val):
+    def parse_hard_of_hearing(self, input_val: str) -> None:
+        """Parse flag indicating if the paricipant is hard of hearing.
+
+        @param input_val: Cell to parse.
+        """
         if not input_val in EXPECTED_BOOLEAN_VALUES:
             msg = ERROR_HARD_OF_HEARING_VALUE % (
                 input_val,
@@ -786,7 +1014,11 @@ class UploadParserAutomaton:
         self.__hard_of_hearing = EXPECTED_BOOLEAN_VALUES[input_val]
         self.__state = STATE_PARSE_DELETED
 
-    def parse_deleted(self, input_val):
+    def parse_deleted(self, input_val: str) -> None:
+        """Parse flag indicating if the snapshot has been deleted.
+
+        @param input_val: Cell to parse.
+        """
         if not input_val in EXPECTED_BOOLEAN_VALUES:
             msg = ERROR_DELETED_VALUE % (
                 input_val,
@@ -798,14 +1030,22 @@ class UploadParserAutomaton:
         self.__deleted = EXPECTED_BOOLEAN_VALUES[input_val]
         self.__state = STATE_PARSE_START_WORDS
 
-    def parse_word_start(self, input_val):
+    def parse_word_start(self, input_val: str) -> None:
+        """Start parsing word status information (if word was spoken or not).
+
+        @param input_val: Cell to parse.
+        """
         self.__word_values = {}
         self.__expected_word_queue = collections.deque(self.__expected_words)
 
         self.__state = STATE_PARSE_WORDS
         self.parse_word(input_val)
 
-    def parse_word(self, input_val):
+    def parse_word(self, input_val: str) -> None:
+        """Parse status of individual word for individual participant on a CDI.
+
+        @param input_val: Cell to parse.
+        """
         if len(self.__expected_word_queue) == 0:
             self.enter_error_state(
                 ERROR_UNEXPECTED_WORD % (self.__columns_processed + 1)
@@ -827,12 +1067,22 @@ class UploadParserAutomaton:
 
         self.__word_values[word] = input_val_int
 
-    def maintain_error_state(self, input_val):
+    def maintain_error_state(self, input_val: str) -> None:
+        """Continue operating the automaton in the error state.
+
+        @param input_val: Current cell.
+        """
         pass
 
-    def __create_equality_check_continuation(self, expected):
+    def __create_equality_check_continuation(self,
+            expected: str) -> typing.Callable[[bool, int, typing.List[str]], bool]:
+        """Create function which ensures a cell value is an exepcted value.
 
-        def check(last_successful, i, header_col):
+        @param expected: The value expected.
+        @returns: Function which ensures that the value in a cell is expected.
+            If not expected, will put the automaton into error state.
+        """
+        def check(last_successful: bool, i: int, header_col: typing.List[str]):
             if not last_successful:
                 return False
             elif header_col[i] == expected:
@@ -848,12 +1098,21 @@ class UploadParserAutomaton:
 
         return check
 
-    def __create_counter_continuation(self, start_num):
+    def __create_counter_continuation(self,
+            start_num: int) -> typing.Callable[[], int]:
+        """Create counter starting at zero.
+
+        Create a function which simply returns an integer where the integer is
+        incremented by one in each call.
+
+        @returns: Newly created counter.
+        """
         counter = Counter(start_num)
 
         return lambda: counter.return_and_increment()
 
     def __prepare_for_new_record(self):
+        """Prepare internal state for recording a new snapshot."""
         self.__columns_processed += 1
 
         if self.__has_database_id:
@@ -861,10 +1120,20 @@ class UploadParserAutomaton:
         else:
             self.__state = STATE_PARSE_CHILD_ID
 
-    def __is_empty(self, candidate):
+    def __is_empty(self, candidate: str) -> bool:
+        """Determine if a string is empty.
+
+        @param candidate: The string to check.
+        @returns: True if empty. False otherwise.
+        """
         return candidate.strip() == ""
 
-    def __parse_float(self, str_val):
+    def __parse_float(self, str_val: str) -> typing.Optional[float]:
+        """Parse a string as a float.
+
+        @param str_val: The value to parse.
+        @returns: Parsed value or None if parsing failure.
+        """
         str_val = str_val.strip()
 
         if str_val == "0":
@@ -879,7 +1148,12 @@ class UploadParserAutomaton:
         except ValueError:
             return None
 
-    def __parse_int(self, str_val):
+    def __parse_int(self, str_val: str) -> typing.Optional[int]:
+        """Parse a string as an int.
+
+        @param str_val: The value to parse.
+        @returns: Parsed value or None if parsing failure.
+        """
         str_val = str_val.strip()
 
         if str_val == "0":
@@ -893,7 +1167,12 @@ class UploadParserAutomaton:
         except ValueError:
             return None
 
-    def __parse_date(self, str_val):
+    def __parse_date(self, str_val: str) -> typing.Optional[str]:
+        """Parse a string as a date into a standardized string format.
+
+        @param str_val: The value to parse.
+        @returns: Parsed value or None if parsing failure.
+        """
         str_val = str_val.strip().replace("-", "/")
 
         converted_date = self.__parse_date_iso(str_val)
@@ -905,13 +1184,23 @@ class UploadParserAutomaton:
 
         return converted_date.date().isoformat().replace("-", "/")
 
-    def __parse_date_iso(self, str_val):
+    def __parse_date_iso(self, str_val: str) -> typing.Optional[datetime.datetime]:
+        """Parse an ISO formatted string as a date into a datetime.
+
+        @param str_val: The value to parse.
+        @returns: Parsed value or None if parsing failure.
+        """
         try:
             return datetime.datetime.strptime(str_val, "%Y/%m/%d")
         except ValueError:
             return None
 
-    def __parse_date_usa(self, str_val):
+    def __parse_date_usa(self, str_val: str) -> typing.Optional[datetime.datetime]:
+        """Parse an US formatted string as a date into a datetime.
+
+        @param str_val: The value to parse.
+        @returns: Parsed value or None if parsing failure.
+        """
         try:
             return datetime.datetime.strptime(str_val, "%m/%d/%Y")
         except ValueError:
