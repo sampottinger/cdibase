@@ -27,7 +27,7 @@ import prog_code.util.db_util as db_util
 import prog_code.util.oper_interp as oper_interp
 
 
-FIELD_MAP = {
+FIELD_MAP: typing.Mapping[str, oper_interp.FieldInfo] = {
     'child_id': oper_interp.RawInterpretField('child_id'),
     'study_id': oper_interp.RawInterpretField('study_id'),
     'study': oper_interp.RawInterpretField('study'),
