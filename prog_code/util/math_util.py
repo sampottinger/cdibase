@@ -18,20 +18,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v3
 """
+import typing
 
-def get_with_end_max(collection, index):
+
+def get_mapped_with_end_max(collection: typing.List, index: int,
+        mapping: typing.Mapping[str, int]) -> int:
+    """Get the value at index or the last value in the colleciton.
+
+    Get a value from collection if index is in range or the final value if the
+    index is out of range.
+
+    @param collection: The collection to get the value from.
+    @param index: The index at which to get the value.
+    @return: The target value.
+    """
     if index >= len(collection):
         ret_val = collection[-1]
     else:
         ret_val = collection[index]
 
-    if ret_val == '%':
-        return 0
-    else:
-        return ret_val
+    if ret_val in mapping:
+        return mapping[ret_val]
+
+    return int(ret_val)
 
 
-def find_percentile(table_entries, target_num_words, age_months, max_words):
+def find_percentile(table_entries: typing.List[typing.List[float]],
+        target_num_words: int, age_months: int, max_words: int) -> float:
     """Find the CDI perentile for a child.
 
     @param table_entries: The percentile table to use to calculate the
@@ -54,7 +67,7 @@ def find_percentile(table_entries, target_num_words, age_months, max_words):
     month_index = int(age_months - first_month + 1)
 
     words_per_percentile = list(map(lambda x:
-        int(get_with_end_max(x, month_index)),
+        get_mapped_with_end_max(x, month_index, {'%': 0}),
         table_entries
     ))
     words_per_percentile.append(0)
