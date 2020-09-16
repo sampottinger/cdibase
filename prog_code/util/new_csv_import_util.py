@@ -448,9 +448,15 @@ class UploadParserAutomaton:
 
         @returns: Newly calculated age, ignoring a if given in an import CSV.
         """
+        assert self.__birthday != None
+        assert self.__session_date != None
+
+        birthday_realized: str = self.__birthday # type: ignore
+        session_date_realized: str = self.__session_date # type: ignore
+
         return recalc_util.recalculate_age_raw(
-            self.__birthday,
-            self.__session_date
+            birthday_realized,
+            session_date_realized
         )
 
     def __get_num_languages(self) -> int:
@@ -475,10 +481,16 @@ class UploadParserAutomaton:
 
         @returns: Session number.
         """
+        assert self.__study != None
+        assert self.__study_id != None
+
+        study_realized: str = self.__study # type: ignore
+        study_id_realized: str = self.__study_id # type: ignore
+
         if self.__session_num_deferred:
             return recalc_util.get_session_number(
-                self.__study,
-                self.__study_id
+                study_realized,
+                study_id_realized
             )
         else:
             return self.__assert_not_none(self.__session_num)
@@ -947,16 +959,18 @@ class UploadParserAutomaton:
 
         @param input_val: Cell to parse.
         """
-        cdi_model = self.__cached_adapter.load_cdi_model(cdi_name)
+        cdi_model_maybe = self.__cached_adapter.load_cdi_model(cdi_name)
 
         # Check CDI was known
-        if cdi_model == None:
+        if cdi_model_maybe == None:
             msg = ERROR_UNKNOWN_CDI_TYPE % (
                 cdi_name,
                 self.__columns_processed + 1
             )
             self.enter_error_state(msg)
             return
+
+        cdi_model: models.CDIFormat = cdi_model_maybe # type: ignore
 
         # Check words were present
         required_words: typing.Set[str] = set(functools.reduce(

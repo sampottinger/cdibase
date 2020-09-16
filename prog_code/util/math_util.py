@@ -44,7 +44,7 @@ def get_mapped_with_end_max(collection: typing.List, index: int,
 
 
 def find_percentile(table_entries: typing.List[typing.List[float]],
-        target_num_words: int, age_months: int, max_words: int) -> float:
+        target_num_words: int, age_months: float, max_words: int) -> float:
     """Find the CDI perentile for a child.
 
     @param table_entries: The percentile table to use to calculate the

@@ -169,9 +169,7 @@ def recalculate_percentile_raw(cached_adapter: CachedCDIAdapter, cdi_type: str,
     @returns: Newly calculated percentile.
     """
     # Load CDI information
-    cdi_model = cached_adapter.load_cdi_model(cdi_type)
-    if cdi_model == None:
-        cdi_model = cached_adapter.load_cdi_model('fullenglishcdi')
+    cdi_model = get_cdi_model_by_name_or_default(cached_adapter, cdi_type)
 
     # Get percentile information
     meta_percentile_info = cdi_model.details['percentiles']
@@ -183,19 +181,28 @@ def recalculate_percentile_raw(cached_adapter: CachedCDIAdapter, cdi_type: str,
         percentiles_name = meta_percentile_info['female']
 
     percentiles = cached_adapter.load_percentile_model(percentiles_name)
+    assert percentiles != None
+
+    percentiles_realized: models.PercentileTable = percentiles # type: ignore
 
     # Calculate percentile
     return math_util.find_percentile(
-        percentiles.details,
+        percentiles_realized.details,
         words_spoken,
         age,
         cached_adapter.get_max_cdi_words(cdi_type)
     )
 
-def get_words_spoken(cached_adapter, cdi_type, individual_words):
-    cdi_model = cached_adapter.load_cdi_model(cdi_type)
-    if cdi_model == None:
-        cdi_model = cached_adapter.load_cdi_model('fullenglishcdi')
+def get_words_spoken(cached_adapter: CachedCDIAdapter, cdi_type: str,
+        individual_words: typing.Iterable[models.SnapshotContent]) -> int:
+    """Get the number of words spoken from a snapshot's word records.
+
+    @param cached_adapter: Adapter though which to get CDI format data.
+    @param cdi_type: The name of the CDI format from which the word records are collected.
+    @param individual_words: Records of words.
+    @returns: Number of words spoken or spoken-equivalent.
+    """
+    cdi_model = get_cdi_model_by_name_or_default(cached_adapter, cdi_type)
 
     count_as_spoken_vals = cdi_model.details['count_as_spoken']
 
@@ -206,29 +213,42 @@ def get_words_spoken(cached_adapter, cdi_type, individual_words):
 
     return words_spoken
 
-def recalculate_ages(snapshots):
+def recalculate_ages(snapshots: typing.Iterable[models.SnapshotMetadata]) -> None:
+    """Recalculate all ages in a collection of snapshots, modifying in place.
+
+    @param snapshots: Snapshots to modify.
+    """
     for snapshot in snapshots:
         recalculate_age(snapshot)
 
 
-def recalculate_percentiles(snapshots):
+def recalculate_percentiles(snapshots: typing.Iterable[models.SnapshotMetadata]) -> None:
+    """Recalculate all percentiles in a collection of snapshots, modifying in place.
+
+    @param snapshots: Snapshots to modify.
+    """
     adapter = CachedCDIAdapter()
     for snapshot in snapshots:
         recalculate_percentile(snapshot, adapter)
 
 
-def update_snapshots(snapshots):
-    connection = db_util.get_db_connection()
-    cursor = connection.cursor()
+def update_snapshots(snapshots: typing.Iterable[models.SnapshotMetadata]) -> None:
+    """Persist updated snapshots to database.
 
-    for snapshot in snapshots:
-        db_util.update_snapshot(snapshot, cursor)
+    @param snapshots: Snapshots to persist.
+    """
+    with db_util.get_cursor() as cursor:
+        for snapshot in snapshots:
+            db_util.update_snapshot(snapshot, cursor)
 
-    connection.commit()
-    connection.close()
 
+def recalculate_ages_and_percentiles(snapshots: typing.Iterable[models.SnapshotMetadata],
+        save: bool = True) -> None:
+    """Recalculate all percentiles and ages in a collection of snapshots, modifying in place.
 
-def recalculate_ages_and_percentiles(snapshots, save=True):
+    @param snapshots: Snapshots to modify.
+    @param save: Flag indicating if the updated snapshots should be persisted after modification.
+    """
     recalculate_ages(snapshots)
     recalculate_percentiles(snapshots)
 
@@ -236,7 +256,13 @@ def recalculate_ages_and_percentiles(snapshots, save=True):
         update_snapshots(snapshots)
 
 
-def get_session_number(study, study_id):
+def get_session_number(study: str, study_id: str) -> int:
+    """Get the current session number (next to be submitted session number) for a study participant.
+
+    @param study: The name of the study.
+    @param study_id: The ID of the participant in the study.
+    @returns: Next session number (number of previous results + 1).
+    """
     study_filter = models.Filter('study', 'eq', study)
     study_id_filter = models.Filter('study_id', 'eq', study_id)
     results = filter_util.run_search_query([study_filter, study_id_filter],
