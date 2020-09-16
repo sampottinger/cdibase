@@ -44,4 +44,4 @@ nosetests.xml
 
 venv
 
-templates/cdi_email_template.txt
+**/cdi_email_template.txt
