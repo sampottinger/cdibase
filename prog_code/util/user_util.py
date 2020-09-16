@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v3
 """
-
 import random
 import string
+import typing
 
 import werkzeug
 
@@ -39,9 +39,7 @@ Password: %s
 Please don't forget to change your password after logging in!
 
 All the best,
-Sam
-CdiBase Application Curator
-sam@gleap.org / cdi@gleap.org
+CdiBase
 '''
 
 RESET_PASSWORD_MSG = '''Hello!
@@ -54,13 +52,22 @@ Password: %s
 Please don't forget to change your password after logging in! If you didn't request a change in password, please email cdi@gleap.org.
 
 All the best,
-Sam
-CdiBase Application Curator
-sam@gleap.org / cdi@gleap.org
+CdiBase
 '''
 
 
-def generate_password(pass_len=10):
+def force_get_user(email: str) -> models.User:
+    """Get a user record by email and assert the user exists.
+
+    @param email: The email address of the user.
+    @returns: User account record.
+    """
+    user = db_util.load_user_model(email)
+    assert user != None
+    return user # type: ignore
+
+
+def generate_password(pass_len: int = 10) -> str:
     """Generate a random user password.
 
     @keyword pass_len: The length in characters of the password to generate.
@@ -70,9 +77,9 @@ def generate_password(pass_len=10):
     return ''.join([random.choice(chars) for i in range(pass_len)])
 
 
-def create_new_user(email, can_enter_data, can_delete_data, can_import_data,
-    can_edit_parents, can_access_data, can_change_formats, can_use_api_key,
-    can_admin):
+def create_new_user(email: str, can_enter_data: bool, can_delete_data: bool, can_import_data: bool,
+    can_edit_parents: bool, can_access_data: bool, can_change_formats: bool, can_use_api_key: bool,
+    can_admin: bool) -> None:
     """Create and persist a new user, sending account info by email in process.
 
     @param email: The email address of the user to create an account for.
@@ -122,7 +129,7 @@ def create_new_user(email, can_enter_data, can_delete_data, can_import_data,
         SIGN_UP_MSG % (email, password)
     )
 
-def check_user_password(email, password):
+def check_user_password(email: str, password: str) -> bool:
     """Check if the given password is correct.
 
     @param email: The email of the user to check a password for.
@@ -133,7 +140,7 @@ def check_user_password(email, password):
     @rtype: bool
     """
     email = email.lower()
-    user = db_util.load_user_model(email)
+    user = force_get_user(email)
     if not user:
         return False
     pass_hash = str(user.password_hash)
@@ -142,7 +149,7 @@ def check_user_password(email, password):
     except:
         return False
 
-def change_user_password(email, password):
+def change_user_password(email: str, password: str) -> None:
     """Change a user's account password.
 
     @param email: The email of the user to change account passwords for.
@@ -151,15 +158,15 @@ def change_user_password(email, password):
     @type password: str
     """
     email = email.lower()
-    user = db_util.load_user_model(email)
+    user = force_get_user(email)
     pass_hash = werkzeug.generate_password_hash(password,
         method='sha512')
     user.password_hash = pass_hash
     db_util.save_user_model(user)
 
-def update_user(orig_email, email, can_enter_data, can_delete_data,
-    can_import_data, can_edit_parents, can_access_data, can_change_formats,
-    can_use_api_key, can_admin):
+def update_user(orig_email: str, email: str, can_enter_data: bool, can_delete_data: bool,
+    can_import_data: bool, can_edit_parents: bool, can_access_data: bool, can_change_formats: bool,
+    can_use_api_key: bool, can_admin: bool) -> None:
     """Change a user's account.
 
     @param orig_email: The email of the user whose account permissions is being
@@ -188,7 +195,7 @@ def update_user(orig_email, email, can_enter_data, can_delete_data,
     @type can_admin: bool
     """
     email = email.lower()
-    user = db_util.load_user_model(orig_email)
+    user = force_get_user(orig_email)
     user.email = email
     user.can_enter_data = can_enter_data
     user.can_delete_data = can_delete_data
@@ -200,7 +207,7 @@ def update_user(orig_email, email, can_enter_data, can_delete_data,
     user.can_admin = can_admin
     db_util.save_user_model(user, existing_email=orig_email)
 
-def reset_password(email, pass_len=10):
+def reset_password(email: str, pass_len: int = 10) -> None:
     """Set user's password to random string and send email with new credentials.
 
     @param email: The email of the user whose account password needs to be
@@ -219,7 +226,7 @@ def reset_password(email, pass_len=10):
         RESET_PASSWORD_MSG % (email, new_pass)
     )
 
-def get_user(identifier):
+def get_user(identifier: str) -> typing.Optional[models.User]:
     """Get user account information for the user with the given email.
 
     @param identifier: The email address of the user to get account information
@@ -228,9 +235,9 @@ def get_user(identifier):
     @return: User account info for use with given email address.
     @rtype: models.User
     """
-    return db_util.load_user_model(identifier)
+    return db_util.load_user_model(str(identifier))
 
-def delete_user(email):
+def delete_user(email: str) -> None:
     """Delete the user with the given email address.
 
     @param email: The email address of the user whose account should be deleted.
@@ -239,7 +246,7 @@ def delete_user(email):
     email = email.lower()
     db_util.delete_user_model(email)
 
-def get_all_users():
+def get_all_users() -> typing.List[models.User]:
     """Get a listing of all of the users registered with the application.
 
     @return: Collection of all user accounts for this application.

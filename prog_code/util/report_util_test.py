@@ -140,3 +140,109 @@ class ReportUtilTest(unittest.TestCase):
                 mock_snapshot.assert_any_call(test_metadata[0])
                 mock_snapshot.assert_any_call(test_metadata[1])
                 mock_snapshot.assert_any_call(test_metadata[2])
+
+    def test_generate_study_report_csv(self):
+        with unittest.mock.patch('prog_code.util.db_util.load_cdi_model') as mock_cdi:
+            with unittest.mock.patch('prog_code.util.db_util.load_snapshot_contents') as mock_snapshot:
+                test_snap_1 = TEST_SNAPSHOT.clone()
+                test_snap_1.cdi_type = 'cdi_type_1'
+                test_snap_1.session_date = '2015/01/01'
+
+                test_snap_2 = TEST_SNAPSHOT.clone()
+                test_snap_2.cdi_type = 'cdi_type_1'
+                test_snap_2.session_date = '2015/02/01'
+
+                test_snap_3 = TEST_SNAPSHOT.clone()
+                test_snap_3.cdi_type = 'cdi_type_1'
+                test_snap_3.session_date = '2015/03/01'
+
+                test_metadata = [test_snap_1, test_snap_2, test_snap_3]
+
+                test_contents_1 = [
+                    models.SnapshotContent(0, 'word1', 1, 1),
+                    models.SnapshotContent(0, 'word2', 0, 1),
+                    models.SnapshotContent(0, 'word3', 0, 1)
+                ]
+                test_contents_2 = [
+                    models.SnapshotContent(0, 'word1', 1, 1),
+                    models.SnapshotContent(0, 'word2', 2, 1),
+                    models.SnapshotContent(0, 'word3', 0, 1)
+                ]
+                test_contents_3 = [
+                    models.SnapshotContent(0, 'word1', 1, 1),
+                    models.SnapshotContent(0, 'word2', 1, 1),
+                    models.SnapshotContent(0, 'word3', 1, 1)
+                ]
+
+                categories = [{
+                    'words': ['word1', 'word2', 'word3']
+                }]
+
+                mock_cdi.side_effect = [
+                    models.CDIFormat('', '', '', {'count_as_spoken': [1, 2], 'categories': categories}),
+                ]
+
+                mock_snapshot.side_effect = [
+                    test_contents_1,
+                    test_contents_2,
+                    test_contents_3
+                ]
+
+                results = report_util.generate_study_report_csv(
+                    test_metadata,
+                    models.CDIFormat('', '', '', {'count_as_spoken': [1, 2], 'categories': categories})
+                )
+                self.assertTrue(results != None)
+
+    def test_generate_study_report_zip(self):
+        with unittest.mock.patch('prog_code.util.db_util.load_cdi_model') as mock_cdi:
+            with unittest.mock.patch('prog_code.util.db_util.load_snapshot_contents') as mock_snapshot:
+                test_snap_1 = TEST_SNAPSHOT.clone()
+                test_snap_1.cdi_type = 'cdi_type_1'
+                test_snap_1.session_date = '2015/01/01'
+
+                test_snap_2 = TEST_SNAPSHOT.clone()
+                test_snap_2.cdi_type = 'cdi_type_1'
+                test_snap_2.session_date = '2015/02/01'
+
+                test_snap_3 = TEST_SNAPSHOT.clone()
+                test_snap_3.cdi_type = 'cdi_type_1'
+                test_snap_3.session_date = '2015/03/01'
+
+                test_metadata = [test_snap_1, test_snap_2, test_snap_3]
+
+                test_contents_1 = [
+                    models.SnapshotContent(0, 'word1', 1, 1),
+                    models.SnapshotContent(0, 'word2', 0, 1),
+                    models.SnapshotContent(0, 'word3', 0, 1)
+                ]
+                test_contents_2 = [
+                    models.SnapshotContent(0, 'word1', 1, 1),
+                    models.SnapshotContent(0, 'word2', 2, 1),
+                    models.SnapshotContent(0, 'word3', 0, 1)
+                ]
+                test_contents_3 = [
+                    models.SnapshotContent(0, 'word1', 1, 1),
+                    models.SnapshotContent(0, 'word2', 1, 1),
+                    models.SnapshotContent(0, 'word3', 1, 1)
+                ]
+
+                categories = [{
+                    'words': ['word1', 'word2', 'word3']
+                }]
+
+                mock_cdi.side_effect = [
+                    models.CDIFormat('', '', '', {'count_as_spoken': [1, 2], 'categories': categories}),
+                ]
+
+                mock_snapshot.side_effect = [
+                    test_contents_1,
+                    test_contents_2,
+                    test_contents_3
+                ]
+
+                results = report_util.generate_study_report(
+                    test_metadata,
+                    models.CDIFormat('', '', '', {'count_as_spoken': [1, 2], 'categories': categories})
+                )
+                self.assertTrue(results != None)

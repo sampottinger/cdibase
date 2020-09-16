@@ -603,7 +603,7 @@ class TestEditParentControllers(unittest.TestCase):
             ]
 
         def on_end(mocks):
-            mocks['get_user'].assert_called_with(None)
+            mocks['get_user'].assert_not_called()
             mocks['load_cdi_model'].assert_called_with('standard')
             mocks['insert_snapshot'].assert_not_called()
             mocks['remove_parent_form'].assert_not_called()
@@ -1014,7 +1014,7 @@ class TestEditParentControllers(unittest.TestCase):
         def on_end(mocks):
             mocks['get_parent_form_by_id'].assert_called_with(str(TEST_PARENT_FORM_ID))
             mocks['load_cdi_model'].assert_called_with('standard')
-            mocks['get_user'].assert_called_with(None)
+            mocks['get_user'].assert_not_called()
             mocks['get_snapshot_chronology_for_db_id'].assert_called_with(TEST_DB_ID)
             mocks['load_snapshot_contents'].assert_called_with(self.__chronology[0])
 
