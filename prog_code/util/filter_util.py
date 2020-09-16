@@ -169,7 +169,7 @@ def build_search_query(filters: typing.Iterable[models.Filter],
 
 
 def build_delete_query(filters: typing.Iterable[models.Filter], table: str,
-        restore: bool, hard_delete: bool = False):
+        restore: bool, hard_delete: bool = False) -> QueryInfo:
     """Create a delete related query (either to delete or to restore).
 
     @param filters: The filters through which to target the action.
@@ -190,7 +190,7 @@ def build_delete_query(filters: typing.Iterable[models.Filter], table: str,
 
 
 def run_search_query(filters_iter: typing.Iterable[models.Filter], table: str,
-        exclude_deleted: bool = True):
+        exclude_deleted: bool = True) -> typing.List[models.SnapshotMetadata]:
     """Builds and runs a SQL select query on the given table with given filters.
 
     @param filters_iter: The filters to build the query out of.
@@ -233,13 +233,18 @@ def run_search_query(filters_iter: typing.Iterable[models.Filter], table: str,
 
     db_cursor.execute(query_info.query_str, operands_flat)
 
-    ret_val = map(lambda x: models.SnapshotMetadata(*x), db_cursor.fetchall())
+    ret_val = list(map(
+        lambda x: models.SnapshotMetadata(*x),
+        db_cursor.fetchall()
+    ))
     db_connection.close()
     return ret_val
 
 
-def run_delete_query(filters: typing.Iterable[models.Filter], table: str,
-        restore: bool, hard_delete: bool = False):
+def run_delete_query(filters: typing.Iterable[models.Filter],
+        table: str,
+        restore: bool,
+        hard_delete: bool = False):
     """Builds and runs a SQL select query on the given table with given filters.
 
     @param filters: The filters to build the query out of.
@@ -253,9 +258,6 @@ def run_delete_query(filters: typing.Iterable[models.Filter], table: str,
         filters.
     @rtype: Iterable over models.SnapshotMetadata
     """
-    db_connection = db_util.get_db_connection()
-    db_cursor = db_connection.cursor()
-
     query_info = build_delete_query(
         filters,
         table,
@@ -283,6 +285,5 @@ def run_delete_query(filters: typing.Iterable[models.Filter], table: str,
     for operand in operands:
         operands_flat.extend(operand)
 
-    db_cursor.execute(query_info.query_str, operands_flat)
-    db_connection.commit()
-    db_connection.close()
+    with db_util.get_cursor() as db_cursor:
+        db_cursor.execute(query_info.query_str, operands_flat)
