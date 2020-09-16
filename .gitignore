@@ -43,3 +43,5 @@ nosetests.xml
 .pydevproject
 
 venv
+
+templates/cdi_email_template.txt
