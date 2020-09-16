@@ -164,7 +164,7 @@ class GenderField(FieldInfo[int]):
                 elif str_val in self.OTHER_VALUES:
                     ret_vals.append(constants.OTHER_GENDER)
                 else:
-                    ret_vals.append(str_val) # type: ignore
+                    raise RuntimeError('Unexpected value: ' + str_val)
 
         return ret_vals
 
@@ -211,7 +211,7 @@ class BooleanField(FieldInfo[bool]):
                 elif str_val in self.FALSE_VALUES:
                     ret_vals.append(False)
                 else:
-                    ret_vals.append(str_val) # type: ignore
+                    raise RuntimeError('Unexpected value: ' + str_val)
 
         return ret_vals
 

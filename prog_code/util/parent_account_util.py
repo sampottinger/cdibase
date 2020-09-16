@@ -18,8 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author Sam Pottinger
 @license GNU GPL v3
 """
-
+import os
 import re
+import typing
 
 import dateutil.parser as dateutil_parser
 
@@ -32,28 +33,7 @@ import prog_code.util.user_util as user_util
 
 CDI_EMAIL_SUBJECT = 'CU Language Project'
 
-CDI_EMAIL_TEMPLATE = '''Hello!
-
-Thank you for helping the CU Language Project. Please complete a vocabulary checklist for
-%s by going to the URL below.
-
-Form URL: %s
-
-We greatly appreciate your time.
-
-Thank you so much again,
-The CU Language Project Team
-
----
-CU Language Project
-University of Colorado at Boulder
-Department of Psychology
-(303) 735-0952
-Language.Project@colorado.edu
-
-For directions and more information please visit our website:
-http://psych.colorado.edu/~colungalab/CULanguage/CU-LANGUAGE_parents.html
-'''
+CDI_EMAIL_TEMPLATE = None
 
 URL_TEMPLATE = 'https://cdi.colorado.edu/base/parent_cdi/%s'
 EMAIL_REGEX = re.compile('^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$',
@@ -67,7 +47,7 @@ class AttributeResolutionResolver:
         """Create a new resolution resolver without a user to load from."""
         self.__target_user = None
 
-    def is_valid_value(self, value):
+    def is_valid_value(self, value: typing.Union[int, str, None]) -> bool:
         """Determine if an attribute of a parent form is valid.
 
         @param value: The attribute value to check.
@@ -77,7 +57,7 @@ class AttributeResolutionResolver:
         """
         return value != None and value != ''
 
-    def set_global_id(self, new_global_id):
+    def set_global_id(self, new_global_id: typing.Union[str]) -> None:
         """Set the global ID of the child to load missing form values from.
 
         @param new_global_id: The global ID of the child to start loading form
@@ -88,11 +68,11 @@ class AttributeResolutionResolver:
             return
 
         try:
-            new_global_id = int(new_global_id)
+            new_global_id_parsed = int(new_global_id) # type: ignore
         except ValueError:
             return
 
-        child_id_filter = models.Filter('child_id', 'eq', new_global_id)
+        child_id_filter = models.Filter('child_id', 'eq', new_global_id_parsed)
         results = filter_util.run_search_query([child_id_filter], 'snapshots')
         if len(results) == 0:
             return
@@ -100,7 +80,7 @@ class AttributeResolutionResolver:
         results.sort(key=lambda x: x.session_date, reverse=True)
         self.__target_user = results[0]
 
-    def set_study_id(self, study, study_id):
+    def set_study_id(self, study: str, study_id: str) -> None:
         """Set the child to load missing values from using study information.
 
         Set the child to load missing form values from by finding the reference
@@ -125,7 +105,8 @@ class AttributeResolutionResolver:
         results.sort(key=lambda x: x.session_date, reverse=True)
         self.__target_user = results[0]
 
-    def fill_field(self, current_value, field_name):
+    def fill_field(self, current_value: typing.Union[str, int],
+            field_name: str) -> typing.Union[int, str]:
         """Fill a parent form value from the reference child information.
 
         @param current_value: The current form field value.
@@ -142,7 +123,7 @@ class AttributeResolutionResolver:
             return getattr(self.__target_user, field_name)
         return current_value
 
-    def fill_parent_form_defaults(self, parent_form):
+    def fill_parent_form_defaults(self, parent_form: models.ParentForm) -> None:
         """Fill all of the missing form values for the provided form.
 
         Using the reference child set eariler on this state machine, set all of
@@ -205,7 +186,7 @@ class AttributeResolutionResolver:
         )
 
 
-def is_likely_email_address(target):
+def is_likely_email_address(target: str) -> bool:
     """Determine if the provided string is likely an email address.
 
     @param target: The string to test for containing an email address.
@@ -216,7 +197,7 @@ def is_likely_email_address(target):
     return EMAIL_REGEX.match(target) != None
 
 
-def generate_unique_cdi_form_id():
+def generate_unique_cdi_form_id() -> str:
     """Generate a unique random parent CDI form ID.
 
     Generate a new parent CDI form ID that is not currently in use by other
@@ -231,10 +212,29 @@ def generate_unique_cdi_form_id():
         ret_id = user_util.generate_password().lower()
         found = db_util.get_parent_form_by_id(ret_id) == None
 
-    return ret_id
+    return ret_id # type: ignore
 
 
-def send_cdi_email(parent_form):
+def get_cdi_email_template() -> str:
+    """Load the CDI email template from disk.
+
+    @returns: String contents of the CDI email template.
+    """
+    util_dir = os.path.dirname(os.path.realpath(__file__))
+    prog_code_dir = os.path.dirname(util_dir)
+    root_dir = os.path.dirname(prog_code_dir)
+    taget_path = os.path.join(
+        root_dir,
+        'templates',
+        'cdi_email_template.txt'
+    )
+    with open(taget_path) as f:
+        content = f.read()
+
+    return content
+
+
+def send_cdi_email(parent_form: models.ParentForm) -> None:
     """Send an email with parent CDI form information.
 
     Sends an email to a parent with a link that the parent can follow to fill
@@ -247,11 +247,12 @@ def send_cdi_email(parent_form):
     mail_util.send_msg(
         parent_form.parent_email,
         CDI_EMAIL_SUBJECT,
-        CDI_EMAIL_TEMPLATE % (parent_form.child_name, form_url)
+        get_cdi_email_template() % (parent_form.child_name, form_url)
     )
 
 
-def get_snapshot_chronology_for_db_id(db_id):
+def get_snapshot_chronology_for_db_id(
+        db_id: str) -> typing.List[models.SnapshotMetadata]:
     """Get snapshots for a child sorted in reverse chronological order.
 
     Get snapshots for a child sorted in reverse choronological order given the
@@ -272,7 +273,8 @@ def get_snapshot_chronology_for_db_id(db_id):
     results.sort(key=lambda x: x.session_date, reverse=True)
     return results
 
-def get_snapshot_chronology_for_study_id(study, study_id):
+def get_snapshot_chronology_for_study_id(study: str,
+        study_id: str) -> typing.List[models.SnapshotMetadata]:
     """Get the snapshots for a child sorted in reverse chronological order.
 
     Get the snapshots for a child sorted in reverse chronological order given
@@ -302,7 +304,7 @@ def get_snapshot_chronology_for_study_id(study, study_id):
     results.sort(key=lambda x: x.session_date, reverse=True)
     return results
 
-def is_birthday_valid(birthday):
+def is_birthday_valid(birthday: str) -> bool:
     """Determine if the provided string description of a birthday is valid.
 
     Determine if the provided string does contain a valid date that can be

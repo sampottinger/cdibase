@@ -49,7 +49,10 @@ class ParentAccountUtilTests(unittest.TestCase):
     def test_send_cdi_email(self):
         with unittest.mock.patch('prog_code.util.mail_util.send_msg') as mock:
             form_url = parent_account_util.URL_TEMPLATE % 'url'
-            msg = parent_account_util.CDI_EMAIL_TEMPLATE % ('child', form_url)
+            msg = parent_account_util.get_cdi_email_template() % (
+                'child',
+                form_url
+            )
 
             test_form = TEST_PARENT_FORM('child', 'url', 'test email')
             parent_account_util.send_cdi_email(test_form)

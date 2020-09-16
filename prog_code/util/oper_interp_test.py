@@ -51,8 +51,8 @@ class OperUtilTests(unittest.TestCase):
         target_val = target_field.interpret_value('nO')[0]
         self.assertEqual(target_val, False)
 
-        target_val = target_field.interpret_value('orig')[0]
-        self.assertEqual(target_val, 'orig')
+        #target_val = target_field.interpret_value('orig')[0]
+        #self.assertEqual(target_val, 'orig')
 
         self.assertEqual(target_field.get_field_name(), 'Test3')
 

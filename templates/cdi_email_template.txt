@@ -1,0 +1,7 @@
+Hello!
+
+Thank you for helping. Please complete a vocabulary checklist for %s by going to the URL below.
+
+Form URL: %s
+
+We greatly appreciate your time.
