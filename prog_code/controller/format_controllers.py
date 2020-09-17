@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import threading
 import urllib
+import urllib.parse
 
 import flask
 
@@ -37,6 +38,8 @@ from ..util import recalc_util
 from ..util import session_util
 
 from ..struct import models
+
+from . import controller_types
 
 from cdibase import app
 
@@ -66,7 +69,7 @@ class Format:
         save_model_function, delete_model_function, model_metadata_class,
         model_full_class, file_extension):
         """Create a new Format management strategy.
-        
+
         @param upload_type: The user-facing description of the appropriate
             upload format.
         @type upload_type: str
@@ -139,7 +142,7 @@ FORMATS = {
 
 @app.route('/base/edit_formats')
 @session_util.require_login(change_formats=True)
-def edit_formats():
+def edit_formats() -> controller_types.ValidFlaskReturnTypes:
     """Index page for changing data management behavior.
 
     Index page with controls for editing formatting, forms, and percentile
@@ -161,7 +164,7 @@ def edit_formats():
 
 @app.route('/base/edit_formats/<format_type>/_add', methods=['GET', 'POST'])
 @session_util.require_login(change_formats=True)
-def upload_format(format_type):
+def upload_format(format_type: str) -> controller_types.ValidFlaskReturnTypes:
     """Handler to save a specification.
 
     format_type == cdi:
@@ -212,7 +215,7 @@ def upload_format(format_type):
             return flask.redirect(ADD_FORMATS_URL % format.url_component)
 
         safe_name = name.replace(' ', '')
-        safe_name = urllib.quote_plus(safe_name)
+        safe_name = urllib.parse.quote_plus(safe_name)
 
         if format.load_model_function(safe_name) != None:
             flask.session[constants.ERROR_ATTR] = ALREADY_EXISTS_MSG % name
@@ -220,17 +223,17 @@ def upload_format(format_type):
 
         # Check file upload valid
         if upload and file_util.allowed_file(upload.filename):
-            
+
             # Generate random filename
             with file_lock:
                 filename = file_util.generate_unique_filename(
                     format.file_extension)
                 upload.save(os.path.join(app.config[UPLOAD_FOLDER], filename))
-            
+
             # Create and save record
             new_model = format.model_metadata_class(name, safe_name, filename)
             format.save_model_function(new_model)
-            
+
             flask.session[constants.CONFIRMATION_ATTR] = FORMAT_ADDED_MSG % name
             return flask.redirect(EDIT_FORMATS_URL)
 
@@ -240,7 +243,7 @@ def upload_format(format_type):
 
 @app.route('/base/edit_formats/<format_type>/<format_name>/delete')
 @session_util.require_login(change_formats=True)
-def delete_format(format_type, format_name):
+def delete_format(format_type: str, format_name: str) -> controller_types.ValidFlaskReturnTypes:
     """Delete an existing specification (presetation, CDI, or precentile).
 
     Delete a presentation format, CDI format, or precentile table from the
@@ -287,7 +290,7 @@ def delete_format(format_type, format_name):
 
 @app.route('/base/edit_formats/download/<filename>')
 @session_util.require_login(change_formats=True)
-def uploaded_file(filename):
+def uploaded_file(filename: str) -> controller_types.ValidFlaskReturnTypes:
     """Controller to render an uploaded file.
 
     @param filename: The name of the uploaded file to retrieve.
@@ -301,6 +304,7 @@ def uploaded_file(filename):
 @app.route('/base/edit_formats/recalc')
 @session_util.require_login(change_formats=True)
 def recalculate_ages_and_percentiles():
+    """Recalc all ages and precentiles."""
     snapshots = filter_util.run_search_query([], 'snapshots', True)
     recalc_util.recalculate_ages_and_percentiles(snapshots)
     flask.session[constants.CONFIRMATION_ATTR] = 'Percentiles and ages updated!'

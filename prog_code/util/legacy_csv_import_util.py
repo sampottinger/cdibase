@@ -624,13 +624,13 @@ def parse_csv_prototypes(contents: typing.Union[str, typing.IO[str]],
 def build_snapshot(prototype: typing.Dict,
         cdi_type: str,
         languages: typing.List[str],
-        hard_of_hearing: bool,
+        hard_of_hearing: int,
         cursor: sqlite3.Cursor):
     """Save a snapshot and return its metadata.
 
     @param prototype: The primtive prototype parsed.
     @param cdi_type: The type of CDI being saved.
-    @param hard_of_hearing: Flag indicating if the participant is hard of
+    @param hard_of_hearing: Constant indicating if the participant is hard of
         hearing.
     @param cursor: Cursor to use to save the record.
     @returns: Metadata of newly saved snapshot.
@@ -669,13 +669,13 @@ def build_snapshot(prototype: typing.Dict,
 def parse_csv(contents: typing.Union[str, typing.IO[str]],
         cdi_type: str,
         languages: typing.List[str],
-        hard_of_hearing: bool,
+        hard_of_hearing: int,
         act_as_file: bool = False) -> typing.Dict:
     """Create and save snapshots from a CSV.
 
     @param contents: The content of the CSV to be parsed.
     @param cdi_type: The type of CDI being saved.
-    @param hard_of_hearing: Flag indicating if the participant is hard of
+    @param hard_of_hearing: Constant indicating if the participant is hard of
         hearing.
     @param act_as_file: Flag indicating if contents should be treated as a
         string or file-like. If true, treats it as a file-like. If false,

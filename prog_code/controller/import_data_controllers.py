@@ -32,12 +32,14 @@ from ..util import new_csv_import_util
 from ..util import db_util
 from ..util import session_util
 
+from . import controller_types
+
 CONFIRM_MSG = 'CSV imported into the database.'
 
 
 @app.route('/base/import_data', methods=['GET', 'POST'])
 @session_util.require_login(import_data=True)
-def import_data():
+def import_data() -> controller_types.ValidFlaskReturnTypes:
     """Controller to import a CSV file into the lab database.
 
     @return: Form to perform the import if GET and redirect if POST with info
@@ -59,9 +61,7 @@ def import_data():
         )
 
     else:
-        contents = io.StringIO(
-            unicode(flask.request.files['file'].read()), newline=None
-        )
+        contents = flask.request.files['file'].read()
         cdi_type = flask.request.form.get('cdi-type', '')
         file_format = flask.request.form['file-format']
 
@@ -71,7 +71,12 @@ def import_data():
             return import_data_legacy(contents, cdi_type)
 
 
-def import_data_new(contents):
+def import_data_new(contents: str) -> controller_types.ValidFlaskReturnTypes:
+    """Strategy to import data from the "new" CSV format.
+
+    @param: Contents to parse.
+    @returns: Redirect
+    """
     results = new_csv_import_util.process_csv(contents)
 
     if results.had_error:
@@ -95,7 +100,12 @@ def import_data_new(contents):
     return flask.redirect('/base/import_data')
 
 
-def import_data_legacy(contents, cdi_type):
+def import_data_legacy(contents: str, cdi_type: str) -> controller_types.ValidFlaskReturnTypes:
+    """Strategy to import data from the "legacy" CSV format.
+
+    @param: Contents to parse.
+    @returns: Redirect
+    """
     results = legacy_csv_import_util.parse_csv(
         contents,
         cdi_type,
