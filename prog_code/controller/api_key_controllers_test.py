@@ -40,8 +40,8 @@ TEST_PARENT_FORM_ID = 20
 TEST_CHILD_NAME = 'Test Child'
 TEST_PARENT_EMAIL = 'parent@example.com'
 TEST_EMAIL = 'test_mail'
-TEST_DB_ID = 123
-TEST_STUDY_ID = 456
+TEST_DB_ID = '123'
+TEST_STUDY_ID = '456'
 TEST_SNAPSHOT_ID = 789
 TEST_ITEMS_EXCLUDED = 3
 TEST_EXTRA_CATEGORIES = 4
@@ -53,7 +53,7 @@ TEST_BIRTHDAY = '2011/09/12'
 TEST_PARENT_FORM_ID_MOD = 30
 TEST_CHILD_NAME_MOD = 'Test Child2'
 TEST_PARENT_EMAIL_MOD = 'parent2@example.com'
-TEST_DB_ID_MOD = 321
+TEST_DB_ID_MOD = '321'
 TEST_STUDY_ID_MOD = 654
 TEST_STUDY_MOD = 'test study 2'
 TEST_BIRTHDAY_MOD = '2011/09/13'
@@ -703,17 +703,6 @@ class TestAPIKeyControllers(unittest.TestCase):
                         'format': 'invalid_format',
                         'parent_email': TEST_PARENT_EMAIL,
                         'database_id': TEST_DB_ID
-                    })
-                )
-                self.assertTrue('error' in json.loads(resp.data))
-
-                resp = client.get('/base/api/v0/send_parent_forms?' +
-                    urllib.parse.urlencode({
-                        'api_key': TEST_API_KEY,
-                        'child_name': 'test name',
-                        'cdi_type': 'standard',
-                        'parent_email': TEST_PARENT_EMAIL,
-                        'database_id': 'invalid type'
                     })
                 )
                 self.assertTrue('error' in json.loads(resp.data))

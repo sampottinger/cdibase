@@ -447,7 +447,8 @@ class ParentForm:
 
     # TODO (sampottinger): Languages here is a CSV field but it should be a list
     def __init__(self, form_id: str, child_name: str, parent_email: str, cdi_type: str,
-            database_id: int, study_id: str, study: str, gender: typing.Optional[int],
+            database_id: typing.Optional[str], study_id: typing.Optional[str],
+            study: typing.Optional[str], gender: typing.Optional[int],
             birthday: typing.Optional[str], items_excluded: typing.Optional[int],
             extra_categories: typing.Optional[int], languages: typing.Optional[str],
             num_languages: typing.Optional[int], hard_of_hearing: typing.Optional[int],

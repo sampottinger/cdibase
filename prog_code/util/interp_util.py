@@ -49,7 +49,7 @@ def monthdelta(d1: datetime.date, d2: datetime.date) -> float:
     return float((d2 - d1).days) / DAYS_PER_MONTH
 
 
-def safe_int_interpret(target: str) -> typing.Optional[int]:
+def safe_int_interpret(target: typing.Optional[str]) -> typing.Optional[int]:
     """Interpret a value as an integer.
 
     @param target: The value to interpret.
@@ -59,12 +59,14 @@ def safe_int_interpret(target: str) -> typing.Optional[int]:
     if target == None:
         return None
 
+    target_realized: str = target # type: ignore
+
     try:
-        return int(target)
+        return int(target_realized)
     except ValueError:
         return None
 
-def safe_float_interpret(target: str) -> typing.Optional[float]:
+def safe_float_interpret(target: typing.Optional[str]) -> typing.Optional[float]:
     """Interpret a value as an floating point value.
 
     @param target: The value to interpet.
@@ -74,8 +76,10 @@ def safe_float_interpret(target: str) -> typing.Optional[float]:
     if target == None:
         return None
 
+    target_realized: str = target # type: ignore
+
     try:
-        return float(target)
+        return float(target_realized) # type: ignore
     except ValueError:
         return None
 

@@ -57,12 +57,11 @@ class AttributeResolutionResolver:
         """
         return value != None and value != ''
 
-    def set_global_id(self, new_global_id: int) -> None:
+    def set_global_id(self, new_global_id: typing.Optional[str]) -> None:
         """Set the global ID of the child to load missing form values from.
 
         @param new_global_id: The global ID of the child to start loading form
             values from.
-        @type new_global_id: int
         """
         if not self.is_valid_value(new_global_id):
             return
@@ -80,7 +79,7 @@ class AttributeResolutionResolver:
         results.sort(key=lambda x: x.session_date, reverse=True)
         self.__target_user = results[0]
 
-    def set_study_id(self, study: str, study_id: str) -> None:
+    def set_study_id(self, study: typing.Optional[str], study_id: typing.Optional[str]) -> None:
         """Set the child to load missing values from using study information.
 
         Set the child to load missing form values from by finding the reference
@@ -95,8 +94,11 @@ class AttributeResolutionResolver:
         if not self.is_valid_value(study) or not self.is_valid_value(study_id):
             return
 
-        study_filter = models.Filter('study', 'eq', study)
-        study_id_filter = models.Filter('study_id', 'eq', study_id)
+        study_realized: str = study # type: ignore
+        study_id_realized: str = study_id # type: ignore
+
+        study_filter = models.Filter('study', 'eq', study_realized)
+        study_id_filter = models.Filter('study_id', 'eq', study_id_realized)
         results = filter_util.run_search_query([study_filter, study_id_filter],
             'snapshots')
         if len(results) == 0:
@@ -122,7 +124,8 @@ class AttributeResolutionResolver:
                 raise RuntimeError('Cannot fill field.')
             else:
                 return getattr(self.__target_user, field_name)
-        return current_value # type: ignore
+        else:
+            return current_value # type: ignore
 
     def fill_field_int(self, current_value: typing.Union[str, int, None],
             field_name: str) -> int:
@@ -164,7 +167,7 @@ class AttributeResolutionResolver:
         self.set_global_id(parent_form.database_id)
         self.set_study_id(parent_form.study, parent_form.study_id)
 
-        parent_form.database_id = self.fill_field_int(
+        parent_form.database_id = self.fill_field_str(
             parent_form.database_id,
             'child_id'
         )
@@ -333,20 +336,22 @@ def get_snapshot_chronology_for_study_id(study: str,
     results.sort(key=lambda x: x.session_date, reverse=True)
     return results
 
-def is_birthday_valid(birthday: str) -> bool:
+def is_birthday_valid(birthday_maybe: typing.Optional[str]) -> bool:
     """Determine if the provided string description of a birthday is valid.
 
     Determine if the provided string does contain a valid date that can be
     parsed by the application.
 
-    @param birthday: The string serialization of a date to test for
+    @param birthday_maybe: The string serialization of a date to test for
         parse-ability.
-    @type birthday: str
+    @type birthday_maybe: str
     @return: True if the provided string can be parsed as a date. False
         otherwise.
     """
-    if birthday == None:
+    if birthday_maybe == None:
         return False
+
+    birthday: str = birthday_maybe # type: ignore
     try:
         dateutil_parser.parse(birthday, dayfirst=False, yearfirst=False)
         return True

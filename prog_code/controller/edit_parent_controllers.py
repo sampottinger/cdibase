@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v3
 """
-
 import datetime
+import typing
 
 import dateutil.parser as dateutil_parser
 import flask
@@ -38,6 +38,8 @@ from ..util import session_util
 from ..util import user_util
 
 from ..struct import models
+
+from . import controller_types
 
 from cdibase import app
 
@@ -70,9 +72,31 @@ WORD_VALUE_INVALID_MSG = 'Whoops! You seemed to have forgotten to provide a '\
 NO_GLOBAL_ID_MSG = 'No global ID specified.'
 THANK_YOU_MSG_URL = '/base/parent_cdi/_thanks'
 
+T = typing.TypeVar('T')
+
+
+def is_none_or_negative(target: typing.Optional[float]) -> bool:
+    """Determine if the given value is none or negative, making it invalid for some fields.
+
+    @param target: The value to test.
+    @returns: True if none or negative. False otherwise.
+    """
+    return target == None or target < 0 # type: ignore
+
+
+def assert_not_none(target: typing.Optional[T]) -> T:
+    """Check that a value is not None.
+
+    @param target: The value to test.
+    @returns: The same value input if not None. Error thrown if None.
+    """
+    assert target != None
+    return target # type: ignore
+
+
 @app.route('/base/parent_accounts', methods=['GET', 'POST'])
 @session_util.require_login(edit_parents=True)
-def send_cdi_form():
+def send_cdi_form() -> controller_types.ValidFlaskReturnTypes:
     """Create and send a parent CDI form.
 
     Controller that, on GET, displays controls to send CDI parent forms by
@@ -88,25 +112,25 @@ def send_cdi_form():
     if request.method == 'POST':
 
         # Read user provided values
-        form_id = parent_account_util.generate_unique_cdi_form_id()
-        global_id = request.form.get('global_id')
-        gender = request.form.get('gender')
-        items_excluded = request.form.get('items_excluded')
-        total_num_sessions = request.form.get('total_num_sessions')
-        extra_categories = request.form.get('extra_categories')
-        study_id = request.form.get('study_id')
-        study = request.form.get('study')
-        birthday = request.form.get('birthday')
-        languages = request.form.get('languages')
-        hard_of_hearing = request.form.get('hard_of_hearing', False)
-        hard_of_hearing = hard_of_hearing == constants.FORM_SELECTED_VALUE
-        child_name = request.form.get('child_name')
-        parent_email = request.form.get('parent_email')
-        cdi_type = request.form.get('cdi_type')
+        form_id: str = parent_account_util.generate_unique_cdi_form_id() # type: ignore
+        global_id_str: str = request.form.get('global_id') # type: ignore
+        gender: str = request.form.get('gender') # type: ignore
+        items_excluded: str = request.form.get('items_excluded') # type: ignore
+        total_num_sessions: str = request.form.get('total_num_sessions') # type: ignore
+        extra_categories: str = request.form.get('extra_categories') # type: ignore
+        study_id: str = request.form.get('study_id') # type: ignore
+        study: str = request.form.get('study') # type: ignore
+        birthday: str = request.form.get('birthday') # type: ignore
+        languages: str = request.form.get('languages') # type: ignore
+        hard_of_hearing_str: str = request.form.get('hard_of_hearing', False) # type: ignore
+        hard_of_hearing = hard_of_hearing_str == constants.FORM_SELECTED_VALUE
+        child_name: str = request.form.get('child_name') # type: ignore
+        parent_email: str = request.form.get('parent_email') # type: ignore
+        cdi_type: str = request.form.get('cdi_type') # type: ignore
 
         # Save for future send
         flask.session['LAST_PARENT_PARAMS'] = {
-            'global_id': global_id,
+            'global_id': global_id_str,
             'gender': gender,
             'items_excluded': items_excluded,
             'total_num_sessions': total_num_sessions,
@@ -123,28 +147,21 @@ def send_cdi_form():
 
         # Check that the CDI type provided has been defined and can be found
         # in the application database.
-        cdi_model = db_util.load_cdi_model(cdi_type)
-        if cdi_type == None or cdi_type == '' or cdi_model == None:
+        cdi_model_maybe = db_util.load_cdi_model(cdi_type)
+        if cdi_type == None or cdi_type == '' or cdi_model_maybe == None:
             flask.session[constants.ERROR_ATTR] = CDI_TYPE_NOT_GIVEN_MSG
             return flask.redirect(PARENT_ACCOUNT_CONTROLS_URL)
 
+        cdi_model: models.CDIFormat = cdi_model_maybe # type: ignore
+
         # Ensure either a global child ID was provided or that both a global
         # and study ID are available.
-        missing_global_id = global_id == None or global_id == ''
+        missing_global_id = global_id_str == None or global_id_str == ''
         missing_study_id = study_id == None or study_id == ''
         missing_study = study == None or study == ''
         if missing_global_id and (missing_study_id or missing_study):
             flask.session[constants.ERROR_ATTR] = NO_ID_MSG
             return flask.redirect(PARENT_ACCOUNT_CONTROLS_URL)
-
-        # If a global ID was provided, coerce it to an integer or report an
-        # invalid global ID.
-        if not missing_global_id:
-            try:
-                global_id = int(global_id)
-            except ValueError:
-                flask.session[constants.ERROR_ATTR] = GLOBAL_ID_MUST_BE_INT_MSG
-                return flask.redirect(PARENT_ACCOUNT_CONTROLS_URL)
 
         # Ensure that the email address provided at least has the form of an
         # email address. Note that, due to the asynchronous nature of email,
@@ -161,41 +178,43 @@ def send_cdi_form():
                 msg = DATE_INVALID_MSG % birthday
                 flask.session[constants.ERROR_ATTR] = msg,
                 return flask.redirect(PARENT_ACCOUNT_CONTROLS_URL)
-            birthday = dateutil_parser.parse(
+            birthday_date = dateutil_parser.parse(
                 birthday,
                 dayfirst=False,
                 yearfirst=False
             )
-            birthday = birthday.strftime(DATE_OUT_STR)
+            birthday = birthday_date.strftime(DATE_OUT_STR)
 
         # Use the specified interpretation / presentation formation to parse the
         # provided hard of hearing status.
+        hard_of_hearing_int: typing.Optional[int] = None
         if hard_of_hearing != None and hard_of_hearing != '':
             if hard_of_hearing:
-                hard_of_hearing = constants.EXPLICIT_TRUE
+                hard_of_hearing_int = constants.EXPLICIT_TRUE
             else:
-                hard_of_hearing = constants.EXPLICIT_FALSE
+                hard_of_hearing_int = constants.EXPLICIT_FALSE
 
         # Parse out parent form attributes that are integers.
-        global_id = interp_util.safe_int_interpret(global_id)
-        gender = interp_util.safe_int_interpret(gender)
-        items_excluded = interp_util.safe_int_interpret(items_excluded)
-        extra_categories = interp_util.safe_int_interpret(extra_categories)
-        total_num_sessions = interp_util.safe_int_interpret(total_num_sessions)
+        items_excluded_int = interp_util.safe_int_interpret(items_excluded)
+        extra_categories_int = interp_util.safe_int_interpret(extra_categories)
+        total_num_sessions_int = interp_util.safe_int_interpret(total_num_sessions)
 
-        # Ensure languages are provided and, if not, reject the request
+        # Ensure languages are provided or try to get it from prior
+        languages_str: typing.Optional[str] = None
+        num_languages: typing.Optional[int] = None
+
         if languages != None and languages != '':
-            languages = languages.split(',')
-            languages_str = ','.join(languages)
-            num_languages = len(languages)
-        else:
-            languages_str = None
-            num_languages = None
+            languages_list = languages.split(',')
+            languages_str = ','.join(languages_list)
+            num_languages = len(languages_list)
 
         # Ensure gender information specified and, if it is, make sure the
         # provided gender value is valid.
+        gender_int: typing.Optional[int] = None
+        gender_int = interp_util.safe_int_interpret(gender)
+
         has_gender_info = gender != '' and gender != None
-        if has_gender_info and not gender in VALID_GENDER_VALUES:
+        if has_gender_info and not gender_int in VALID_GENDER_VALUES:
             flask.session[constants.ERROR_ATTR] = GENDER_INVALID_MSG
             return flask.redirect(PARENT_ACCOUNT_CONTROLS_URL)
 
@@ -206,17 +225,17 @@ def send_cdi_form():
             child_name,
             parent_email,
             cdi_type,
-            global_id,
+            global_id_str,
             study_id,
             study,
-            gender,
+            gender_int,
             birthday,
-            items_excluded,
-            extra_categories,
+            items_excluded_int,
+            extra_categories_int,
             languages_str,
             num_languages,
-            hard_of_hearing,
-            total_num_sessions
+            hard_of_hearing_int,
+            total_num_sessions_int
         )
 
         # If a parent form model is missing information about a child, load the
@@ -284,7 +303,7 @@ def send_cdi_form():
 
 
 @app.route('/base/parent_cdi/_thanks')
-def thank_parent_form():
+def thank_parent_form() -> controller_types.ValidFlaskReturnTypes:
     """Display a landing page thanking a parent for thier input.
 
     @return: Static HTML page rendering thanking a user for filling out a
@@ -298,7 +317,7 @@ def thank_parent_form():
 
 
 @app.route('/base/parent_cdi/<form_id>', methods=['GET', 'POST'])
-def handle_parent_cdi_form(form_id):
+def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTypes:
     """Controller to display and handle a parent CDI form.
 
     Controller to render a parent CDI form on a GET request and logic to handle
@@ -337,12 +356,14 @@ def handle_parent_cdi_form(form_id):
         ), 404
 
     # Ensure that the selected format is valid and is specified in the databse.
-    selected_format = db_util.load_cdi_model(parent_form.cdi_type)
-    if selected_format == None:
+    selected_format_maybe = db_util.load_cdi_model(parent_form.cdi_type)
+    if selected_format_maybe == None:
         return flask.render_template(
             'end_parent_form_404.html',
             **session_util.get_standard_template_values()
         ), 404
+
+    selected_format: models.CDIFormat = selected_format_maybe # type: ignore
 
     if request.method == 'POST':
 
@@ -355,18 +376,29 @@ def handle_parent_cdi_form(form_id):
         total_possible_words = 0
         for category in selected_format.details['categories']:
             for word in category['words']:
-                word_val = request.form.get(WORD_RESPONSE_ID_TEMPL % word, None)
-                if word_val == None:
+
+                word_val_maybe: typing.Optional[str] = request.form.get(
+                    WORD_RESPONSE_ID_TEMPL % word,
+                    None
+                )
+
+                word_val_int: typing.Optional[int] = None
+                if word_val_maybe == None:
                     msg = WORD_VALUE_MISSING_MSG % word
                     flask.session[constants.ERROR_ATTR] = msg
                     successful = False
-                word_val = interp_util.safe_int_interpret(word_val)
-                if word_val == None:
+                else:
+                    word_val: str = word_val_maybe # type: ignore
+                    word_val_int = interp_util.safe_int_interpret(word_val)
+
+                if word_val_int == None:
                     msg = WORD_VALUE_INVALID_MSG % word
                     flask.session[constants.ERROR_ATTR] = msg
                     successful = False
-                word_entries[word.lower().replace('*', '')] = word_val
-                if word_val in count_as_spoken_vals:
+
+                word_entries[word.lower().replace('*', '')] = word_val_int
+
+                if word_val_int in count_as_spoken_vals:
                     known_words.append(word)
                     words_spoken += 1
                 total_possible_words += 1
@@ -391,30 +423,35 @@ def handle_parent_cdi_form(form_id):
         # have it, load it form the user's response.
         database_id = parent_form.database_id
         if database_id == None or database_id == '':
-            database_id = interp_util.safe_int_interpret(
-                request.form.get('database_id', None))
+            database_id = request.form.get('database_id', None)
 
         # Ensure that, if only a global ID is provided, that a study and study
         # ID is generated.
         if database_id != None:
             results = parent_account_util.get_snapshot_chronology_for_db_id(
-                database_id)
-        else:
+                database_id # type: ignore
+            )
+        elif study != None and study_id != None:
             results = parent_account_util.get_snapshot_chronology_for_study_id(
-                study, study_id)
+                study, # type: ignore
+                study_id # type: ignore
+            )
+        else:
+            flask.session[constants.ERROR_ATTR] = NO_ID_MSG
+            return flask.redirect(request.path)
 
         # Ensure that the parent form has birthday information or load it from
         # the user response, checking that it is of appropriate ISO format.
         birthday = parent_form.birthday
         if birthday == None or birthday == '':
-            birthday = request.form.get('birthday', None)
-            if not parent_account_util.is_birthday_valid(birthday):
-                msg = BIRTHDAY_INVALID_MSG % birthday
+            birthday_str: typing.Optional[str] = request.form.get('birthday', None)
+            if not parent_account_util.is_birthday_valid(birthday_str):
+                msg = BIRTHDAY_INVALID_MSG % birthday_str
                 flask.session[constants.ERROR_ATTR] = msg
                 flask.session['SAVED_WORDS'] = word_entries
                 return flask.redirect(request.path)
             else:
-                birthday_parts = birthday.split('/')
+                birthday_parts = birthday_str.split('/') # type: ignore
                 # Put year last
                 birthday_parts = [
                     birthday_parts[2],
@@ -422,7 +459,7 @@ def handle_parent_cdi_form(form_id):
                     birthday_parts[1]
                 ]
         else:
-            birthday_parts = birthday.split('/')
+            birthday_parts = birthday.split('/') # type: ignore
 
         # Ensure that the parent form has gender information or load it from
         # the user response, ensuring the gender provided is of an appropriate
@@ -444,7 +481,7 @@ def handle_parent_cdi_form(form_id):
         if items_excluded == None or items_excluded == '':
             items_excluded = interp_util.safe_int_interpret(
                 request.form.get('items_excluded', None))
-            if items_excluded == None or items_excluded < 0:
+            if is_none_or_negative(items_excluded):
                 items_excluded = 0
 
         # Ensure that the parent form has extra categories information or load
@@ -454,7 +491,7 @@ def handle_parent_cdi_form(form_id):
         if extra_categories == None or extra_categories == '':
             extra_categories = interp_util.safe_int_interpret(
                 request.form.get('extra_categories', None))
-            if extra_categories == None or extra_categories < 0:
+            if is_none_or_negative(extra_categories):
                 extra_categories = 0
 
         # Ensure that the parent form has total num sessions info or load
@@ -464,7 +501,7 @@ def handle_parent_cdi_form(form_id):
         if total_num_sessions == None or total_num_sessions == '':
             total_num_sessions = interp_util.safe_int_interpret(
                 request.form.get('total_num_sessions', None))
-            if total_num_sessions == None or total_num_sessions < 0:
+            if is_none_or_negative(total_num_sessions):
                 total_num_sessions = 0
 
         # Ensure that the parent form has languages information or load it from
@@ -474,12 +511,13 @@ def handle_parent_cdi_form(form_id):
             languages = request.form.get('languages', None)
 
         # Ensure that languages information is valid.
+        languages_list: typing.List[str] = []
         if languages == None or languages == '':
             flask.session[constants.ERROR_ATTR] = LANGUAGES_NOT_PROVIDED_MSG
             flask.session['SAVED_WORDS'] = word_entries
             return flask.redirect(request.path)
         else:
-            languages = languages.split(',')
+            languages_list = languages.split(',') # type: ignore
 
         # Ensure that the parent form has hard of hearing information or load
         # it from the user response, ensuring the hard of hearing information
@@ -528,8 +566,10 @@ def handle_parent_cdi_form(form_id):
                 flask.session['SAVED_WORDS'] = word_entries
                 return flask.redirect(request.path)
 
+            percentile_model_realized: models.PercentileTable = percentile_model # type: ignore
+
             percentile = math_util.find_percentile(
-                percentile_model.details,
+                percentile_model_realized.details,
                 words_spoken,
                 age,
                 total_possible_words
@@ -538,31 +578,43 @@ def handle_parent_cdi_form(form_id):
             percentile = -1
 
         # Find prior entries in study
-        session_number = recalc_util.get_session_number(study, study_id)
+        if study != None and study_id != None:
+            session_number = recalc_util.get_session_number(study, study_id) # type: ignore
+
         if not total_num_sessions:
             total_num_sessions = session_number
+
+        # Check all required values resolved
+        study_id_realized = assert_not_none(study_id)
+        study_realized = assert_not_none(study)
+        gender_realized = assert_not_none(gender)
+        age_realized = assert_not_none(age)
+        birthday_realized = assert_not_none(birthday)
+        items_excluded_realized = assert_not_none(items_excluded)
+        extra_categories_realized = assert_not_none(extra_categories)
+        hard_of_hearing_realized = assert_not_none(hard_of_hearing)
 
         # Put in snapshot metadata
         new_snapshot = models.SnapshotMetadata(
             None,
-            database_id,
-            study_id,
-            study,
-            gender,
-            age,
-            birthday,
+            str(database_id),
+            study_id_realized,
+            study_realized,
+            gender_realized,
+            age_realized,
+            birthday_realized,
             datetime.date.today().strftime(DATE_OUT_STR),
             session_number,
             total_num_sessions,
             words_spoken,
-            items_excluded,
+            items_excluded_realized,
             percentile,
-            extra_categories,
+            extra_categories_realized,
             0,
-            languages,
-            len(languages),
+            languages_list,
+            len(languages_list),
             selected_format.details['meta']['cdi_type'],
-            hard_of_hearing,
+            hard_of_hearing_realized,
             False
         )
         db_util.insert_snapshot(new_snapshot, word_entries)
@@ -574,29 +626,30 @@ def handle_parent_cdi_form(form_id):
 
     else:
         # Get the most recent snapshot
-        results = parent_account_util.get_snapshot_chronology_for_db_id(
-            parent_form.database_id)
+        if parent_form.database_id == None:
+            results = []
+        else:
+            results = parent_account_util.get_snapshot_chronology_for_db_id(
+                parent_form.database_id # type: ignore
+            )
 
         saved_known_words = flask.session.get('SAVED_WORDS', None)
         if saved_known_words == {}:
             saved_known_words = None
 
-        word_entries = None
+        word_entries = {}
         if saved_known_words:
             word_entries = saved_known_words
-        else:
+        elif len(results) > 0:
             # Find the words known from the last snapshot if that last snapshot
             # is available for reference.
-            if len(results) == 0:
-                word_entries = {}
-            else:
-                latest_snapshot = results[0]
-                contents = db_util.load_snapshot_contents(latest_snapshot)
-                known_words_tuples = map(
-                    lambda x: (x.word, x.value),
-                    contents
-                )
-                word_entries = dict(known_words_tuples)
+            latest_snapshot = results[0]
+            contents = db_util.load_snapshot_contents(latest_snapshot)
+            known_words_tuples = map(
+                lambda x: (x.word, x.value),
+                contents
+            )
+            word_entries = dict(known_words_tuples)
 
         option_values = list(map(
             lambda x: x['value'],

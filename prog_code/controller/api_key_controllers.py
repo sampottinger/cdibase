@@ -367,17 +367,16 @@ def send_parent_form() -> controller_types.ValidFlaskReturnTypes:
 
     # Parse the rest of user input.
     form_id = parent_account_util.generate_unique_cdi_form_id()
-    global_id_maybe = interp_util.safe_int_interpret(
-        request.args.get('database_id', ''))
-    study_id = request.args.get('study_id', '')
-    study = request.args.get('study', '')
+    global_id_maybe = request.args.get('database_id', '')
+    study_id_maybe = request.args.get('study_id', '')
+    study_maybe = request.args.get('study', '')
     gender_maybe = request.args.get('gender', '')
-    birthday = request.args.get('birthday', '')
-    items_excluded = interp_util.safe_int_interpret(
+    birthday_maybe = request.args.get('birthday', '')
+    items_excluded_maybe = interp_util.safe_int_interpret(
         request.args.get('items_excluded', ''))
-    extra_categories = interp_util.safe_int_interpret(
+    extra_categories_maybe = interp_util.safe_int_interpret(
         request.args.get('extra_categories', ''))
-    total_num_sessions = interp_util.safe_int_interpret(
+    total_num_sessions_maybe = interp_util.safe_int_interpret(
         request.args.get('total_num_sessions', ''))
     languages = request.args.get('languages', '')
     languages = languages.split('.')
@@ -400,12 +399,10 @@ def send_parent_form() -> controller_types.ValidFlaskReturnTypes:
 
     # Ensure that either a global ID or both a study and study ID were provided.
     global_id_missing = global_id_maybe == None or global_id_maybe == ''
-    study_id_missing = study_id == None or study_id == ''
-    study_missing = study == None or study == ''
+    study_id_missing = study_id_maybe == None or study_id_maybe == ''
+    study_missing = study_maybe == None or study_maybe == ''
     if global_id_missing and (study_id_missing or study_missing):
         return generate_invalid_request_error(NO_ID_MSG)
-
-    global_id: int = global_id_maybe # type: ignore
 
     # Ensure that the provided parent email address at least has the form of an
     # email address. Note that, due to the asynchronous nature of email, there
@@ -417,44 +414,42 @@ def send_parent_form() -> controller_types.ValidFlaskReturnTypes:
 
     # Check that, if a birthday was provided, that the birthday has an
     # appropriate ISO date format.
-    if birthday != None and birthday != '':
+    if birthday_maybe != None and birthday_maybe != '':
         try:
-            birthday = datetime.datetime.strptime(birthday, ISO_PARSE_STR)
-            birthday = birthday.strftime(DATE_OUT_STR)
+            birthday_date = datetime.datetime.strptime(birthday_maybe, ISO_PARSE_STR)
+            birthday_maybe = birthday_date.strftime(DATE_OUT_STR)
         except ValueError as e:
             return generate_invalid_request_error(ISO_DATE_INVALID_MSG)
 
     # Use the specified interpretation / presentation format to parse the
     # provided gender value.
     interpretation_vals = interpretation_format.details
+    gender: typing.Optional[int] = None
     if gender_maybe != None and gender_maybe != '':
-        if isinstance(gender_maybe, int):
-            pass
-        elif gender_maybe == interpretation_vals['male']:
-            gender_maybe = constants.MALE
+        if gender_maybe == interpretation_vals['male']:
+            gender = constants.MALE
         elif gender_maybe == interpretation_vals['female']:
-            gender_maybe = constants.FEMALE
+            gender = constants.FEMALE
         elif gender_maybe == interpretation_vals['explicit_other']:
-            gender_maybe = constants.OTHER_GENDER
+            gender = constants.OTHER_GENDER
         else:
             return generate_invalid_request_error(INVALID_GENDER_VALUE_MSG)
 
-    gender: int = gender_maybe # type: ignore
-
     # use the specified interpretation / presentation formation to parse the
     # provided hard of hearing status.
+    hard_of_hearing_int: typing.Optional[int] = None
     if hard_of_hearing != None and hard_of_hearing != '':
         if isinstance(hard_of_hearing, bool):
             if hard_of_hearing:
-                hard_of_hearing = constants.EXPLICIT_TRUE
+                hard_of_hearing_int = constants.EXPLICIT_TRUE
             else:
-                hard_of_hearing = constants.EXPLICIT_FALSE
+                hard_of_hearing_int = constants.EXPLICIT_FALSE
         elif isinstance(hard_of_hearing, int):
-            pass
+            hard_of_hearing_int = hard_of_hearing # type: ignore
         elif hard_of_hearing == interpretation_vals['explicit_true']:
-            hard_of_hearing = constants.EXPLICIT_TRUE
+            hard_of_hearing_int = constants.EXPLICIT_TRUE
         elif hard_of_hearing == interpretation_vals['explicit_false']:
-            hard_of_hearing = constants.EXPLICIT_FALSE
+            hard_of_hearing_int = constants.EXPLICIT_FALSE
         else:
             return generate_invalid_request_error(INVALID_HARD_OF_HEARING_MSG)
 
@@ -465,17 +460,17 @@ def send_parent_form() -> controller_types.ValidFlaskReturnTypes:
         child_name,
         parent_email,
         cdi_type,
-        global_id,
-        study_id,
-        study,
+        global_id_maybe,
+        study_id_maybe,
+        study_maybe,
         gender,
-        birthday,
-        items_excluded,
-        extra_categories,
+        birthday_maybe,
+        items_excluded_maybe,
+        extra_categories_maybe,
         ','.join(languages),
         len(languages),
-        hard_of_hearing,
-        total_num_sessions
+        hard_of_hearing_int,
+        total_num_sessions_maybe
     )
 
     # If a parent form model is missing information about a child, load the rest
@@ -643,8 +638,7 @@ def send_parent_forms() -> controller_types.ValidFlaskReturnTypes:
 
         # Get the grouping of parameters across the parameter arrays. Note that
         # get if avail returns '' if the parameter is not provided.
-        global_id = interp_util.safe_int_interpret(
-            api_key_util.get_if_avail(global_id_vals, i))
+        global_id = api_key_util.get_if_avail(global_id_vals, i)
         study_id = api_key_util.get_if_avail(study_id_vals, i)
         study = api_key_util.get_if_avail(study_vals, i)
         gender_raw = api_key_util.get_if_avail(gender_vals, i)
@@ -681,8 +675,6 @@ def send_parent_forms() -> controller_types.ValidFlaskReturnTypes:
         study_missing = study == None or study == ''
         if global_id_missing and (study_id_missing or study_missing):
             return generate_invalid_request_error(NO_ID_MSG)
-
-        global_id_realized: int = global_id # type: ignore
 
         # Ensure that the provided email address at least has the form of an
         # email address. Note that, due to the asynchronous nature of email,
@@ -751,7 +743,7 @@ def send_parent_forms() -> controller_types.ValidFlaskReturnTypes:
             child_name,
             parent_email,
             cdi_type,
-            global_id_realized,
+            global_id,
             study_id,
             study,
             gender,

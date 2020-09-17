@@ -36,7 +36,7 @@ TEST_PARENT_FORM_ID = 20
 TEST_CHILD_NAME = 'Test Child'
 TEST_PARENT_EMAIL = 'parent@example.com'
 TEST_EMAIL = 'test_mail'
-TEST_DB_ID = 123
+TEST_DB_ID = '123'
 TEST_STUDY_ID = 456
 TEST_SNAPSHOT_ID = 789
 TEST_ITEMS_EXCLUDED = 3
@@ -53,7 +53,7 @@ TEST_BIRTHDAY_DATE = date(2011, 9, 12)
 TEST_PARENT_FORM_ID_MOD = 30
 TEST_CHILD_NAME_MOD = 'Test Child2'
 TEST_PARENT_EMAIL_MOD = 'parent2@example.com'
-TEST_DB_ID_MOD = 321
+TEST_DB_ID_MOD = '321'
 TEST_STUDY_ID_MOD = 654
 TEST_STUDY_MOD = 'test study 2'
 TEST_BIRTHDAY_MOD = '09/13/2011'
@@ -401,16 +401,6 @@ class TestEditParentControllers(unittest.TestCase):
 
                 data = copy.copy(SEND_FORM_DATA_TEMPLATE)
                 data['parent_email'] = 'bad email address'
-                client.post('/base/parent_accounts', data=data)
-
-                with client.session_transaction() as sess:
-                    self.assertTrue(constants.ERROR_ATTR in sess)
-                    self.assertNotEqual(sess[constants.ERROR_ATTR], '')
-                    sess[constants.ERROR_ATTR] = ''
-                    self.assertFalse(constants.CONFIRMATION_ATTR in sess)
-
-                data = copy.copy(SEND_FORM_DATA_TEMPLATE)
-                data['global_id'] = 'invalid'
                 client.post('/base/parent_accounts', data=data)
 
                 with client.session_transaction() as sess:
