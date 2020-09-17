@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 class CDIFormatMetadata:
     """Information about an CDI format without the format itself."""
 
-    def __init__(self, human_name, safe_name, filename):
+    def __init__(self, human_name: str, safe_name: str, filename: str):
         """Create a new metadata record.
 
         @param human_name: The name of this format intended for human eyes.
@@ -81,7 +81,7 @@ class ValueMapping:
 
 class PresentationFormatMetadata:
     """Information about a CSV presentation format without the format itself."""
-    
+
     def __init__(self, human_name, safe_name, filename):
         """Create a new metadata record.
 
@@ -101,7 +101,7 @@ class PresentationFormatMetadata:
 
 class PresentationFormat(PresentationFormatMetadata):
     """A complete CSV presentation format specification with metadata."""
-    
+
     def __init__(self, human_name, safe_name, filename, details):
         """Create a new specification record.
 
@@ -302,22 +302,22 @@ class SnapshotMetadata:
             self.database_id,
             self.child_id,
             self.study_id,
-            self.study, 
-            self.gender, 
+            self.study,
+            self.gender,
             self.age,
-            self.birthday, 
-            self.session_date, 
-            self.session_num, 
-            self.total_num_sessions, 
+            self.birthday,
+            self.session_date,
+            self.session_num,
+            self.total_num_sessions,
             self.words_spoken,
-            self.items_excluded, 
-            self.percentile, 
-            self.extra_categories, 
-            self.revision, 
+            self.items_excluded,
+            self.percentile,
+            self.extra_categories,
+            self.revision,
             self.languages,
-            self.num_languages, 
-            self.cdi_type, 
-            self.hard_of_hearing, 
+            self.num_languages,
+            self.cdi_type,
+            self.hard_of_hearing,
             self.deleted
         )
 
