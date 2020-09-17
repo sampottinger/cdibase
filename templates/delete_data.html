@@ -105,7 +105,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             </div>
             <div class="form-entry">
                 <label class="radio"><input type="radio" name="operation" value="delete">Delete matching entries.</label>
-                {% if user.can_admin %}<label class="radio"><input type="radio" name="operation" value="hard-delete">Delete permanently matching entries (be careful! 👀🚨)</label>{% endif %}
+                {% if user.can_admin %}<label class="radio"><input type="radio" name="operation" value="hard-delete">Permanently delete matching entries (be careful! 👀🚨)</label>{% endif %}
                 <label class="radio"><input type="radio" name="operation" value="restore">Restore (un-delete) matching entries.</label>
             </div>
             <div id="download-button-holder">
