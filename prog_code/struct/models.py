@@ -445,10 +445,10 @@ class User:
 class ParentForm:
     """Record of a parent CDI form that can be filled out online."""
 
-    def __init__(self, form_id, child_name, parent_email, cdi_type,
-        database_id, study_id, study, gender, birthday, items_excluded,
-        extra_categories, languages, num_languages, hard_of_hearing,
-        total_num_sessions):
+    def __init__(self, form_id: str, child_name: str, parent_email: str, cdi_type: str,
+            database_id: int, study_id: str, study: str, gender: int, birthday: str,
+            items_excluded: int, extra_categories: int, languages: typing.List[str],
+            num_languages: int, hard_of_hearing: int, total_num_sessions: int):
         """Create a new parent form record.
 
         Create a new parent form record. Note that this constructor does not
