@@ -2,47 +2,76 @@
  * Client-side logic for displaying a frequency distribution of CDIs / study.
  *
  * Copyright (C) 2014 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-var LEFT_BAR_SIZE = 150;
-var WIDTH = 900;
-var HEIGHT = 700;
-var LABEL_WIDTH = 200;
-var LIST_Y = 50;
+// Thanks https://stackoverflow.com/questions/36644438/how-to-convert-a-plain-object-into-an-es6-map
+Object.entries = typeof Object.entries === 'function' ? Object.entries : obj => Object.keys(obj).map(k => [k, obj[k]]);
 
-var studySelection = d3.map();
-var studySizes = d3.map();
+let LEFT_BAR_SIZE = 150;
+let WIDTH = 900;
+let HEIGHT = 700;
+let LABEL_WIDTH = 200;
+let LIST_Y = 50;
 
-var histogramBuckets = [
-    {countByStudy: d3.map(), count: 0, min: 1, max: 1},
-    {countByStudy: d3.map(), count: 0, min: 2, max: 2},
-    {countByStudy: d3.map(), count: 0, min: 3, max: 3},
-    {countByStudy: d3.map(), count: 0, min: 4, max: 4},
-    {countByStudy: d3.map(), count: 0, min: 5, max: 5},
-    {countByStudy: d3.map(), count: 0, min: 6, max: 6},
-    {countByStudy: d3.map(), count: 0, min: 7, max: 7},
-    {countByStudy: d3.map(), count: 0, min: 8, max: 8},
-    {countByStudy: d3.map(), count: 0, min: 9, max: 9},
-    {countByStudy: d3.map(), count: 0, min: 10, max: 10},
-    {countByStudy: d3.map(), count: 0, min: 11, max: 11},
-    {countByStudy: d3.map(), count: 0, min: 12, max: null}
+let studySelection = new Map();
+let studySizes = new Map();
+
+let histogramBuckets = [
+    {countByStudy: new Map(), count: 0, min: 1, max: 1},
+    {countByStudy: new Map(), count: 0, min: 2, max: 2},
+    {countByStudy: new Map(), count: 0, min: 3, max: 3},
+    {countByStudy: new Map(), count: 0, min: 4, max: 4},
+    {countByStudy: new Map(), count: 0, min: 5, max: 5},
+    {countByStudy: new Map(), count: 0, min: 6, max: 6},
+    {countByStudy: new Map(), count: 0, min: 7, max: 7},
+    {countByStudy: new Map(), count: 0, min: 8, max: 8},
+    {countByStudy: new Map(), count: 0, min: 9, max: 9},
+    {countByStudy: new Map(), count: 0, min: 10, max: 10},
+    {countByStudy: new Map(), count: 0, min: 11, max: 11},
+    {countByStudy: new Map(), count: 0, min: 12, max: null}
 ];
 
-var aggregationMethod = 'sum';
-var sourceData;
+let aggregationMethod = 'sum';
+let sourceData;
+
+
+/**
+ * For compatibility, emulate old d3 map keys.
+ */
+function iterateKeys(targetMap) {
+    return Array.from(targetMap.entries()).map((x) => x[0]);
+}
+
+
+/**
+ * For compatibility, emulate old d3 map values.
+ */
+function iterateValues(targetMap) {
+    return Array.from(targetMap.entries()).map((x) => x[1]);
+}
+
+
+/**
+ * For compatibility, emulate old d3 map values.
+ */
+function iterateEntries(targetMap) {
+    return Array.from(targetMap.entries()).map(
+        (x) => { return {"key": x[0], "value": x[1]}; }
+    );
+}
 
 
 /**
@@ -50,31 +79,31 @@ var sourceData;
  *
  * Recalculate the distribution of CDIs per study for the frequency distribution
  * display.
- */  
+ */
 function updateBuckets() {
     histogramBuckets.forEach(function(bucket) {
         bucket.count = 0;
-        bucket.countByStudy = d3.map();
+        bucket.countByStudy = new Map();
     });
 
-    var byParticipant = d3.map();
-    sourceData.entries().forEach(function(studyItem) {
-        var studyName = studyItem.key;
-        var studyValues = studyItem.value;
+    let byParticipant = new Map();
+    iterateEntries(sourceData).forEach(function(studyItem) {
+        let studyName = studyItem.key;
+        let studyValues = studyItem.value;
 
         if (!studySelection.get(studyName)) {
             return;
         }
 
-        studyValues.entries().forEach(function(studyItem) {
-            var participantID = studyItem.key;
-            var count = studyItem.value;
+        iterateEntries(studyValues).forEach(function(studyItem) {
+            let participantID = studyItem.key;
+            let count = studyItem.value;
 
             if (!byParticipant.has(participantID)) {
                 byParticipant.set(participantID, {count: 0, studies: []});
             }
 
-            var info = byParticipant.get(participantID);
+            let info = byParticipant.get(participantID);
 
             if (aggregationMethod === 'sum') {
                 info.count += count;
@@ -85,13 +114,13 @@ function updateBuckets() {
             }
         });
     });
-    
-    byParticipant.values().forEach(function (info) {
-        var count = info.count;
-        var studies = info.studies;
+
+    iterateValues(byParticipant).forEach(function (info) {
+        let count = info.count;
+        let studies = info.studies;
         histogramBuckets.forEach(function (bucket) {
-            var matchesMin = bucket.min == null || bucket.min <= count;
-            var matchesMax = bucket.max == null || bucket.max >= count;
+            let matchesMin = bucket.min == null || bucket.min <= count;
+            let matchesMax = bucket.max == null || bucket.max >= count;
             if (matchesMin && matchesMax) {
                 bucket.count += 1;
 
@@ -118,32 +147,28 @@ function updateBuckets() {
  * "buckets" on the right side.
  */
 function updateViz() {
-    var studyYCoord = d3.map();
-    var studiesList = studySizes.entries().filter(function(entry) {
-        return studySelection.get(entry.key);
-    });
+    let studyYCoord = new Map();
+    let studiesList = iterateEntries(studySizes).filter(
+        (entry) => studySelection.get(entry.key)
+    );
 
-    studiesList.sort(function(a, b) {
-        return b.value - a.value;
-    });
+    studiesList.sort((a, b) => b.value - a.value);
 
     // Create left scales
-    var leftPlacementScale = d3.scale.linear()
+    let leftPlacementScale = d3.scaleLinear()
         .domain([0, studiesList.length])
         .range([0, HEIGHT - LIST_Y]);
 
-    var maxStudyValue = d3.max(studiesList.map(function(x) {
-        return x.value;
-    }));
-    var leftBarScale = d3.scale.linear()
+    let maxStudyValue = d3.max(studiesList.map((x) => x.value));
+    let leftBarScale = d3.scaleLinear()
         .domain([0, maxStudyValue])
         .range([0, LABEL_WIDTH]);
 
     // Create left list
-    var leftList = d3.select('#left-list').selectAll('.left-entry')
-        .data(studiesList, function(x) { return x.key; });
+    let leftList = d3.select('#left-list').selectAll('.left-entry')
+        .data(studiesList, (x) => x.key);
 
-    var newItems = leftList.enter().append('g').classed('left-entry', true);
+    let newItems = leftList.enter().append('g').classed('left-entry', true);
     newItems.append('rect').classed('item-rect', true);
     newItems.append('rect').classed('highlight-bar', true);
     newItems.append('text').classed('item-label', true);
@@ -154,22 +179,20 @@ function updateViz() {
         .attr('d', 'M ' + (-LABEL_WIDTH) + ' 2 L 0 2')
         .style("stroke-dasharray", ('2', '1'));
 
-    leftList.attr('transform', function(studyInfo, i) {
+    leftList = d3.select('#left-list').selectAll('.left-entry');
+
+    leftList.attr('transform', (studyInfo, i) => {
         studyYCoord.set(studyInfo.key, leftPlacementScale(i));
         return 'translate(0, ' + leftPlacementScale(i) + ')';
     });
 
     leftList.selectAll('.item-label')
-        .attr('x' -2)
+        .attr('x', -2)
         .attr('y', -2)
-        .text(function(studyInfo) {
-            return studyInfo.key;
-        });
+        .text((studyInfo) => studyInfo.key);
 
     leftList.selectAll('.item-count')
-        .text(function(studyInfo) {
-            return studyInfo.value + ' participants';
-        })
+        .text((studyInfo) => studyInfo.value + ' participants')
         .attr('x', -LABEL_WIDTH)
         .attr('y', -2);
 
@@ -180,9 +203,7 @@ function updateViz() {
         })
         .attr('y', -15)
         .attr('height', 17)
-        .attr('width', function(studyInfo) {
-            return leftBarScale(studyInfo.value);
-        });
+        .attr('width', (studyInfo) => leftBarScale(studyInfo.value));
 
     leftList.selectAll('.highlight-bar')
         .attr('y', -15)
@@ -199,20 +220,20 @@ function updateViz() {
     leftList.exit().remove();
 
     // Create right scales
-    var rightPlacementScale = d3.scale.linear()
+    let rightPlacementScale = d3.scaleLinear()
         .domain([0, histogramBuckets.length])
         .range([0, HEIGHT - LIST_Y]);
 
-    var maxBucketValue = d3.max(histogramBuckets.map(function(x) {
-        return x.count;
-    }));
-    var rightBarScale = d3.scale.linear()
+    let maxBucketValue = d3.max(histogramBuckets.map((x) => x.count));
+    let rightBarScale = d3.scaleLinear()
         .domain([0, maxBucketValue])
         .range([0, LABEL_WIDTH]);
 
     // Create right list
-    var rightList = d3.select('#right-list').selectAll('.right-entry')
+    let rightList = d3.select('#right-list').selectAll('.right-entry')
         .data(histogramBuckets);
+
+    rightList.exit().remove();
 
     newItems = rightList.enter().append('g').classed('right-entry', true);
     newItems.append('rect').classed('item-rect', true);
@@ -225,13 +246,16 @@ function updateViz() {
         .style('stroke-dasharray', ('2', '1'));
     newItems.append('rect').classed('item-bg', true);
 
-    rightList.attr('transform', function(bucket, i) {
-        return 'translate(0, ' + rightPlacementScale(i) + ')';
-    });
+    rightList = d3.select('#right-list').selectAll('.right-entry');
+
+    rightList.attr(
+      'transform',
+      (bucket, i) => 'translate(0, ' + rightPlacementScale(i) + ')'
+    );
 
     rightList.selectAll('.item-label')
         .attr('x', 2)
-        .text(function(bucket) {
+        .text((bucket) => {
             if (bucket.min === null) {
                 return '<= ' + bucket.max + ' CDIs';
             } else if (bucket.max === null) {
@@ -246,9 +270,7 @@ function updateViz() {
         });
 
     rightList.selectAll('.item-count')
-        .text(function(bucket) {
-            return bucket.count + ' participants';
-        })
+        .text((bucket) => bucket.count + ' participants')
         .attr('x', LABEL_WIDTH)
         .attr('y', -2);
 
@@ -263,9 +285,7 @@ function updateViz() {
         .attr('x', 0)
         .attr('y', -15)
         .attr('height', 17)
-        .attr('width', function(bucket) {
-            return rightBarScale(bucket.count);
-        });
+        .attr('width', (bucket) => rightBarScale(bucket.count));
 
     rightList.selectAll('.highlight-bar')
         .attr('y', -15)
@@ -273,69 +293,73 @@ function updateViz() {
         .attr('x', 0)
         .attr('width', 0);
 
-    rightList.exit().remove();
-
     // Create chord scales
-    var byStudyMax = d3.max(histogramBuckets.map(function(bucket) {
-        return d3.max(bucket.countByStudy.values());
+    let byStudyMax = d3.max(histogramBuckets.map((bucket) => {
+        return d3.max(iterateValues(bucket.countByStudy));
     }));
-    var chordScale = d3.scale.linear()
+    let chordScale = d3.scaleLinear()
         .domain([0, byStudyMax])
         .range([0, 17]);
 
     // Create chords
-    var keySet = [];
-    histogramBuckets.forEach(function(bucket, i) {
-        bucket.countByStudy.keys().forEach(function(studyName) {
+    let keySet = [];
+    histogramBuckets.forEach((bucket, i) => {
+        iterateKeys(bucket.countByStudy).forEach((studyName) => {
             keySet.push({study: studyName, bucket: i})
         });
     });
 
-    var chords = d3.select('#chord-area').selectAll('.set-chord').data(keySet);
+    let chords = d3.select('#chord-area').selectAll('.set-chord').data(keySet);
+
+    chords.exit().remove();
 
     chords.enter().append('path').classed('set-chord', true);
 
+    chords = d3.select('#chord-area').selectAll('.set-chord');
+
     chords.attr('opacity', 0.2)
-        .attr('stroke-width', function (keySet) {
-            var intersection = histogramBuckets[keySet.bucket].countByStudy
+        .attr('stroke-width', (keySet) => {
+            let intersection = histogramBuckets[keySet.bucket].countByStudy
                 .get(keySet.study);
 
             return chordScale(intersection);
         })
-        .attr('d', function(keySet) {
-            var startX = 0;
-            var startY = studyYCoord.get(keySet.study) - 5;
-            var endX = WIDTH - LABEL_WIDTH * 2;
-            var endY = rightPlacementScale(keySet.bucket) - 5;
+        .attr('d', (keySet) => {
+            let startX = 0;
+            let startY = studyYCoord.get(keySet.study) - 5;
+            let endX = WIDTH - LABEL_WIDTH * 2;
+            let endY = rightPlacementScale(keySet.bucket) - 5;
 
-            var path = 'M ' + startX + ' ' + startY + ' ';
+            let path = 'M ' + startX + ' ' + startY + ' ';
             path += 'C ' + (startX + 200) + ' ' + startY + ' ';
             path += (endX - 200) + ' ' + endY + ' ';
             path += endX + ' ' + endY;
             return path;
         });
 
-    chords.exit().remove();
+    chords = d3.select('#chord-area').selectAll('.set-chord');
 
     // Attach listeners
-    rightList.on('mouseenter', function(bucket, i) {
+    rightList.on('mouseenter', function(event, bucket) {
         d3.select(this).classed('active', true);
-        
-        var filteredChords = chords.filter(function(keySet) {
+
+        let i = rightList.nodes().indexOf(this);
+
+        let filteredChords = chords.filter((keySet) => {
             return keySet.bucket == i;
         });
 
-        var counts = bucket.countByStudy;
+        let counts = bucket.countByStudy;
 
         leftList.selectAll('.highlight-bar').transition()
-            .attr('x', function(studyInfo) {
+            .attr('x', (studyInfo) => {
                 if (counts.has(studyInfo.key)) {
                     return -leftBarScale(counts.get(studyInfo.key));
                 } else {
                     return 0;
                 }
             })
-            .attr('width', function(studyInfo) {
+            .attr('width', (studyInfo) => {
                 if (counts.has(studyInfo.key)) {
                     return leftBarScale(counts.get(studyInfo.key));
                 } else {
@@ -343,8 +367,8 @@ function updateViz() {
                 }
             });
 
-        leftList.selectAll('.item-count').text(function(studyInfo) {
-            var count = counts.get(studyInfo.key);
+        leftList.selectAll('.item-count').text((studyInfo) => {
+            let count = counts.get(studyInfo.key);
             if (count === undefined) { count = 0; }
             return studyInfo.value + ' part. (' + count + ' high.)';
         });
@@ -352,7 +376,7 @@ function updateViz() {
         filteredChords.classed('active', true);
     });
 
-    rightList.on('mouseleave', function(bucket, i) {
+    rightList.on('mouseleave', function(event, bucket) {
         d3.select('#viz-target').selectAll('.active').classed('active', false);
 
         leftList.selectAll('.highlight-bar')
@@ -365,16 +389,16 @@ function updateViz() {
         });
     });
 
-    leftList.on('mouseenter', function(studyInfo) {
+    leftList.on('mouseenter', function(event, studyInfo) {
         d3.select(this).classed('active', true);
-        
-        var filteredChords = chords.filter(function(keySet) {
+
+        let filteredChords = chords.filter(function(keySet) {
             return keySet.study == studyInfo.key;
         });
 
         rightList.selectAll('.highlight-bar').transition()
-            .attr('width', function(bucket) {
-                var counts = bucket.countByStudy;
+            .attr('width', (bucket) => {
+                let counts = bucket.countByStudy;
                 if (counts.has(studyInfo.key)) {
                     return rightBarScale(counts.get(studyInfo.key));
                 } else {
@@ -383,15 +407,15 @@ function updateViz() {
             });
 
         rightList.selectAll('.item-count')
-            .text(function(bucket) {
-                var counts = bucket.countByStudy;
-                var highlighted = counts.get(studyInfo.key);
+            .text((bucket) => {
+                let counts = bucket.countByStudy;
+                let highlighted = counts.get(studyInfo.key);
 
                 if (highlighted === undefined) {
                     highlighted = 0;
                 }
-                
-                var retStr = bucket.count + ' part. (';
+
+                let retStr = bucket.count + ' part. (';
                 retStr += highlighted + ' high.)';
 
                 return retStr;
@@ -400,7 +424,7 @@ function updateViz() {
         filteredChords.classed('active', true);
     });
 
-    leftList.on('mouseleave', function(studyInfo) {
+    leftList.on('mouseleave', function(event, studyInfo) {
         d3.select('#viz-target').selectAll('.active').classed('active', false);
 
         rightList.selectAll('.highlight-bar')
@@ -408,7 +432,7 @@ function updateViz() {
             .attr('x', 0)
             .attr('width', 0);
 
-        rightList.selectAll('.item-count').text(function(bucket) {
+        rightList.selectAll('.item-count').text((bucket) => {
             return bucket.count + ' participants';
         })
     });
@@ -418,22 +442,22 @@ function updateViz() {
 /**
  * Process and display the frequency distribution data returned by the server.
  */
-function initViz(err, data) {
+function initViz(data) {
     // Process data
-    sourceData = d3.map(data);
-    sourceData.keys().forEach(function(studyName) {
-        var studyInfo = d3.map(sourceData.get(studyName));
-        
+    sourceData = new Map(Object.entries(data));
+    iterateKeys(sourceData).forEach((studyName) => {
+        let studyInfo = new Map(Object.entries(sourceData.get(studyName)));
+
         sourceData.set(studyName, studyInfo);
         studySelection.set(studyName, true);
 
-        studySizes.set(studyName, studyInfo.values().length);
+        studySizes.set(studyName, iterateValues(studyInfo).length);
     });
 
     // Create chart frame
-    var vizTarget = d3.select('#viz-target');
-    
-    var leftFrameGroup = vizTarget.append('g').attr('id', 'left-frame-group');
+    let vizTarget = d3.select('#viz-target');
+
+    let leftFrameGroup = vizTarget.append('g').attr('id', 'left-frame-group');
     leftFrameGroup.attr('transform', 'translate(' + LABEL_WIDTH + ',0)');
     leftFrameGroup.append('text')
         .classed('frame-elem', true)
@@ -448,8 +472,8 @@ function initViz(err, data) {
         .attr('width', LABEL_WIDTH)
         .attr('height', 1);
 
-    var rightFrameGroup = vizTarget.append('g').attr('id', 'right-frame-group');
-    var rightFrameStartX = WIDTH - LABEL_WIDTH;
+    let rightFrameGroup = vizTarget.append('g').attr('id', 'right-frame-group');
+    let rightFrameStartX = WIDTH - LABEL_WIDTH;
     rightFrameGroup.attr('transform', 'translate(' + rightFrameStartX + ',0)');
     rightFrameGroup.append('text')
         .classed('frame-elem', true)
@@ -494,27 +518,23 @@ function initViz(err, data) {
  * within the frequency distribution calculation.
  */
 function createStudySelectionList() {
-    var list = d3.select('#study-selection-list').selectAll('.study-check')
+    let list = d3.select('#study-selection-list').selectAll('.study-check')
         .data(studySelection.keys());
 
-    var newItems = list.enter().append('div')
+    let newItems = list.enter().append('div')
         .classed('control-group', true)
         .classed('study-check', true);
 
-    var newInnerItem = newItems.append('label')
+    let newInnerItem = newItems.append('label')
         .classed('study-check', true)
         .classed('checkbox', true);
 
     newInnerItem.append('input')
         .attr('type', 'checkbox')
         .classed('study-input-check', true)
-        .property('checked', function(studyName) {
-            return studySelection.get(studyName);
-        });
-    
-    newInnerItem.append('span').html(function(studyName) {
-        return studyName
-    });
+        .property('checked', (studyName) => studySelection.get(studyName));
+
+    newInnerItem.append('span').html((studyName) => studyName);
 }
 
 
@@ -522,11 +542,13 @@ function createStudySelectionList() {
  * Update the display that shows how many studies had how many CDIs.
  */
 function updateBucketTable() {
-    var listItems = d3.select('#bucket-list-bod').selectAll('.bucket-list-item')
-        .data(histogramBuckets.map(function (x, i) { return i; }));
+    let listItems = d3.select('#bucket-list-bod').selectAll('.bucket-list-item')
+        .data(histogramBuckets.map((x, i) => i));
 
-    var newListItems = listItems.enter().append('tr')
+    let newListItems = listItems.enter().append('tr')
         .classed('bucket-list-item', true);
+
+    listItems.exit().remove();
 
     newListItems.append('td').append('input').classed('min-input', true);
     newListItems.append('td').append('input').classed('max-input', true);
@@ -535,27 +557,27 @@ function updateBucketTable() {
         .html('delete bucket')
         .classed('del-link', true);
 
+    listItems = d3.select('#bucket-list-bod').selectAll('.bucket-list-item')
+
     listItems.selectAll('.min-input')
-        .attr('value', function(i) {
-            var info = histogramBuckets[i];
-            var val = info.min === null ? '' : info.min;
+        .attr('value', (i) => {
+            let info = histogramBuckets[i];
+            let val = info.min === null ? '' : info.min;
             return val;
         });
 
     listItems.selectAll('.max-input')
-        .attr('value', function(i) {
-            var info = histogramBuckets[i];
-            var val = info.max === null ? '' : info.max;
+        .attr('value', (i) => {
+            let info = histogramBuckets[i];
+            let val = info.max === null ? '' : info.max;
             return val;
         });
 
-    listItems.selectAll('.del-link').on('click', function(i) {
+    listItems.selectAll('.del-link').on('click', function(event, i) {
         histogramBuckets.splice(i, 1);
         updateBucketTable();
-        d3.event.preventDefault();
+        event.preventDefault();
     });
-
-    listItems.exit().remove();
 }
 
 
@@ -563,7 +585,7 @@ function updateBucketTable() {
  * Register callback for when the user changes the frequency distribution
  * calculation method.
  */
-$('#aggregation-drop').change(function() {
+$('#aggregation-drop').change(() => {
     aggregationMethod = $('#aggregation-drop option:selected').val();
     updateBuckets();
     updateViz();
@@ -574,7 +596,7 @@ $('#aggregation-drop').change(function() {
  * Register callback for when the user wants to change the studies that should
  * be included in the frequency distribution calcuation.
  */
-$('#change-studies-link').click(function() {
+$('#change-studies-link').click(() => {
     $('#main-body').slideUp();
     $('#study-selector').slideDown();
     return false;
@@ -585,11 +607,11 @@ $('#change-studies-link').click(function() {
  * Register callback for when the user finishes selecting the studies that
  * should be included in the frequency distribution calcuation.
  */
-$('#finish-change-studies-link').click(function() {
-    var checks = d3.select('#study-selection-list').selectAll('.study-check');
+$('#finish-change-studies-link').click(() => {
+    let checks = d3.select('#study-selection-list').selectAll('.study-check');
 
-    checks.each(function(studyName) {
-        var checked = d3.select(this).select('.study-input-check')
+    checks.each((studyName) => {
+        let checked = d3.select(this).select('.study-input-check')
             .property('checked');
 
         studySelection.set(studyName, checked);
@@ -610,9 +632,9 @@ $('#finish-change-studies-link').click(function() {
  * group all of the studies with some number of CDIs together into the same
  * bucket to display the "long tail" of the distribution more effectively.
  */
-$('#add-bucket-link').click(function() {
+$('#add-bucket-link').click(() => {
     histogramBuckets.push({
-        countByStudy: d3.map(),
+        countByStudy: new Map(),
         count: 0,
         min: null,
         max: null
@@ -625,8 +647,8 @@ $('#add-bucket-link').click(function() {
 
 /**
  * Register callback for when the user wants to change the histogram buckets.
- */ 
-$('#change-histograms-link').click(function() {
+ */
+$('#change-histograms-link').click(() => {
     $('#main-body').slideUp();
     $('#bucket-selector').slideDown();
     return false;
@@ -636,11 +658,11 @@ $('#change-histograms-link').click(function() {
 /**
  * Register callback for when the user finishes changing the historgram buckets.
  */
-$('#finish-buckets-link').click(function() {
-    var items = d3.select('#bucket-list-bod').selectAll('.bucket-list-item');
+$('#finish-buckets-link').click(() => {
+    let items = d3.select('#bucket-list-bod').selectAll('.bucket-list-item');
     items.each(function(i) {
-        var minInput = d3.select(this).select('.min-input');
-        var newMin = parseInt(minInput.node().value, 10);
+        let minInput = d3.select(this).select('.min-input');
+        let newMin = parseInt(minInput.node().value, 10);
 
         if (isNaN(newMin)) {
             newMin = null;
@@ -648,8 +670,8 @@ $('#finish-buckets-link').click(function() {
 
         histogramBuckets[i].min = newMin;
 
-        var maxInput = d3.select(this).select('.max-input');
-        var newMax = parseInt(maxInput.node().value, 10);
+        let maxInput = d3.select(this).select('.max-input');
+        let newMax = parseInt(maxInput.node().value, 10);
 
         if (isNaN(newMax)) {
             newMax = null;
@@ -667,4 +689,4 @@ $('#finish-buckets-link').click(function() {
 
 
 // Request frequency distribution data from the server.
-d3.json('/base/access_data/distribution', initViz);
+d3.json('/base/access_data/distribution').then(initViz);

@@ -207,6 +207,9 @@ The following third party open source libraries are used:
  - [python-dateutil](https://dateutil.readthedocs.io/en/stable/) under the [Apache v2 license](https://github.com/dateutil/dateutil/blob/master/LICENSE)
  - [Werkzeug](https://palletsprojects.com/p/werkzeug/) under the [BSD license](https://palletsprojects.com/license/)
  - [gunicorn](https://gunicorn.org/) under the [MIT license](https://github.com/benoitc/gunicorn/blob/master/LICENSE)
- - [jquery](https://jquery.com/) under the [MIT license](https://jquery.org/license/)
+
+On the front-end:
  - [bootstrap](https://getbootstrap.com/) under the [MIT license](https://github.com/twbs/bootstrap/blob/main/LICENSE)
  - [d3](https://d3js.org/) under the [BSD license](https://opensource.org/licenses/BSD-3-Clause)
+ - [jquery](https://jquery.com/) under the [MIT license](https://jquery.org/license/)
+ - [sprintf](http://www.diveintojavascript.com/projects/javascript-sprintf) under the [BSD license](https://opensource.org/licenses/BSD-3-Clause).

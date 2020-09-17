@@ -209,7 +209,7 @@ def load_cdi_model(name: str) -> typing.Optional[models.CDIFormat]:
     filename = os.path.join(file_util.UPLOAD_FOLDER, filename)
     with open(filename) as f:
         content = f.read()
-    spec = yaml.load(content)
+    spec = yaml.safe_load(content)
 
     return models.CDIFormat(metadata[0], metadata[1], metadata[2], spec)
 
@@ -297,7 +297,7 @@ def load_presentation_model(
     filename = os.path.join(file_util.UPLOAD_FOLDER, filename)
     with open(filename) as f:
         content = f.read()
-    spec = yaml.load(content)
+    spec = yaml.safe_load(content)
 
     return models.PresentationFormat(metadata[0], metadata[1], metadata[2],
         spec)

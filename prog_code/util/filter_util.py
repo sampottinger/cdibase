@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v3
 """
+import numbers
 import typing
 
 from ..struct import models
@@ -189,6 +190,24 @@ def build_delete_query(filters: typing.Iterable[models.Filter], table: str,
         return build_query(filters, table, 'UPDATE %s SET deleted=1 WHERE %s')
 
 
+def assert_int(target: typing.Any) -> int:
+    """Ensure that target has a numeric type and get it as int."""
+    assert isinstance(target, numbers.Number)
+    return int(target) # type: ignore
+
+
+def assert_float(target: typing.Any) -> float:
+    """Ensure that target has a numeric type and get it as float."""
+    assert isinstance(target, numbers.Number)
+    return float(target) # type: ignore
+
+
+def assert_str(target: typing.Any) -> str:
+    """Ensure that target has a string type."""
+    assert isinstance(target, str) or isinstance(target, numbers.Number)
+    return str(target) # type: ignore
+
+
 def run_search_query(filters_iter: typing.Iterable[models.Filter], table: str,
         exclude_deleted: bool = True) -> typing.List[models.SnapshotMetadata]:
     """Builds and runs a SQL select query on the given table with given filters.
@@ -226,7 +245,28 @@ def run_search_query(filters_iter: typing.Iterable[models.Filter], table: str,
     db_cursor.execute(query_info.query_str, operands_flat)
 
     ret_val = list(map(
-        lambda x: models.SnapshotMetadata(*x),
+        lambda x: models.SnapshotMetadata(
+            assert_int(x[0]),
+            assert_str(x[1]),
+            assert_str(x[2]),
+            assert_str(x[3]),
+            assert_int(x[4]),
+            assert_float(x[5]),
+            assert_str(x[6]),
+            assert_str(x[7]),
+            assert_int(x[8]),
+            assert_int(x[9]),
+            assert_int(x[10]),
+            assert_int(x[11]),
+            assert_float(x[12]),
+            assert_int(x[13]),
+            assert_int(x[14]),
+            assert_str(x[15]).split(','),
+            assert_int(x[16]),
+            assert_str(x[17]),
+            assert_int(x[18]),
+            assert_int(x[19])
+        ),
         db_cursor.fetchall()
     ))
     db_connection.close()

@@ -29,7 +29,7 @@ import prog_code.util.math_util as math_util
 from ..struct import models
 
 
-DEFAULT_CDI = 'fullenglishcdi'
+DEFAULT_CDI = 'fullenglishmcdi'
 
 
 def get_cdi_model_by_name_or_default(
@@ -43,7 +43,7 @@ def get_cdi_model_by_name_or_default(
     @param default_cdi: The name of the model to use if model_maybe is None.
     """
     cdi_model = adapter.load_cdi_model(model_name)
-    return realize_cdi_model(adapter, cdi_model)
+    return realize_cdi_model(adapter, cdi_model, default_cdi)
 
 
 def realize_cdi_model(
