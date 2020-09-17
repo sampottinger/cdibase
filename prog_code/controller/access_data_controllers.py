@@ -34,6 +34,8 @@ from ..util import session_util
 
 from ..struct import models
 
+from . import controller_types
+
 from cdibase import app
 
 NO_FILTER_MESSAGE = 'No filters selected! Please add at least one filter.'
@@ -68,7 +70,7 @@ HTML_CHECKBOX_SELECTED = 'on'
 
 @app.route('/base/access_data')
 @session_util.require_login(access_data=True)
-def access_data():
+def access_data() -> controller_types.ValidFlaskReturnTypes:
     """Index page for building database queries.
 
     @return: Listing of available CSV rendering "formats"
@@ -88,7 +90,7 @@ def access_data():
 
 @app.route('/base/access_data/download_cdi_results', methods=['POST'])
 @session_util.require_login(access_data=True)
-def execute_access_request():
+def execute_access_request() -> controller_types.ValidFlaskReturnTypes:
     """Execute a CDI database query and download the results.
 
     Execute an CDI database query queued in a user's session and return the
@@ -125,7 +127,7 @@ def execute_access_request():
 
 @app.route('/base/access_data/is_waiting')
 @session_util.require_login(access_data=True)
-def is_waiting_on_download():
+def is_waiting_on_download() -> controller_types.ValidFlaskReturnTypes:
     """Determine if the user is waiting on a download to start.
 
     Determine if a user is waiting for CSV file contents to be generated in
@@ -142,7 +144,7 @@ def is_waiting_on_download():
 
 @app.route('/base/access_data/abort')
 @session_util.require_login(access_data=True)
-def abort_download():
+def abort_download() -> controller_types.ValidFlaskReturnTypes:
     """Have the session indicate that the user gave up on waiting for download.
 
     Have the user's session indicate that the user decided not to wait for CSV
@@ -161,7 +163,7 @@ def abort_download():
 
 @app.route('/base/access_data/distribution')
 @session_util.require_login(access_data=True)
-def get_study_distribution():
+def get_study_distribution() -> controller_types.ValidFlaskReturnTypes:
     """Get a JSON file describing how many CDIs there are per study.
 
     @return: JSON serialization of CDI frequency distribution.
@@ -178,7 +180,7 @@ def get_study_distribution():
 
 @app.route('/base/access_data/add_filter', methods=['POST'])
 @session_util.require_login(access_data=True)
-def add_filter():
+def add_filter() -> controller_types.ValidFlaskReturnTypes:
     """Controller to add a filter to the query the user is currently building.
 
     Controller that adds an additional AND clause to the query the user is
@@ -210,7 +212,7 @@ def add_filter():
         return flask.redirect(ACCESS_DATA_URL)
 
     # Create new filter
-    new_filter = models.Filter(field, operator, operand)
+    new_filter = models.Filter(field, operator, operand) # type: ignore
     session_util.add_filter(new_filter)
 
     #flask.session[CONFIRMATION_ATTR] = FILTER_CREATED_MSG
@@ -220,7 +222,7 @@ def add_filter():
 
 @app.route('/base/access_data/delete_filter/<int:filter_index>')
 @session_util.require_login(access_data=True)
-def delete_filter(filter_index):
+def delete_filter(filter_index) -> controller_types.ValidFlaskReturnTypes:
     """Controller to delete a filter from query the user is currently building.
 
     Controller that removes an AND clause from the query the user is currently
@@ -244,7 +246,7 @@ def delete_filter(filter_index):
 
 @app.route('/base/access_data/download_cdi_results.zip')
 @session_util.require_login(access_data=True)
-def execute_zip_access_request():
+def execute_zip_access_request() -> controller_types.ValidFlaskReturnTypes:
     """Controller for finding and rendering archive of database query results.
 
     Controller that executes a request (that must have atleast one filter) using
@@ -309,7 +311,7 @@ def execute_zip_access_request():
 
 @app.route('/base/access_data/download_cdi_results.csv')
 @session_util.require_login(access_data=True)
-def execute_csv_access_request():
+def execute_csv_access_request() -> controller_types.ValidFlaskReturnTypes:
     """Controller for finding and rendering archives of database query results.
 
     @return: ZIP archive where each study with results has a CSV file.
@@ -351,8 +353,11 @@ def execute_csv_access_request():
         flask.session[ERROR_ATTR] = UNKNOWN_PRESENTATION_FORMAT_MSG
         return flask.redirect(ACCESS_DATA_URL)
 
-    csv_file = report_util.generate_consolidated_study_report(snapshots,
-        presentation_format)
+    presentation_format_realized: models.PresentationFormat = presentation_format # type: ignore
+    csv_file = report_util.generate_consolidated_study_report(
+        snapshots,
+        presentation_format_realized
+    )
     csv_contents = csv_file.getvalue()
 
     response = flask.Response(

@@ -1092,7 +1092,8 @@ def get_counts() -> typing.Mapping[str, typing.Mapping[str, int]]:
     return by_study
 
 
-def report_usage(email_address: str, action_name: str, args_snapshot: str):
+def report_usage(email_address: typing.Optional[str], action_name: typing.Optional[str],
+        args_snapshot: typing.Optional[str]):
     """Record that a user took an action.
 
     @param email_address: The email address of the user.
@@ -1103,9 +1104,9 @@ def report_usage(email_address: str, action_name: str, args_snapshot: str):
         cursor.execute(
             'INSERT INTO usage_report VALUES (?, ?, ?, ?)',
             (
-                email_address,
-                action_name,
-                args_snapshot,
+                'None' if email_address == None else email_address,
+                'None' if action_name == None else action_name,
+                'None' if args_snapshot == None else args_snapshot,
                 datetime.datetime.now().isoformat()
             )
         )

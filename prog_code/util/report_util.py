@@ -348,7 +348,7 @@ def sort_by_study_order(rows: typing.List[typing.Any], cdi_format: models.CDIFor
 
 
 def generate_study_report_csv(snapshots_from_study: typing.List[models.SnapshotMetadata],
-        presentation_format: models.PresentationFormat) -> typing.IO[str]:
+        presentation_format: models.PresentationFormat) -> io.StringIO:
     """Generate a CSV file for a set of snapshots with the same CDI format.
 
     @param snapshots_from_study: The snapshots to create a CSV report for.
@@ -388,7 +388,7 @@ def generate_study_report_csv(snapshots_from_study: typing.List[models.SnapshotM
 
 
 def generate_consolidated_study_report(snapshots_iter: typing.Iterable[models.SnapshotMetadata],
-        presentation_format: models.PresentationFormat) -> typing.IO[str]:
+        presentation_format: models.PresentationFormat) -> io.StringIO:
     """Generate a unified CSV file for a set of snapshots
 
     @param snapshots_iter: The snapshots to create a CSV report for.
