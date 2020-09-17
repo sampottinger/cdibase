@@ -84,7 +84,7 @@ class ValueMapping:
 class PresentationFormatMetadata:
     """Information about a CSV presentation format without the format itself."""
 
-    def __init__(self, human_name, safe_name, filename):
+    def __init__(self, human_name: str, safe_name: str, filename: str):
         """Create a new metadata record.
 
         @param human_name: The name of this format intended for human eyes.
@@ -104,7 +104,7 @@ class PresentationFormatMetadata:
 class PresentationFormat(PresentationFormatMetadata):
     """A complete CSV presentation format specification with metadata."""
 
-    def __init__(self, human_name, safe_name, filename, details):
+    def __init__(self, human_name: str, safe_name: str, filename: str, details: typing.Dict):
         """Create a new specification record.
 
         @param human_name: The name of this format intended for human eyes.
@@ -130,7 +130,7 @@ class PercentileTableMetadata:
     percentile without the table itself.
     """
 
-    def __init__(self, human_name, safe_name, filename):
+    def __init__(self, human_name: str, safe_name: str, filename: str):
         """Create a new metadata record.
 
         @param human_name: The name of this table intended for human eyes.
@@ -154,7 +154,8 @@ class PercentileTable(PercentileTableMetadata):
     metadata about that table.
     """
 
-    def __init__(self, human_name, safe_name, filename, details):
+    def __init__(self, human_name: str, safe_name: str, filename: str,
+            details: typing.List[typing.List[float]]):
         """Create a new specification record.
 
         @param human_name: The name of this table intended for human eyes.

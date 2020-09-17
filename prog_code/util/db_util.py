@@ -382,7 +382,8 @@ def load_percentile_model(name: str) -> typing.Optional[models.PercentileTable]:
     filename = metadata[2]
     filename = os.path.join(file_util.UPLOAD_FOLDER, filename)
     with open(filename) as f:
-        spec = list(csv.reader(f))
+        inner_spec = csv.reader(f)
+        spec = [[float(x) if x != '%' else 0 for x in row] for row in inner_spec]
 
     return models.PercentileTable(metadata[0], metadata[1], metadata[2], spec)
 
