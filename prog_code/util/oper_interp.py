@@ -51,7 +51,7 @@ class FieldInfo(typing.Generic[T]):
         """
         return self.__field_name
 
-    def interpret_value(self, val: str) -> typing.List[T]:
+    def interpret_value(self, val: typing.Union[str, int, float]) -> typing.List[T]:
         """Interpret a value which may be a comma separated string.
 
         @returns: The value possibly split by commas.
@@ -59,7 +59,7 @@ class FieldInfo(typing.Generic[T]):
         if isinstance(val, str):
             return val.split(',') # type: ignore
         else:
-            return [val]
+            return [val] # type: ignore
 
 
 class DateInterpretField(FieldInfo[str]):
@@ -86,7 +86,7 @@ class DateInterpretField(FieldInfo[str]):
         parts = val.split('/')
         return parts[2] + '/' + parts[0] + '/' + parts[1]
 
-    def interpret_value(self, val: str) -> typing.List[str]:
+    def interpret_value(self, val: typing.Union[str, int, float]) -> typing.List[str]:
         """Return user provided operand value without interpretation.
 
         @param val: The original user provided operand value.
@@ -110,7 +110,7 @@ class RawInterpretField(FieldInfo[str]):
         """
         super(RawInterpretField, self).__init__(field_name)
 
-    def interpret_value(self, val: str) -> typing.List[str]:
+    def interpret_value(self, val: typing.Union[str, int, float]) -> typing.List[str]:
         """Return user provided operand interpreted as a date.
 
         @param val: The original user provided operand value.
@@ -138,7 +138,7 @@ class GenderField(FieldInfo[int]):
         """
         super(GenderField, self).__init__(field_name)
 
-    def interpret_value(self, val: str) -> typing.List[int]:
+    def interpret_value(self, val: typing.Union[str, int, float]) -> typing.List[int]:
         """Return user provided operand value interpreted as a gender.
 
         @param val: The original user provided operand value.
@@ -187,7 +187,7 @@ class BooleanField(FieldInfo[bool]):
         """
         super(BooleanField, self).__init__(field_name)
 
-    def interpret_value(self, val: str) -> typing.List[bool]:
+    def interpret_value(self, val: typing.Union[str, int, float]) -> typing.List[bool]:
         """Return user provided operand value interpreted as a boolean value.
 
         @param val: The original user provided operand value.
@@ -226,7 +226,7 @@ class NumericalField(FieldInfo[float]):
     def __init__(self, field_name):
         super(NumericalField, self).__init__(field_name)
 
-    def interpret_value(self, val: str) -> typing.List[float]:
+    def interpret_value(self, val: typing.Union[str, int, float]) -> typing.List[float]:
         """Return user provided operand value interpreted as a numerical value.
 
         @param val: The original user provided operand value.

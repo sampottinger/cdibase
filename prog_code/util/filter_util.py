@@ -142,9 +142,9 @@ def build_query(filters: typing.Iterable[models.Filter], table: str,
 
     filter_fields_str = map(
         lambda x: build_query_component(
-            x['field'],
-            x['operator'],
-            x['operands']
+            x['field'], # type: ignore
+            x['operator'], # type: ignore
+            x['operands'] # type: ignore
         ),
         fields_and_extraneous_named
     )
@@ -214,17 +214,9 @@ def run_search_query(filters_iter: typing.Iterable[models.Filter], table: str,
 
     filter_fields_and_operands = zip(query_info.filter_fields, raw_operands)
 
-    filter_fields_and_operands_named = map(
-        lambda x: {
-            'field': x[0],
-            'operand': x[1]
-        },
-        filter_fields_and_operands
-    )
-
     operands = map(
-        lambda x: x['field'].interpret_value(x['operand']),
-        filter_fields_and_operands_named
+        lambda x: x[0].interpret_value(x[1]),
+        filter_fields_and_operands
     )
 
     operands_flat = []
@@ -268,17 +260,9 @@ def run_delete_query(filters: typing.Iterable[models.Filter],
 
     filter_fields_and_operands = zip(query_info.filter_fields, raw_operands)
 
-    filter_fields_and_operands_named = map(
-        lambda x: {
-            'field': x[0],
-            'operand': x[1]
-        },
-        filter_fields_and_operands
-    )
-
     operands = map(
-        lambda x: x['field'].interpret_value(x['operand']),
-        filter_fields_and_operands_named
+        lambda x: x[0].interpret_value(x[1]),
+        filter_fields_and_operands
     )
 
     operands_flat = []

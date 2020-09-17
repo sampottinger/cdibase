@@ -356,7 +356,7 @@ class Filter:
     records with this property should be returned (AND clause with condition).
     """
 
-    def __init__(self, field, operator, operand):
+    def __init__(self, field: str, operator: str, operand: typing.Union[int, str, float]):
         """Creates a new Filter record of the form field operator operand.
 
         @param field: The field (safe name) of CDI snapshot to filter data on.
@@ -368,6 +368,9 @@ class Filter:
         self.field = field
         self.operator = operator
         self.operand = operand
+
+        self.operand_float: typing.Optional[float]
+
         try:
             self.operand_float = float(self.operand)
         except ValueError:

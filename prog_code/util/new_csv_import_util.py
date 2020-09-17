@@ -364,21 +364,14 @@ class UploadParserAutomaton:
 
         @returns: Records describing if words were found or not.
         """
-        named_items = map(
-            lambda x: {
-                'word': x[0],
-                'value': x[1]
-            },
-            self.__word_values.items()
-        )
         return list(map(
             lambda x: models.SnapshotContent(
                 None,
-                x['word'], # type: ignore
-                x['value'], # type: ignore
+                x[0],
+                x[1], # type: ignore
                 0
             ),
-            named_items
+            self.__word_values.items()
         ))
 
     def __get_percentile(self) -> float:
