@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @license: GNU GPL v3
 """
 import random
-import string
+import string 
 import typing
 
 import werkzeug.security

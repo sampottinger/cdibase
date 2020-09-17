@@ -17,4 +17,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 from cdibase import app
-app.run(debug=True)
+app.run(debug=True, threaded=False, processes=3)

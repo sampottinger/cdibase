@@ -236,7 +236,7 @@ def run_search_query(filters_iter: typing.Iterable[models.Filter], table: str,
 def run_delete_query(filters: typing.Iterable[models.Filter],
         table: str,
         restore: bool,
-        hard_delete: bool = False):
+        hard_delete: bool = False) -> typing.Iterable[models.SnapshotMetadata]:
     """Builds and runs a SQL select query on the given table with given filters.
 
     @param filters: The filters to build the query out of.
@@ -250,13 +250,17 @@ def run_delete_query(filters: typing.Iterable[models.Filter],
         filters.
     @rtype: Iterable over models.SnapshotMetadata
     """
+    filters_realized = list(filters)
+
+    records = run_search_query(filters_realized, table, False)
+
     query_info = build_delete_query(
-        filters,
+        filters_realized,
         table,
         restore,
         hard_delete=hard_delete
     )
-    raw_operands = map(lambda x: x.operand, filters)
+    raw_operands = map(lambda x: x.operand, filters_realized)
 
     filter_fields_and_operands = zip(query_info.filter_fields, raw_operands)
 
@@ -271,3 +275,5 @@ def run_delete_query(filters: typing.Iterable[models.Filter],
 
     with db_util.get_cursor() as db_cursor:
         db_cursor.execute(query_info.query_str, operands_flat)
+
+    return records

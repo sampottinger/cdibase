@@ -50,7 +50,7 @@ class TestDBConnection:
         return self.next_cursor
 
     def close(self):
-        self.close = True
+        self.closed = True
 
     def commit(self):
         pass
@@ -93,7 +93,7 @@ class FilterUtilTests(unittest.TestCase):
             ]
             filter_util.run_delete_query(filters, 'test', True)
 
-            query = fake_cursor.queries[0]
+            query = fake_cursor.queries[1]
             query_str ='UPDATE test SET deleted=0 WHERE (study == ? OR study == ?)'
             self.assertEqual(query, query_str)
 
@@ -115,7 +115,7 @@ class FilterUtilTests(unittest.TestCase):
             ]
             filter_util.run_delete_query(filters, 'test', False)
 
-            query = fake_cursor.queries[0]
+            query = fake_cursor.queries[1]
             query_str ='UPDATE test SET deleted=1 WHERE (study == ? OR study == ?)'
             self.assertEqual(query, query_str)
 
@@ -137,7 +137,7 @@ class FilterUtilTests(unittest.TestCase):
             ]
             filter_util.run_delete_query(filters, 'test', False, hard_delete=True)
 
-            query = fake_cursor.queries[0]
+            query = fake_cursor.queries[1]
             query_str ='DELETE FROM test WHERE (study == ? OR study == ?)'
             self.assertEqual(query, query_str)
 

@@ -336,5 +336,6 @@ class TestDeleteDataControllers(unittest.TestCase):
                     mock_run_delete_query.assert_called_with(
                         unittest.mock.ANY,
                         SNAPSHOTS_DB_TABLE,
-                        True
+                        True,
+                        False
                     )

@@ -71,6 +71,7 @@ PASSWORD_ATTR = 'password'
 OPERATION_ATTR = 'operation'
 
 DELETE_OPERATION = 'delete'
+HARD_DELETE_OPERATION = 'hard-delete'
 RESTORE_OPERATION = 'restore'
 
 FORMAT_SESSION_ATTR = constants.FORMAT_SESSION_ATTR
@@ -125,7 +126,12 @@ def start_delete_request() -> controller_types.ValidFlaskReturnTypes:
         return flask.redirect(DELETE_DATA_URL)
 
     operation_str = flask.request.form.get(OPERATION_ATTR, '')
-    if not operation_str in [DELETE_OPERATION, RESTORE_OPERATION]:
+    allowed_operations = [
+        DELETE_OPERATION,
+        RESTORE_OPERATION,
+        HARD_DELETE_OPERATION
+    ]
+    if not operation_str in allowed_operations:
         flask.session[ERROR_ATTR] = NEED_OPERATION_MSG
         return flask.redirect(DELETE_DATA_URL)
 
@@ -233,6 +239,8 @@ def execute_delete_request() -> controller_types.ValidFlaskReturnTypes:
     @return: ZIP archive where each study with results has a CSV file.
     @rtype: flask.Response
     """
+    email: str = session_util.get_user_email() # type: ignore
+
     request = flask.request
     operation = request.args.get('operation', RESTORE_OPERATION)
 
@@ -246,19 +254,33 @@ def execute_delete_request() -> controller_types.ValidFlaskReturnTypes:
         return flask.redirect(DELETE_DATA_URL)
 
     db_util.report_usage(
-        session_util.get_user_email(),
+        email,
         "Delete Data",
         json.dumps({
-            "restore": operation == RESTORE_OPERATION,
+            "operation": operation,
             "filters": session_util.get_filters_serialized()
         })
     )
 
+    is_restore = operation == RESTORE_OPERATION
+    is_hard = operation == HARD_DELETE_OPERATION
+
+    if is_hard:
+        assert user_util.force_get_user(email).can_admin == True
+
     snapshots = filter_util.run_delete_query(
         session_util.get_filters(),
         SNAPSHOTS_DB_TABLE,
-        operation == RESTORE_OPERATION
+        is_restore,
+        is_hard
     )
+
+    if is_hard:
+        with db_util.get_cursor() as cursor:
+            snapshot_ids = map(lambda x: x.database_id, snapshots)
+            snapshot_ids_non_none = filter(lambda x: x != None, snapshot_ids)
+            for snapshot_id in snapshot_ids_non_none:
+                db_util.delete_snapshot(snapshot_id, cursor)
 
     if operation == RESTORE_OPERATION:
         flask.session[CONFIRMATION_ATTR] = RESTORED_MESSAGE

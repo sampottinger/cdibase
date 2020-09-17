@@ -127,6 +127,7 @@ def get_db_connection() -> SharedConnection:
     """
     return SharedConnection.get_instance()
 
+
 def save_cdi_model(newMetadataModel: models.CDIFormatMetadata) -> None:
     """Save a metadata for a CDI format.
 
@@ -922,13 +923,32 @@ def update_snapshot(snapshot_metadata: models.SnapshotMetadata,
         )
 
 
+
+def delete_snapshot(snapshot_id, cursor=None) -> None:
+    """Hard delete a snapshot given its id.
+
+    @param snapshot_id: The ID of the snapshot to delete.
+    @param cursor: The cursor to use in executing the operation or None if a
+        new cursor should be created.
+    """
+    with get_realized_cursor(cursor) as cursor_realized:
+        cursor.execute(
+            '''DELETE FROM snapshots WHERE id = ?''',
+            (snapshot_id,)
+        )
+        cursor.execute(
+            '''DELETE FROM snapshot_content WHERE snapshot_id = ?''',
+            (snapshot_id,)
+        )
+
+
 # TODO: Combined for transaction
 def insert_snapshot(snapshot_metadata: models.SnapshotMetadata,
         word_entries: typing.Union[
             typing.Mapping[str, int],
             typing.Iterable[models.SnapshotContent]
         ],
-        cursor : typing.Optional[sqlite3.Cursor] = None):
+        cursor : typing.Optional[sqlite3.Cursor] = None) -> None:
     """Insert a new CDI snapshot.
 
     @param snapshot_metadata: The metadata for this snapshot that should be
@@ -1016,7 +1036,7 @@ def insert_snapshot(snapshot_metadata: models.SnapshotMetadata,
                 )
 
 
-def insert_parent_form(form_metadata: models.ParentForm):
+def insert_parent_form(form_metadata: models.ParentForm) -> None:
     """Create a record of a parent form.
 
     @param form_metadata: Information about the parent form to persist.
@@ -1068,7 +1088,7 @@ def get_parent_form_by_id(form_id: str) -> typing.Optional[models.ParentForm]:
         return None
 
 
-def remove_parent_form(form_id: str):
+def remove_parent_form(form_id: str) -> None:
     """Delete the record of a parent CDI form.
 
     @param form_id: The ID of the parent CDI form to delete.
@@ -1112,8 +1132,9 @@ def get_counts() -> typing.Mapping[str, typing.Mapping[str, int]]:
     return by_study
 
 
-def report_usage(email_address: typing.Optional[str], action_name: typing.Optional[str],
-        args_snapshot: typing.Optional[str]):
+def report_usage(email_address: typing.Optional[str],
+        action_name: typing.Optional[str],
+        args_snapshot: typing.Optional[str]) -> None:
     """Record that a user took an action.
 
     @param email_address: The email address of the user.
