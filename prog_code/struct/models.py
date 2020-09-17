@@ -396,9 +396,10 @@ class Filter:
 class User:
     """Record of a user account providing someone access to CdiBase."""
 
-    def __init__(self, db_id, email, password_hash, can_enter_data,
-        can_delete_data, can_import_data, can_edit_parents, can_access_data,
-        can_change_formats, can_use_api_key, can_admin):
+    def __init__(self, db_id: int, email: str, password_hash: typing.Union[str, bytes],
+            can_enter_data: bool, can_delete_data: bool, can_import_data: bool,
+            can_edit_parents: bool, can_access_data: bool, can_change_formats: bool,
+            can_use_api_key: bool, can_admin: bool):
         """Create a new User record.
 
         @param db_id: The unique numerical ID assigned to this user account in

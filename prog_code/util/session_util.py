@@ -192,7 +192,7 @@ def get_user_email() -> typing.Optional[str]:
     return flask.session.get('email', None)
 
 
-def get_user_id() -> typing.Optional[str]:
+def get_user_id() -> typing.Optional[int]:
     """Get the id of the user currently logged in.
 
     @returns: Current user ID or None if no session.
