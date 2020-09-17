@@ -515,7 +515,7 @@ class ParentForm:
         self.hard_of_hearing = hard_of_hearing
         self.total_num_sessions = total_num_sessions
 
-    def __eq__(self, other: models.ParentForm):
+    def __eq__(self, other):
         """Test to see if this form has the same attribute values as other.
 
         Test to see if this parent form record has the same attribute values as
@@ -547,7 +547,7 @@ class ParentForm:
 class APIKey:
     """Record of an API key allowing programmatic access for a specific user."""
 
-    def __init__(self, user_id, key):
+    def __init__(self, user_id: int, key: str):
         """Create a new API key record.
 
         @param user_id: The unique numerical ID of the user that this key
