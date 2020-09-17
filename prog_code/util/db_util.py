@@ -25,6 +25,7 @@ import os
 import json
 import sqlite3
 import threading
+import time
 import typing
 
 import yaml
@@ -847,6 +848,22 @@ def update_participant_metadata(child_id: str, gender: int, birthday_str: str,
             run_metadata_update(params)
 
 
+def reserve_child_id(cursor: typing.Optional[sqlite3.Cursor] = None) -> str:
+    """Reserve a unique child ID.
+
+    @param cursor: The cursor to use to execute the operation or None if one should be created.
+    @returns: New child id.
+    """
+    with get_realized_cursor(cursor) as cursor_realized:
+        cmd = 'INSERT INTO reservations VALUES (?)'
+        cursor_realized.execute(
+            cmd,
+            (int(time.time()),)
+        )
+        new_id = cursor_realized.lastrowid
+        return 'auto_%d' % new_id
+
+
 def update_snapshot(snapshot_metadata: models.SnapshotMetadata,
         cursor: typing.Optional[sqlite3.Cursor] = None) -> None:
     """Update the participant metadata for all their snapshots.
@@ -860,10 +877,9 @@ def update_snapshot(snapshot_metadata: models.SnapshotMetadata,
     """
     with get_realized_cursor(cursor) as cursor_realized:
         if snapshot_metadata.child_id == None:
-            cursor_realized.execute('SELECT count(DISTINCT child_id) FROM snapshots')
-            child_id = 'auto_' + cursor_realized.fetchone()[0] + 1
+            child_id = reserve_child_id(cursor)
         else:
-            child_id = snapshot_metadata.child_id
+            child_id = snapshot_metadata.child_id # type: ignore
 
         # Standardize date
         snapshot_metadata.birthday = clean_up_date_force(snapshot_metadata.birthday)
