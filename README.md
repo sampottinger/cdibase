@@ -1,16 +1,20 @@
 CDIBase
 ===================
+
 Data management application for early language labs that allowing the reading, searching, storing, and entry of Communicative Development Inventories data. **Developed by and for language labs, free and open source CDI management software for great good.**
 
 <br>
+
 ### Authors and License
-Released under the [GNU GPL v3 License](https://www.gnu.org/licenses/gpl-3.0.txt), this open source project was started by [Sam Pottinger of Gleap LLC](http://gleap.org) and has enjoyed gracious guidance from [Professor Eliana Colunga's](http://psych.colorado.edu/~colunga/) [CU Language Project](http://psych.colorado.edu/~colungalab/CULanguage/CU-LANGUAGE.html) at the [University of Colorado Boulder](http://colorado.edu/) (though the project is not officially affiliated or owned by the university).
+
+Released under the [GNU GPL v3 License](https://www.gnu.org/licenses/gpl-3.0.txt), this open source project was started by [Sam Pottinger of Data Driven Empathy LLC](http://gleap.org) and has enjoyed gracious guidance from [Professor Eliana Colunga's](http://psych.colorado.edu/~colunga/) [CU Language Project](http://psych.colorado.edu/~colungalab/CULanguage/CU-LANGUAGE.html) at the [University of Colorado Boulder](http://colorado.edu/) (though the project is not officially affiliated or owned by the university).
 
 [Sam Pottinger](http://gleap.org) continues to be the active maintainer / project lead.
 
-(c) 2016 [Sam Pottinger](http://gleap.org)
+(c) 2020 [Sam Pottinger](http://gleap.org)
 
 <br>
+
 ### Background and Motivation
 
 CDIBase allows early language labs software to maintain a standardized dataset for all child language inventory data regardless of study and the format of the CDI used. This allows labs to query / manage all of their data from all of their studies at once even across multiple languages.
@@ -27,18 +31,20 @@ This web (public Internet or private Intranet) application allows lab members to
 At the time of writing, only [sqlite3](www.sqlite.org) databases are supported. However, we need help in deciding what other databases to support. Patches welcome or speak up in the issue tracker!
 
 <br>
+
 ### Technologies Used
 
-Cdibase itself is written in [Flask](flask.pocoo.org/). The original version targets a [sqlite3](www.sqlite.org) database but any SQL database can be used with minimal modification. There is planned future support for MongoDB backends. The front-end, rendered by [Jinja2](jinja.pocoo.org) templates, uses some [jQuery](http://jquery.com/).
+Cdibase itself is written in [Flask](flask.pocoo.org/). The original version targets a [sqlite3](www.sqlite.org) database but any SQL database can be used with minimal modification. The front-end, rendered by [Jinja2](jinja.pocoo.org) templates, uses some [jQuery](http://jquery.com/) and [d3](https://d3js.org/).
 
-The suggested production (server) environment runs a [Gunicorn](http://gunicorn.org/) instance managed by [Supervisor](http://supervisord.org/) behind public facing [nginx](http://wiki.nginx.org/Main).
-
-The project uses Google's [pymox](https://code.google.com/p/pymox/) for automated testing.
+The suggested production (server) environment runs a [Gunicorn](http://gunicorn.org/) instance managed by [Supervisor](http://supervisord.org/) behind public facing [nginx](http://wiki.nginx.org/Main). That said, other deployments are possible.
 
 Want support for other types of databases? Speak up in the issue tracker and, of course, patches are welcome.
 
 <br>
+
 ### Environment Setup
+
+Note that you will need to [install Python 3](https://docs.python-guide.org/starting/installation/). Python 2 support was deprecated in September 2020.
 
 * Checkout the repository:
 ```
@@ -105,6 +111,7 @@ $ mkdir uploads
 You can leave the virtual environment with ```$ deactivate```.
 
 <br>
+
 ### Local Development Server
 
 Start the local development server with:
@@ -129,11 +136,7 @@ Finally, before some features of the application can be used, you will also need
 These can be provided through the edit formats tab or at ```http://127.0.0.1:5000/base/edit_formats```.
 
 <br>
-### Staging / Pre-production Server
 
-At this time, this project, unfortunately, does not have a staging server feature or guidelines on running a stage server.
-
-<br>
 ### Deployment / Production Server
 
 You will need to be given the location of the code as well as directory access permissions by the server superuser. After securing that, navigate to the cdibase environment.
@@ -158,6 +161,7 @@ supervisor> exit
 The uploads directory needs to be writable by the application. At this time, file storage services like S3 are not supported.
 
 <br>
+
 ### Automated Testing
 
 Run unit tests with:
@@ -174,12 +178,35 @@ Ran XX tests in 0.545s
 OK
 ```
 
+You may also check type hints with ```$ mypy cdibase.py```. Note that test code does not have type hints.
+
 <br>
+
 ### Notes on software architecture
 
 The application consists of models, views (templates), controllers, and utilities. While following MVC, those utilities split out more complex logic not dealing directly with user responses to increase testability. Both can be found in the utilities and controllers directories respectively under the prog_code directory.
 
 <br>
+
 ### Standards, Conventions, and State of Development
 
 Ideally future development should follow an 80% unit testing coverage guidelines for the controllers with discretionary unit test coverage for the utilities. Python code should include [epydoc](http://epydoc.sourceforge.net/) inline documentation and should follow [Google's Python Style Guidelines](http://google-styleguide.googlecode.com/svn/trunk/pyguide.html). Note, after the drop of mox, test code is excluded from the style guidelines due to things like line length but conformance is still recommended when convenient.
+
+<br>
+
+### Open Source Libraries Used
+
+The following third party open source libraries are used:
+
+ - [Flask](https://flask.palletsprojects.com/en/1.1.x/) under the [BSD license](https://flask.palletsprojects.com/en/1.1.x/license/)
+ - [Flask-Mail](https://flask-mail.readthedocs.io/en/latest/) under the [BSD license](https://github.com/mattupstate/flask-mail/blob/master/LICENSE)
+ - [itsdangerous](https://itsdangerous.palletsprojects.com/en/1.1.x/) under the [BSD licnese](https://itsdangerous.palletsprojects.com/en/1.1.x/license/)
+ - [Jinja2](https://jinja.palletsprojects.com/en/2.11.x/) under the [BSD license](https://github.com/pallets/jinja/blob/master/LICENSE.rst)
+ - [MarkupSafe](https://palletsprojects.com/p/markupsafe/) under the [BSD license](https://palletsprojects.com/license/)
+ - [PyYAML](https://pyyaml.org/) under the [MIT license](https://pypi.org/project/PyYAML/)
+ - [python-dateutil](https://dateutil.readthedocs.io/en/stable/) under the [Apache v2 license](https://github.com/dateutil/dateutil/blob/master/LICENSE)
+ - [Werkzeug](https://palletsprojects.com/p/werkzeug/) under the [BSD license](https://palletsprojects.com/license/)
+ - [gunicorn](https://gunicorn.org/) under the [MIT license](https://github.com/benoitc/gunicorn/blob/master/LICENSE)
+ - [jquery](https://jquery.com/) under the [MIT license](https://jquery.org/license/)
+ - [bootstrap](https://getbootstrap.com/) under the [MIT license](https://github.com/twbs/bootstrap/blob/main/LICENSE)
+ - [d3](https://d3js.org/) under the [BSD license](https://opensource.org/licenses/BSD-3-Clause)
