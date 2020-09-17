@@ -192,6 +192,18 @@ def get_user_email() -> typing.Optional[str]:
     return flask.session.get('email', None)
 
 
+def get_user_email_force() -> str:
+    """Get the email of the currently logged in user.
+
+    @return: The email of the user currently logged in who is making the current
+        request. Throw error if it is not available.
+    @rtype: str
+    """
+    user_email = get_user_email()
+    assert user_email != None
+    return user_email # type: ignore
+
+
 def get_user_id() -> typing.Optional[int]:
     """Get the id of the user currently logged in.
 

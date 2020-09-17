@@ -35,6 +35,8 @@ from ..util import session_util
 
 from ..struct import models
 
+from . import controller_types
+
 from cdibase import app
 
 NO_FILTER_MESSAGE = 'No filters selected! Please add at least one filter.'
@@ -81,10 +83,10 @@ HTML_CHECKBOX_SELECTED = 'on'
 
 @app.route('/base/delete_data')
 @session_util.require_login(delete_data=True)
-def delete_data():
+def delete_data() -> controller_types.ValidFlaskReturnTypes:
     """Index page for building database queries.
 
-    @return: Listing of available CSV rendering "formats" 
+    @return: Listing of available CSV rendering "formats"
     @rtype: flask.Response
     """
     return flask.render_template(
@@ -98,12 +100,12 @@ def delete_data():
 
 @app.route('/base/delete_data/delete_cdi_results', methods=['POST'])
 @session_util.require_login(delete_data=True)
-def start_delete_request():
+def start_delete_request() -> controller_types.ValidFlaskReturnTypes:
     """Execute a CDI database query and download the results.
 
     Execute an CDI database query queued in a user's session and return the
     results in either a single "consolidated" CSV or a zip archive of CSVs. The
-    request should include format as an argument indicating the presentation 
+    request should include format as an argument indicating the presentation
     format that the CDIs should be provided in (name of a presentation format
     provided via configuration file) as it will be saved to the session and
     used by execute_zip_access_request. The request should also include
@@ -115,7 +117,7 @@ def start_delete_request():
     """
     password = flask.request.form.get(PASSWORD_ATTR, '')
     confirm = user_util.check_user_password(
-        session_util.get_user_email(),
+        session_util.get_user_email_force(),
         password
     )
     if not confirm:
@@ -130,13 +132,13 @@ def start_delete_request():
     session_util.set_waiting_on_delete(True)
     flask.session[FORMAT_SESSION_ATTR] = flask.request.args.get(
         FORMAT_SESSION_ATTR, '')
-    
+
     return flask.redirect(EXECUTE_URL % operation_str)
 
 
 @app.route('/base/delete_data/is_waiting')
 @session_util.require_login(delete_data=True)
-def is_waiting_on_delete():
+def is_waiting_on_delete() -> controller_types.ValidFlaskReturnTypes:
     """Determine if the user is waiting on a delete to start.
 
     Determine if a user is waiting for CSV file contents to be generated in
@@ -153,7 +155,7 @@ def is_waiting_on_delete():
 
 @app.route('/base/delete_data/add_filter', methods=['POST'])
 @session_util.require_login(delete_data=True)
-def add_filter_from_delete():
+def add_filter_from_delete() -> controller_types.ValidFlaskReturnTypes:
     """Controller to add a filter to the query the user is currently building.
 
     Controller that adds an additional AND clause to the query the user is
@@ -185,7 +187,7 @@ def add_filter_from_delete():
         return flask.redirect(DELETE_DATA_URL)
 
     # Create new filter
-    new_filter = models.Filter(field, operator, operand)
+    new_filter = models.Filter(field, operator, operand) # type: ignore
     session_util.add_filter(new_filter)
 
     #flask.session[CONFIRMATION_ATTR] = FILTER_CREATED_MSG
@@ -195,13 +197,13 @@ def add_filter_from_delete():
 
 @app.route('/base/delete_data/delete_filter/<int:filter_index>')
 @session_util.require_login(delete_data=True)
-def delete_filter_from_delete(filter_index):
+def delete_filter_from_delete(filter_index: int) -> controller_types.ValidFlaskReturnTypes:
     """Controller to delete a filter from query the user is currently building.
 
     Controller that removes an AND clause from the query the user is currently
     building against the database. Will set either an error or a conformation
     message in the user session.
-    
+
     @param filter_index: The numerical index of filter to be deleted. Index goes
         to element in list of filters for user's current query.
     @type filter_index: int
@@ -219,7 +221,7 @@ def delete_filter_from_delete(filter_index):
 
 @app.route('/base/delete_data/execute')
 @session_util.require_login(delete_data=True)
-def execute_delete_request():
+def execute_delete_request() -> controller_types.ValidFlaskReturnTypes:
     """Controller for finding and rendering archive of database query results.
 
     Controller that executes a request (that must have atleast one filter) using
