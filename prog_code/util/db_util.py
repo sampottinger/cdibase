@@ -725,6 +725,17 @@ def clean_up_date(target_val: str) -> typing.Optional[str]:
     return '%d/%02d/%02d' % (year, month, day)
 
 
+def clean_up_date_force(target_val: str) -> str:
+    """Standardize string date format to YYYY/MM/DD and assert correct format.
+
+    @param target_val: The value to standardize.
+    @returns: Standardized string date serialization.
+    """
+    ret_val = clean_up_date(target_val)
+    assert ret_val != None
+    return ret_val # type: ignore
+
+
 class RealizedCursor:
 
     def __init__(self, cursor: typing.Optional[sqlite3.Cursor]):
@@ -850,15 +861,16 @@ def update_snapshot(snapshot_metadata: models.SnapshotMetadata,
     """
     with get_realized_cursor(cursor) as cursor_realized:
         if snapshot_metadata.child_id == None:
-            cursor_realized.execute('SELECT MAX(child_id) FROM snapshots')
-            child_id = cursor_realized.fetchone()[0] + 1
+            cursor_realized.execute('SELECT count(DISTINCT child_id) FROM snapshots')
+            child_id = 'auto_' + cursor_realized.fetchone()[0] + 1
         else:
             child_id = snapshot_metadata.child_id
 
         # Standardize date
-        snapshot_metadata.birthday = clean_up_date(snapshot_metadata.birthday)
-        snapshot_metadata.session_date = clean_up_date(
-            snapshot_metadata.session_date)
+        snapshot_metadata.birthday = clean_up_date_force(snapshot_metadata.birthday)
+        snapshot_metadata.session_date = clean_up_date_force(
+            snapshot_metadata.session_date
+        )
 
         if isinstance(snapshot_metadata.languages, str):
             languages_val = snapshot_metadata.languages
@@ -921,9 +933,10 @@ def insert_snapshot(snapshot_metadata: models.SnapshotMetadata,
             child_id = snapshot_metadata.child_id
 
         # Standardize date
-        snapshot_metadata.birthday = clean_up_date(snapshot_metadata.birthday)
-        snapshot_metadata.session_date = clean_up_date(
-            snapshot_metadata.session_date)
+        snapshot_metadata.birthday = clean_up_date_force(snapshot_metadata.birthday)
+        snapshot_metadata.session_date = clean_up_date_force(
+            snapshot_metadata.session_date
+        )
 
         cmd = 'INSERT INTO snapshots VALUES (%s)' % (', '.join('?' * 20))
         cursor_realized.execute(

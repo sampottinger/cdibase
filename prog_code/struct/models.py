@@ -180,13 +180,14 @@ class SnapshotMetadata:
     child development inventory.
     """
 
-    def __init__(self, database_id, child_id, study_id, study, gender, age,
-        birthday, session_date, session_num, total_num_sessions, words_spoken,
-        items_excluded, percentile, extra_categories, revision, languages,
-        num_languages, cdi_type, hard_of_hearing, deleted):
+    def __init__(self, database_id: typing.Optional[int], child_id: typing.Optional[str],
+            study_id: str, study: str, gender: int, age: float, birthday: str, session_date: str,
+            session_num: int, total_num_sessions: int, words_spoken: int, items_excluded: int,
+            percentile: float, extra_categories: int, revision: int, languages: typing.List[str],
+            num_languages: int, cdi_type: str, hard_of_hearing: int, deleted: int):
         """Create a new snapshot metadata record.
 
-        @param database_id: The ID for this snapshot.
+        @param database_id: The ID for this snapshot or None if not saved.
         @type database_id: int
         @param child_id: The global database-wide ID for the child.
         @type child_id: int

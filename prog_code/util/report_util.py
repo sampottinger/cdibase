@@ -65,7 +65,8 @@ class NotFoundSnapshotContent:
         self.value = constants.NO_DATA
 
 
-def interpret_word_value(value, presentation_format):
+def interpret_word_value(value: int,
+        presentation_format: typing.Optional[models.PresentationFormat]) -> typing.Union[str, int]:
     """Convert underlying special database value to a string descriptions.
 
     @param value: The value to get a string description for.
@@ -84,9 +85,11 @@ def interpret_word_value(value, presentation_format):
 
     name = PRESENTATION_VALUE_NAME_MAP.get(value, value)
 
-    if presentation_format == None or not name in presentation_format.details:
+    presentation_format_realized: models.PresentationFormat = presentation_format # type: ignore
+
+    if presentation_format == None or not name in presentation_format_realized.details:
         return value
-    return presentation_format.details[name]
+    return presentation_format_realized.details[name]
 
 
 def summarize_snapshots(snapshot_metas: typing.Iterable[models.SnapshotMetadata]) -> typing.Dict[
@@ -137,7 +140,7 @@ def serialize_snapshot(snapshot: models.SnapshotMetadata,
         presentation_format: models.PresentationFormat = None,
         word_listing: typing.List[str] = None,
         report_dict: bool = False,
-        include_words: bool = True) -> typing.Union[dict, typing.List[str]]:
+        include_words: bool = True) -> typing.Union[dict, typing.List]:
     """Turn a snapshot uft8 encoded list of strings.
 
     @param snapshot: The snapshot to serialize.
@@ -168,10 +171,10 @@ def serialize_snapshot(snapshot: models.SnapshotMetadata,
             word_listing
         )
 
-        word_values = map(
+        word_values = list(map(
             lambda x: interpret_word_value(x.value, presentation_format),
             snapshot_contents_sorted
-        )
+        ))
 
     if report_dict:
         gender = interpret_word_value(snapshot.gender, presentation_format)
@@ -201,7 +204,7 @@ def serialize_snapshot(snapshot: models.SnapshotMetadata,
         }
 
         if include_words:
-            return_dict['words'] = word_values
+            return_dict['words'] = word_values # type: ignore
 
         return return_dict
 

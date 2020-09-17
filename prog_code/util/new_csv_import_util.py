@@ -339,24 +339,24 @@ class UploadParserAutomaton:
         return models.SnapshotMetadata(
             None,
             self.__child_id,
-            self.__study_id,
-            self.__study,
-            self.__gender,
+            self.__assert_not_none(self.__study_id),
+            self.__assert_not_none(self.__study),
+            self.__assert_not_none(self.__gender),
             self.__get_age(),
-            self.__birthday,
-            self.__session_date,
+            self.__assert_not_none(self.__birthday),
+            self.__assert_not_none(self.__session_date),
             self.__get_session_num(),
-            self.__total_num_sessions,
+            self.__assert_not_none(self.__total_num_sessions),
             self.__get_words_spoken(),
-            self.__excluded_items,
+            self.__assert_not_none(self.__excluded_items),
             self.__get_percentile(),
-            self.__extra_categories,
-            self.__revision,
-            self.__languages,
+            self.__assert_not_none(self.__extra_categories),
+            self.__assert_not_none(self.__revision),
+            self.__assert_not_none(self.__languages),
             self.__get_num_languages(),
-            self.__cdi_name,
-            self.__hard_of_hearing,
-            self.__deleted
+            self.__assert_not_none(self.__cdi_name),
+            self.__assert_not_none(self.__hard_of_hearing),
+            self.__assert_not_none(self.__deleted)
         )
 
     def __create_words(self) -> typing.List[models.SnapshotContent]:
