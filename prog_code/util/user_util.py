@@ -106,7 +106,7 @@ def create_new_user(email: str, can_enter_data: bool, can_delete_data: bool, can
     """
     email = email.lower()
     password = generate_password()
-    pass_hash = werkzeug.generate_password_hash(password,
+    pass_hash = werkzeug.security.generate_password_hash(password,
         method='sha512')
     user = models.User(
         -1,
@@ -145,7 +145,7 @@ def check_user_password(email: str, password: str) -> bool:
         return False
     pass_hash = str(user.password_hash)
     try:
-        return werkzeug.check_password_hash(pass_hash, password)
+        return werkzeug.security.check_password_hash(pass_hash, password)
     except:
         return False
 
@@ -159,7 +159,7 @@ def change_user_password(email: str, password: str) -> None:
     """
     email = email.lower()
     user = force_get_user(email)
-    pass_hash = werkzeug.generate_password_hash(password,
+    pass_hash = werkzeug.security.generate_password_hash(password,
         method='sha512')
     user.password_hash = pass_hash
     db_util.save_user_model(user)
