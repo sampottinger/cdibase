@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v2
 """
+import typing
+
 
 class CDIFormatMetadata:
     """Information about an CDI format without the format itself."""
@@ -42,7 +44,7 @@ class CDIFormatMetadata:
 class CDIFormat(CDIFormatMetadata):
     """A complete CDI format specification with metadata."""
 
-    def __init__(self, human_name, safe_name, filename, details):
+    def __init__(self, human_name: str, safe_name: str, filename: str, details: typing.Dict):
         """Create a new specification record.
 
         @param human_name: The name of this format intended for human eyes.
