@@ -374,8 +374,8 @@ class UploadParserAutomaton:
         return list(map(
             lambda x: models.SnapshotContent(
                 None,
-                x['word'],
-                x['value'],
+                x['word'], # type: ignore
+                x['value'], # type: ignore
                 0
             ),
             named_items

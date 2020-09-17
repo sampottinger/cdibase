@@ -137,7 +137,7 @@ def serialize_snapshot(snapshot: models.SnapshotMetadata,
         presentation_format: models.PresentationFormat = None,
         word_listing: typing.List[str] = None,
         report_dict: bool = False,
-        include_words: bool = True) -> typing.Union[dict, typing.List]:
+        include_words: bool = True) -> typing.Union[dict, typing.List[str]]:
     """Turn a snapshot uft8 encoded list of strings.
 
     @param snapshot: The snapshot to serialize.
@@ -232,11 +232,6 @@ def serialize_snapshot(snapshot: models.SnapshotMetadata,
         if include_words:
             return_list.extend(word_values)
 
-        return_list = list(map(
-            lambda x: x.encode('utf-8','ignore') if isinstance(x, str) else x,
-            return_list
-        ))
-
         return return_list
 
 
@@ -257,7 +252,7 @@ def generate_study_report_rows(snapshots_from_study: typing.List[models.Snapshot
     for snapshot in snapshots_from_study:
         snapshot_contents = db_util.load_snapshot_contents(snapshot)
         candidate_word_listing = set(map(
-            lambda x: x.word.encode('utf-8','ignore'),
+            lambda x: x.word,
             snapshot_contents
         ))
         word_listing_set = word_listing_set.union(candidate_word_listing)

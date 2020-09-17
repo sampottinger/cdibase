@@ -328,11 +328,11 @@ class SnapshotMetadata:
 class SnapshotContent:
     """Record of a single CDI word as part of a snapshot."""
 
-    def __init__(self, snapshot_id, word, value, revision):
+    def __init__(self, snapshot_id: typing.Optional[int], word: str, value: int, revision: int):
         """Creates a new SnapshotContent instance.
 
         @param snapshot_id: The database ID of the snapshot this record is part
-            of.
+            of or None if not saved.
         @type snapshot_id: int
         @param word: The word whose status is encoded in this record.
         @type word: str
