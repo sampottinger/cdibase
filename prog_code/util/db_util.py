@@ -787,7 +787,7 @@ def get_cursor() -> RealizedCursor:
     return get_realized_cursor(None)
 
 
-def update_participant_metadata(child_id: int, gender: int, birthday_str: str,
+def update_participant_metadata(child_id: str, gender: int, birthday_str: str,
         hard_of_hearing: int, languages: typing.Iterable[str],
         snapshot_ids: typing.Iterable[dict] = None,
         cursor: sqlite3.Cursor = None) -> None:
@@ -799,7 +799,6 @@ def update_participant_metadata(child_id: int, gender: int, birthday_str: str,
 
     @param child_id: The global database ID of the participant whose snapshots
         should be updated.
-    @type child_id: int
     @param gender: Constant indicating the gender of the participant (male,
         female, or other) that corresponds to variables in the constants module.
     @type gender: int
@@ -910,7 +909,7 @@ def update_snapshot(snapshot_metadata: models.SnapshotMetadata,
 # TODO: Combined for transaction
 def insert_snapshot(snapshot_metadata: models.SnapshotMetadata,
         word_entries: typing.Union[
-            typing.Iterable[dict],
+            typing.Mapping[str, int],
             typing.Iterable[models.SnapshotContent]
         ],
         cursor : typing.Optional[sqlite3.Cursor] = None):

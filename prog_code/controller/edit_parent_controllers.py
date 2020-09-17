@@ -36,6 +36,7 @@ from ..util import parent_account_util
 from ..util import recalc_util
 from ..util import session_util
 from ..util import user_util
+from ..util import type_util
 
 from ..struct import models
 
@@ -72,8 +73,6 @@ WORD_VALUE_INVALID_MSG = 'Whoops! You seemed to have forgotten to provide a '\
 NO_GLOBAL_ID_MSG = 'No global ID specified.'
 THANK_YOU_MSG_URL = '/base/parent_cdi/_thanks'
 
-T = typing.TypeVar('T')
-
 
 def is_none_or_negative(target: typing.Optional[float]) -> bool:
     """Determine if the given value is none or negative, making it invalid for some fields.
@@ -82,16 +81,6 @@ def is_none_or_negative(target: typing.Optional[float]) -> bool:
     @returns: True if none or negative. False otherwise.
     """
     return target == None or target < 0 # type: ignore
-
-
-def assert_not_none(target: typing.Optional[T]) -> T:
-    """Check that a value is not None.
-
-    @param target: The value to test.
-    @returns: The same value input if not None. Error thrown if None.
-    """
-    assert target != None
-    return target # type: ignore
 
 
 @app.route('/base/parent_accounts', methods=['GET', 'POST'])
@@ -585,14 +574,14 @@ def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTyp
             total_num_sessions = session_number
 
         # Check all required values resolved
-        study_id_realized = assert_not_none(study_id)
-        study_realized = assert_not_none(study)
-        gender_realized = assert_not_none(gender)
-        age_realized = assert_not_none(age)
-        birthday_realized = assert_not_none(birthday)
-        items_excluded_realized = assert_not_none(items_excluded)
-        extra_categories_realized = assert_not_none(extra_categories)
-        hard_of_hearing_realized = assert_not_none(hard_of_hearing)
+        study_id_realized = type_util.assert_not_none(study_id)
+        study_realized = type_util.assert_not_none(study)
+        gender_realized = type_util.assert_not_none(gender)
+        age_realized = type_util.assert_not_none(age)
+        birthday_realized = type_util.assert_not_none(birthday)
+        items_excluded_realized = type_util.assert_not_none(items_excluded)
+        extra_categories_realized = type_util.assert_not_none(extra_categories)
+        hard_of_hearing_realized = type_util.assert_not_none(hard_of_hearing)
 
         # Put in snapshot metadata
         new_snapshot = models.SnapshotMetadata(

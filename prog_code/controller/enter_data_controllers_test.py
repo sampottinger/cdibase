@@ -36,7 +36,7 @@ from ..util import recalc_util
 from ..util import user_util
 
 TEST_EMAIL = 'test.email@example.com'
-TEST_DB_ID = 1
+TEST_DB_ID = '1'
 TEST_USER = models.User(
     TEST_DB_ID,
     TEST_EMAIL,
@@ -89,7 +89,7 @@ TEST_SNAPSHOT_ID = 789
 TEST_ITEMS_EXCLUDED = 3
 TEST_EXTRA_CATEGORIES = 4
 TEST_SESSION_NUM = 4
-TEST_LANGUAGES = 'english'
+TEST_LANGUAGES = ['english']
 TEST_NUM_LANGUAGES = 1
 TEST_HARD_OF_HEARING = False
 TEST_STUDY = 'test study'
@@ -697,8 +697,8 @@ class EnterDataControllersTests(unittest.TestCase):
                     'hard_of_hearing': constants.EXPLICIT_TRUE,
                     'languages': ','.join(self.__new_languages),
                     'snapshot_ids': json.dumps([
-                        {'study': TEST_STUDY, 'id': 1},
-                        {'study': TEST_STUDY_2, 'id': 2}
+                        {'study': TEST_STUDY, 'id': '1'},
+                        {'study': TEST_STUDY_2, 'id': '2'}
                     ])
                 }
 
@@ -718,7 +718,7 @@ class EnterDataControllersTests(unittest.TestCase):
             mocks['report_usage'].assert_called_with(
                 'test.email@example.com',
                 'Update Metadata',
-                '{"global_id": 1}'
+                '{"global_id": "1"}'
             )
             mocks['update_participant_metadata'].assert_called_with(
                 TEST_DB_ID,
@@ -727,8 +727,8 @@ class EnterDataControllersTests(unittest.TestCase):
                 constants.EXPLICIT_TRUE,
                 self.__new_languages,
                 snapshot_ids=[
-                    {'study': TEST_STUDY, 'id': 1},
-                    {'study': TEST_STUDY_2, 'id': 2}
+                    {'study': TEST_STUDY, 'id': '1'},
+                    {'study': TEST_STUDY_2, 'id': '2'}
                 ]
             )
             mocks['run_search_query'].assert_called_with(

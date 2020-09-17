@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v3
 """
-
 import json
 import re
+import typing
 
 import flask
 
@@ -31,14 +31,18 @@ from ..util import interp_util
 from ..util import math_util
 from ..util import recalc_util
 from ..util import session_util
+from ..util import type_util
+
 from ..struct import models
+
+from . import controller_types
 
 from cdibase import app
 
 PARTICIPANT_NOT_FOUND_MSG = '[ not found ]'
 CDI_NOT_FOUND_MSG = 'Could not the specified CDI format.'
 GLOBAL_ID_NOT_PROVIDED_MSG = 'Participant global id was not provided.'
-GLOBAL_ID_NOT_INT_MSG = 'Participant global id should be a whole number.'
+GLOBAL_ID_NOT_GIVEN_MSG = 'Participant global id not given.'
 STUDY_ID_NOT_PROVIDED_MSG = 'Study id was not provided.'
 STUDY_NOT_PROVIDED_MSG = 'Study not provided.'
 GENDER_NOT_PROVIDED_MSG = 'Gender not provided.'
@@ -60,7 +64,7 @@ BIRTHDAY_INVALID_FORMAT_REARRANGE_MSG = 'Birthday entered in incorrect format.'
 SESSION_DATE_INVALID_FORMAT_MSG = 'Session date must be of form YYYY/MM/DD.'
 WORD_VALUE_MISSING_MSG = '%s value missing.'
 WORD_VALUE_INVALID_MSG = '%s value invalid'
-CDI_ADDED_MSG = 'CDI record added for participant %d.'
+CDI_ADDED_MSG = 'CDI record added for participant %s.'
 ENTER_DATA_URL = '/base/enter_data'
 NEW_CHILD_CDI_ADDED_MSG = 'New child and CDI added.'
 DATE_REGEX = re.compile('\d{4}/\d{1,2}/\d{1,2}')
@@ -68,7 +72,7 @@ DATE_REGEX = re.compile('\d{4}/\d{1,2}/\d{1,2}')
 
 @app.route('/base/enter_data')
 @session_util.require_login(enter_data=True)
-def enter_data_index():
+def enter_data_index() -> controller_types.ValidFlaskReturnTypes:
     """Controller for listing of various forms / CDI types.
 
     Controller for listing of the forms / CDI types the application has access
@@ -88,7 +92,7 @@ def enter_data_index():
 
 @app.route('/base/enter_data/<format_name>', methods=['GET', 'POST'])
 @session_util.require_login(enter_data=True)
-def enter_data_form(format_name):
+def enter_data_form(format_name: str) -> controller_types.ValidFlaskReturnTypes:
     """Actual data entry form controller.
 
     GET displays the form for a version of CDI or other structure the lab
@@ -102,10 +106,12 @@ def enter_data_form(format_name):
     """
     request = flask.request
 
-    selected_format = db_util.load_cdi_model(format_name)
-    if selected_format == None:
+    selected_format_maybe = db_util.load_cdi_model(format_name)
+    if selected_format_maybe == None:
         flask.session[constants.ERROR_ATTR] = CDI_NOT_FOUND_MSG
         return flask.redirect(ENTER_DATA_URL)
+
+    selected_format: models.CDIFormat = selected_format_maybe # type: ignore
 
     # Render form
     if request.method == 'GET':
@@ -121,31 +127,27 @@ def enter_data_form(format_name):
         )
 
     # Add new data
-    elif request.method == 'POST':
+    else:
 
         # Snaptshot metadata form data
         global_id = request.form.get('global_id', '')
         study_id = request.form.get('study_id', '')
         study = request.form.get('study', '')
-        gender = request.form.get('gender', '')
-        age = request.form.get('age', '')
+        gender_str = request.form.get('gender', '')
+        age_str = request.form.get('age', '')
         birthday = request.form.get('birthday', '')
         session_date = request.form.get('session_date', '')
-        session_num = request.form.get('session_num', '')
-        items_excluded = request.form.get('items_excluded', '')
-        extra_categories = request.form.get('extra_categories', '')
-        total_num_sessions = request.form.get('total_num_sessions', '')
+        session_num_str = request.form.get('session_num', '')
+        items_excluded_str = request.form.get('items_excluded', '')
+        extra_categories_str = request.form.get('extra_categories', '')
+        total_num_sessions_str = request.form.get('total_num_sessions', '')
         hard_of_hearing = request.form.get('hard_of_hearing', 'off')
         hard_of_hearing = hard_of_hearing == constants.FORM_SELECTED_VALUE
 
         # Check inclusion and interpret submission
         error = None
-        if global_id != '':
-            global_id = interp_util.safe_int_interpret(global_id)
-            if global_id == None:
-                error = GLOBAL_ID_NOT_INT_MSG
-        else:
-            global_id = None
+        if global_id == None or global_id == '':
+            error = GLOBAL_ID_NOT_GIVEN_MSG
 
         if study_id == '':
             error = STUDY_ID_NOT_PROVIDED_MSG
@@ -153,17 +155,19 @@ def enter_data_form(format_name):
         if study == '':
             error = STUDY_NOT_PROVIDED_MSG
 
-        if gender == '':
+        gender: typing.Optional[int] = None
+        if gender_str == '':
             error = GENDER_NOT_PROVIDED_MSG
         else:
-            gender = interp_util.safe_int_interpret(gender)
+            gender = interp_util.safe_int_interpret(gender_str)
             if gender == None:
                 error = GENDER_VALUE_INVALID_MSG
 
-        if age == '':
+        age: typing.Optional[float] = None
+        if age_str == '':
             error = AGE_NOT_PROVIDED_MSG
         else:
-            age = interp_util.safe_float_interpret(age)
+            age = interp_util.safe_float_interpret(age_str)
             if age == None:
                 error = PARTICIPANT_AGE_INVALID_MSG
 
@@ -177,32 +181,37 @@ def enter_data_form(format_name):
         if not DATE_REGEX.match(session_date):
             error = SESSION_DATE_INVALID_FORMAT_MSG
 
-        if session_num == '':
+        session_num: typing.Optional[int] = None
+        if session_num_str == '':
             error = SESSION_NUMBER_NOT_PROVIDED_MSG
         else:
-            session_num = interp_util.safe_int_interpret(session_num)
+            session_num = interp_util.safe_int_interpret(session_num_str)
             if session_num == None:
                 error = SESSION_NUMBER_INVALID_MSG
 
-        if items_excluded == '':
+        items_excluded: typing.Optional[int] = None
+        if items_excluded_str == '':
             error = ITEMS_EXCLUDED_NOT_PROVIDED_MSG
         else:
-            items_excluded = interp_util.safe_int_interpret(items_excluded)
+            items_excluded = interp_util.safe_int_interpret(items_excluded_str)
             if items_excluded == None:
                 error = ITEMS_EXCLUDED_INVALID_MSG
 
-        if extra_categories == '':
+        extra_categories: typing.Optional[int] = None
+        if extra_categories_str == '':
             error = EXTRA_CATEGORIES_NOT_PROVIDED_MSG
         else:
-            extra_categories = interp_util.safe_int_interpret(extra_categories)
+            extra_categories = interp_util.safe_int_interpret(extra_categories_str)
             if extra_categories == None:
                 error = EXTRA_CATEGORIES_INVALID_MSG
 
-        if total_num_sessions == '':
+        total_num_sessions: typing.Optional[int] = None
+        if total_num_sessions_str == '':
             error = TOTAL_NUM_SESSION_NOT_PROVIDED_MSG
         else:
             total_num_sessions = interp_util.safe_int_interpret(
-                total_num_sessions)
+                total_num_sessions_str
+            )
             if total_num_sessions == None:
                 error = NUM_SESSION_INVALID_MSG
 
@@ -215,28 +224,44 @@ def enter_data_form(format_name):
 
         revision = 0
 
+        # Realize required values
+        age_realized: float = type_util.assert_not_none(age)
+        global_id_realized: str = type_util.assert_not_none(global_id)
+        gender_realized: int = type_util.assert_not_none(gender)
+        session_num_realized: int = type_util.assert_not_none(session_num)
+        total_num_sessions_realized: int = type_util.assert_not_none(total_num_sessions)
+        items_excluded_realized: int = type_util.assert_not_none(items_excluded)
+        extra_categories_realized: int = type_util.assert_not_none(extra_categories)
+
         # Parse word entries
         languages = set()
         count_as_spoken_vals = selected_format.details['count_as_spoken']
-        word_entries = {}
+        word_entries: typing.Dict[str, int] = {}
         words_spoken = 0
         total_possible_words = 0
         for category in selected_format.details['categories']:
             languages.add(category['language'])
             for word in category['words']:
+
                 word_val = request.form.get('%s_report' % word, None)
+
                 if word_val == None:
                     msg = WORD_VALUE_MISSING_MSG % word
                     flask.session[constants.ERROR_ATTR] = msg
                     return flask.redirect(request.path)
+
                 word_val = interp_util.safe_int_interpret(word_val)
                 if word_val == None:
                     msg = WORD_VALUE_INVALID_MSG % word
                     flask.session[constants.ERROR_ATTR] = msg
                     return flask.redirect(request.path)
-                word_entries[word] = int(word_val)
+
+                word_val_realized: int = word_val # type: ignore
+                word_entries[word] = int(word_val_realized)
+
                 if word_val in count_as_spoken_vals:
                     words_spoken += 1
+
                 total_possible_words += 1
 
         # Determine approach percentiles
@@ -251,31 +276,36 @@ def enter_data_form(format_name):
         # TODO(samp): This should be in db_util
         # Calculate percentiles
         percentile_model = db_util.load_percentile_model(percentile_table_name)
+        if percentile_model == None:
+            flask.session[constants.ERROR_ATTR] = 'Missing percentile model'
+            return flask.redirect(request.path)
+
+        percentile_model_realized: model.PercentileTable = percentile_model # type: ignore
         percentile = math_util.find_percentile(
-            percentile_model.details,
+            percentile_model_realized.details,
             words_spoken,
-            age,
+            age_realized,
             total_possible_words
         )
 
         # Put in snapshot metadata
         new_snapshot = models.SnapshotMetadata(
             None,
-            global_id,
+            global_id_realized,
             study_id,
             study,
-            gender,
-            age,
+            gender_realized,
+            age_realized,
             birthday,
             session_date,
-            session_num,
-            total_num_sessions,
+            session_num_realized,
+            total_num_sessions_realized,
             words_spoken,
-            items_excluded,
+            items_excluded_realized,
             percentile,
-            extra_categories,
+            extra_categories_realized,
             revision,
-            ','.join(languages),
+            list(languages),
             len(languages),
             selected_format.details['meta']['cdi_type'],
             hard_of_hearing,
@@ -305,7 +335,8 @@ def enter_data_form(format_name):
 
 @app.route('/base/enter_data/lookup_global_id/<study_name>/<participant_study_id>')
 @session_util.require_login(enter_data=True)
-def lookup_global_id(study_name, participant_study_id):
+def lookup_global_id(study_name: str,
+        participant_study_id: str) -> controller_types.ValidFlaskReturnTypes:
     """Load find the global ID for a participant given his / her study info.
 
     Application accessible HTTP handler to find the the global ID for a
@@ -331,7 +362,7 @@ def lookup_global_id(study_name, participant_study_id):
 
 @app.route('/base/edit_data/lookup_user', methods=['POST'])
 @session_util.require_login(enter_data=True)
-def lookup_studies():
+def lookup_studies() -> controller_types.ValidFlaskReturnTypes:
     """Lookup the studies, global DB ID, and metadata for a participant.
 
     Lookup the global DB ID for a participant along with their studies and
@@ -354,13 +385,15 @@ def lookup_studies():
         study = request.form['study']
         global_id = db_util.lookup_global_participant_id(study, study_id)
     elif lookup_method == 'by_global_id':
-        global_id = interp_util.safe_int_interpret(request.form['global_id'])
+        global_id = request.form['global_id']
         if global_id == None: return ('Global ID not provided', 404)
     else:
         return ('Invalid lookup method', 400)
 
+    global_id_realized = type_util.assert_not_none(global_id)
+
     # Look up studies
-    filters = [models.Filter('child_id', 'eq', global_id)]
+    filters = [models.Filter('child_id', 'eq', global_id_realized)]
     results = filter_util.run_search_query(
         filters,
         constants.SNAPSHOTS_DB_TABLE
@@ -403,7 +436,7 @@ def lookup_studies():
 
 @app.route('/base/edit_data')
 @session_util.require_login(enter_data=True)
-def render_edit_metadata_ui():
+def render_edit_metadata_ui() -> controller_types.ValidFlaskReturnTypes:
     """Display UI that allows the user to update participant metadata.
 
     Display UI that allows the user to update participant demographic and other
@@ -426,7 +459,7 @@ def render_edit_metadata_ui():
 
 @app.route('/base/edit_data', methods=['POST'])
 @session_util.require_login(enter_data=True)
-def edit_metadata():
+def edit_metadata() -> controller_types.ValidFlaskReturnTypes:
     """Edit the metadata for a participant.
 
     @return: Response with error or confirming operation.
@@ -436,7 +469,7 @@ def edit_metadata():
     error = None
 
     # Parse incoming new metadata
-    global_id = interp_util.safe_int_interpret(request.form['global_id'])
+    global_id = request.form['global_id']
     gender = interp_util.safe_int_interpret(request.form['gender'])
     birthday_raw = request.form['birthday']
     languages = request.form['languages'].split(',')
@@ -461,18 +494,22 @@ def edit_metadata():
 
     db_util.report_usage(
         session_util.get_user_email(),
-        "Update Metadata",
+        'Update Metadata',
         json.dumps({
-            "global_id": global_id
+            'global_id': global_id
         })
     )
+
+    # Realize required values
+    gender_realized = type_util.assert_not_none(gender)
+    hard_of_hearing_realized = type_util.assert_not_none(hard_of_hearing)
 
     # Update the snapshots
     db_util.update_participant_metadata(
         global_id,
-        gender,
+        gender_realized,
         birthday_raw,
-        hard_of_hearing,
+        hard_of_hearing_realized,
         languages,
         snapshot_ids=json.loads(request.form['snapshot_ids'])
     )
