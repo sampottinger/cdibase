@@ -2,7 +2,7 @@ CREATE TABLE "api_keys" ("user_id" INTEGER, "api_key" TEXT);
 
 CREATE TABLE cdi_formats (human_name TEXT, safe_name TEXT, filename TEXT);
 
-CREATE TABLE parent_forms 
+CREATE TABLE parent_forms
 (
     form_id TEXT,
     child_name TEXT,
@@ -28,7 +28,7 @@ CREATE TABLE percentile_tables
     filename TEXT
 );
 
-CREATE TABLE presentation_formats 
+CREATE TABLE presentation_formats
 (
     human_name TEXT,
     safe_name TEXT,
@@ -43,7 +43,7 @@ CREATE TABLE snapshot_content
     revision INTEGER
 );
 
-CREATE TABLE snapshots 
+CREATE TABLE snapshots
 (
     id INTEGER PRIMARY KEY,
     child_id INTEGER,
@@ -83,3 +83,8 @@ CREATE TABLE "users"
 );
 
 CREATE INDEX `snapshot_id_index` ON `snapshot_content` (`snapshot_id` ASC);
+
+CREATE TABLE reservation
+(
+    timestamp TEXT
+);

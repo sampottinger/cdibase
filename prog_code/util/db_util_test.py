@@ -15,6 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import copy
 import re
 import unittest
 
@@ -63,6 +64,7 @@ class FakeCursor:
         self.commands = []
         self.committed = False
         self.closed = False
+        self.lastrowid = 1
 
     def execute(self, command, params):
         self.commands.append((command, params))
@@ -97,6 +99,20 @@ class DBUtilTests(unittest.TestCase):
         test_command = fake_cursor.commands[0]
         self.assertTrue('child_id=?,' in test_command[0])
         self.assertEqual(TEST_SNAPSHOT.child_id, test_command[1][0])
+        self.assertEqual(TEST_SNAPSHOT.languages, test_command[1][14].split(','))
+
+    def test_update_snapshot_new_id(self):
+        fake_cursor = FakeCursor()
+
+        snapshot = copy.copy(TEST_SNAPSHOT)
+        snapshot.child_id = None
+        db_util.update_snapshot(snapshot, fake_cursor)
+
+        self.assertEqual(len(fake_cursor.commands), 2)
+
+        test_command = fake_cursor.commands[1]
+        self.assertTrue('child_id=?,' in test_command[0])
+        self.assertNotEqual(TEST_SNAPSHOT.child_id, test_command[1][1])
         self.assertEqual(TEST_SNAPSHOT.languages, test_command[1][14].split(','))
 
     def test_update_participant_metadata_all(self):
