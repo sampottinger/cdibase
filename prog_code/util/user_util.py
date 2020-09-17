@@ -22,7 +22,7 @@ import random
 import string
 import typing
 
-import werkzeug
+import werkzeug.security
 
 from ..struct import models
 
