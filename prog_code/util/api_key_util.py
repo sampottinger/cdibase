@@ -42,7 +42,7 @@ def interp_csv_field(target: str) -> typing.List[str]:
         return target.split(',')
 
 
-def get_if_avail(target_list: str, index: int, default_value: str = '') -> str:
+def get_if_avail(target_list: typing.List[str], index: int, default_value: str = '') -> str:
     """Get a value from a list if that item is available.
 
     @param target_list: The list to try to get an item from.

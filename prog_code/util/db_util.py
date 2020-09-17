@@ -873,9 +873,9 @@ def update_snapshot(snapshot_metadata: models.SnapshotMetadata,
         )
 
         if isinstance(snapshot_metadata.languages, str):
-            languages_val = snapshot_metadata.languages
-        else:
-            languages_val = ','.join(snapshot_metadata.languages)
+            raise RuntimeError('Languages must be a list.')
+
+        languages_val = ','.join(snapshot_metadata.languages)
 
         non_db_id_cols = SNAPSHOT_METADATA_COLS[1:]
         col_statements = map(lambda x: x + '=?', non_db_id_cols)
@@ -938,6 +938,11 @@ def insert_snapshot(snapshot_metadata: models.SnapshotMetadata,
             snapshot_metadata.session_date
         )
 
+        if isinstance(snapshot_metadata.languages, str):
+            raise RuntimeError('Languages must be a list.')
+
+        languages_val = ','.join(snapshot_metadata.languages)
+
         cmd = 'INSERT INTO snapshots VALUES (%s)' % (', '.join('?' * 20))
         cursor_realized.execute(
             cmd,
@@ -957,7 +962,7 @@ def insert_snapshot(snapshot_metadata: models.SnapshotMetadata,
                 snapshot_metadata.percentile,
                 snapshot_metadata.extra_categories,
                 snapshot_metadata.revision,
-                ','.join(snapshot_metadata.languages),
+                languages_val,
                 snapshot_metadata.num_languages,
                 snapshot_metadata.cdi_type,
                 snapshot_metadata.hard_of_hearing,

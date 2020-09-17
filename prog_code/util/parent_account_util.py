@@ -105,7 +105,7 @@ class AttributeResolutionResolver:
         results.sort(key=lambda x: x.session_date, reverse=True)
         self.__target_user = results[0]
 
-    def fill_field(self, current_value: typing.Union[str, int],
+    def fill_field(self, current_value: typing.Union[str, int, None],
             field_name: str) -> typing.Union[int, str]:
         """Fill a parent form value from the reference child information.
 
@@ -117,13 +117,14 @@ class AttributeResolutionResolver:
         @return: The value to use for the provided field.
         @rtype: int or str
         """
-        if self.__target_user == None:
-            return current_value
         if not self.is_valid_value(current_value):
-            return getattr(self.__target_user, field_name)
-        return current_value
+            if self.__target_user == None:
+                raise RuntimeError('Cannot fill field.')
+            else:
+                return getattr(self.__target_user, field_name)
+        return current_value # type: ignore
 
-    def fill_field_int(self, current_value: typing.Union[str, int],
+    def fill_field_int(self, current_value: typing.Union[str, int, None],
             field_name: str) -> int:
         """Fill a parent form value from the reference child information.
 
@@ -137,7 +138,7 @@ class AttributeResolutionResolver:
         """
         return self.fill_field(current_value, field_name) # type: ignore
 
-    def fill_field_str(self, current_value: typing.Union[str, int],
+    def fill_field_str(self, current_value: typing.Union[str, int, None],
             field_name: str) -> str:
         """Fill a parent form value from the reference child information.
 

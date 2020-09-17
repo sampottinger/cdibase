@@ -229,8 +229,7 @@ class SnapshotMetadata:
         @param revision: The number of versions of this snapshot before this
             one.
         @type revision: int
-        @param languages: CSV field of languages included in this CDI.
-        @type languages: str
+        @param languages: List of languages included in this CDI.
         @param num_languages: The number of languages included in this CDI.
         @type num_languages: int
         @param cdi_type: The safe name of the CDI format used for this
@@ -446,10 +445,13 @@ class User:
 class ParentForm:
     """Record of a parent CDI form that can be filled out online."""
 
+    # TODO (sampottinger): Languages here is a CSV field but it should be a list
     def __init__(self, form_id: str, child_name: str, parent_email: str, cdi_type: str,
-            database_id: int, study_id: str, study: str, gender: int, birthday: str,
-            items_excluded: int, extra_categories: int, languages: typing.List[str],
-            num_languages: int, hard_of_hearing: int, total_num_sessions: int):
+            database_id: int, study_id: str, study: str, gender: typing.Optional[int],
+            birthday: typing.Optional[str], items_excluded: typing.Optional[int],
+            extra_categories: typing.Optional[int], languages: typing.Optional[str],
+            num_languages: typing.Optional[int], hard_of_hearing: typing.Optional[int],
+            total_num_sessions: typing.Optional[int]):
         """Create a new parent form record.
 
         Create a new parent form record. Note that this constructor does not

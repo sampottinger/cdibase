@@ -226,7 +226,7 @@ def reset_password(email: str, pass_len: int = 10) -> None:
         RESET_PASSWORD_MSG % (email, new_pass)
     )
 
-def get_user(identifier: str) -> typing.Optional[models.User]:
+def get_user(identifier: typing.Union[str, int]) -> typing.Optional[models.User]:
     """Get user account information for the user with the given email.
 
     @param identifier: The email address of the user to get account information
@@ -235,7 +235,7 @@ def get_user(identifier: str) -> typing.Optional[models.User]:
     @return: User account info for use with given email address.
     @rtype: models.User
     """
-    return db_util.load_user_model(str(identifier))
+    return db_util.load_user_model(identifier)
 
 def delete_user(email: str) -> None:
     """Delete the user with the given email address.

@@ -21,4 +21,9 @@ import typing
 import flask
 import werkzeug.wrappers
 
-ValidFlaskReturnTypes = typing.Union[str, flask.Response, werkzeug.wrappers.Response]
+ValidFlaskReturnTypes = typing.Union[
+    str,
+    flask.Response,
+    werkzeug.wrappers.Response,
+    typing.Tuple[str, int]
+]

@@ -203,6 +203,16 @@ def get_user_id() -> typing.Optional[int]:
     return user.db_id
 
 
+def get_user_id_force() -> int:
+    """Get the id of the user currently logged in and assert not None
+
+    @returns: Current user ID.
+    """
+    result = get_user_id()
+    assert result != None
+    return result # type: ignore
+
+
 def get_confirmation() -> typing.Optional[str]:
     """Get any waiting confirmation messages for the current user.
 

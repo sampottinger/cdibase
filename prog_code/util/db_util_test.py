@@ -49,7 +49,7 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
     50,
     TEST_EXTRA_CATEGORIES,
     0,
-    'english,spanish',
+    ['english','spanish'],
     TEST_NUM_LANGUAGES,
     'standard',
     TEST_HARD_OF_HEARING,
@@ -97,7 +97,7 @@ class DBUtilTests(unittest.TestCase):
         test_command = fake_cursor.commands[0]
         self.assertTrue('child_id=?,' in test_command[0])
         self.assertEqual(TEST_SNAPSHOT.child_id, test_command[1][0])
-        self.assertEqual(TEST_SNAPSHOT.languages, test_command[1][14])
+        self.assertEqual(TEST_SNAPSHOT.languages, test_command[1][14].split(','))
 
     def test_update_participant_metadata_all(self):
         fake_cursor = FakeCursor()
@@ -107,7 +107,7 @@ class DBUtilTests(unittest.TestCase):
             TEST_SNAPSHOT.gender,
             TEST_SNAPSHOT.birthday,
             TEST_SNAPSHOT.hard_of_hearing,
-            TEST_SNAPSHOT.languages.split(','),
+            TEST_SNAPSHOT.languages,
             cursor=fake_cursor
         )
 
@@ -118,7 +118,7 @@ class DBUtilTests(unittest.TestCase):
         self.assertEqual(TEST_SNAPSHOT.gender, test_command[1][0])
         self.assertEqual(TEST_SNAPSHOT.birthday, test_command[1][1])
         self.assertEqual(TEST_SNAPSHOT.hard_of_hearing, test_command[1][2])
-        self.assertEqual(TEST_SNAPSHOT.languages, test_command[1][3])
+        self.assertEqual(TEST_SNAPSHOT.languages, test_command[1][3].split(','))
         self.assertEqual(TEST_SNAPSHOT.child_id, test_command[1][4])
 
     def test_update_participant_metadata_select(self):
@@ -129,7 +129,7 @@ class DBUtilTests(unittest.TestCase):
             TEST_SNAPSHOT.gender,
             TEST_SNAPSHOT.birthday,
             TEST_SNAPSHOT.hard_of_hearing,
-            TEST_SNAPSHOT.languages.split(','),
+            TEST_SNAPSHOT.languages,
             cursor=fake_cursor,
             snapshot_ids=[
                 {'study': 'test-study-1', 'id': 1},
@@ -143,7 +143,7 @@ class DBUtilTests(unittest.TestCase):
         self.assertEqual(TEST_SNAPSHOT.gender, test_command[1][0])
         self.assertEqual(TEST_SNAPSHOT.birthday, test_command[1][1])
         self.assertEqual(TEST_SNAPSHOT.hard_of_hearing, test_command[1][2])
-        self.assertEqual(TEST_SNAPSHOT.languages, test_command[1][3])
+        self.assertEqual(TEST_SNAPSHOT.languages, test_command[1][3].split(','))
         self.assertEqual(TEST_SNAPSHOT.child_id, test_command[1][4])
         self.assertEqual('test-study-1', test_command[1][5])
         self.assertEqual(1, test_command[1][6])
