@@ -515,7 +515,7 @@ class ParentForm:
         self.hard_of_hearing = hard_of_hearing
         self.total_num_sessions = total_num_sessions
 
-    def __eq__(self, other):
+    def __eq__(self, other: models.ParentForm):
         """Test to see if this form has the same attribute values as other.
 
         Test to see if this parent form record has the same attribute values as
