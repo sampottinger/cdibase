@@ -15,10 +15,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import unittest
+import unittest.mock
 
-import mox
-
-import daxlabbase
+import cdibase
 from ..struct import models
 from ..util import constants
 from ..util import user_util
@@ -41,84 +41,92 @@ TEST_USER = models.User(
 )
 
 
-class TestAccountControllers(mox.MoxTestBase):
+class TestAccountControllers(unittest.TestCase):
 
     def setUp(self):
-        mox.MoxTestBase.setUp(self)
-        self.app = daxlabbase.app
+        self.app = cdibase.app
 
     def test_login(self):
-        self.mox.StubOutWithMock(user_util, 'check_user_password')
-        user_util.check_user_password('', '').AndReturn(False)
-        user_util.check_user_password(TEST_EMAIL, '').AndReturn(False)
-        user_util.check_user_password(TEST_EMAIL, 'incorrect').AndReturn(False)
-        user_util.check_user_password(TEST_EMAIL, 'correct').AndReturn(True)
-        self.mox.ReplayAll()
+        with unittest.mock.patch('prog_code.util.user_util.check_user_password') as mock:
+            mock.side_effect = [False, False, False, True]
 
-        with self.app.test_client() as client:
-            resp = client.post('/base/account/login')
+            with self.app.test_client() as client:
+                resp = client.post('/base/account/login')
 
-            with client.session_transaction() as sess:
-                self.assertNotEqual(sess[ERROR_ATTR], '')
-                sess[ERROR_ATTR] = ''
+                with client.session_transaction() as sess:
+                    self.assertNotEqual(sess[ERROR_ATTR], '')
+                    sess[ERROR_ATTR] = ''
 
-            resp = client.post('/base/account/login', data={
-                'email': TEST_EMAIL
-            })
+                resp = client.post('/base/account/login', data={
+                    'email': TEST_EMAIL
+                })
 
-            with client.session_transaction() as sess:
-                self.assertNotEqual(sess[ERROR_ATTR], '')
-                sess[ERROR_ATTR] = ''
+                with client.session_transaction() as sess:
+                    self.assertNotEqual(sess[ERROR_ATTR], '')
+                    sess[ERROR_ATTR] = ''
 
-            resp = client.post('/base/account/login', data={
-                'email': TEST_EMAIL,
-                'password': 'incorrect'
-            })
+                resp = client.post('/base/account/login', data={
+                    'email': TEST_EMAIL,
+                    'password': 'incorrect'
+                })
 
-            with client.session_transaction() as sess:
-                self.assertNotEqual(sess[ERROR_ATTR], '')
-                sess[ERROR_ATTR] = ''
+                with client.session_transaction() as sess:
+                    self.assertNotEqual(sess[ERROR_ATTR], '')
+                    sess[ERROR_ATTR] = ''
 
-            resp = client.post('/base/account/login', data={
-                'email': TEST_EMAIL,
-                'password': 'correct'
-            })
+                resp = client.post('/base/account/login', data={
+                    'email': TEST_EMAIL,
+                    'password': 'correct'
+                })
 
-            with client.session_transaction() as sess:
-                self.assertEqual(sess[ERROR_ATTR], '')
-                self.assertNotEqual(sess[CONFIRMATION_ATTR], '')
+                with client.session_transaction() as sess:
+                    self.assertEqual(sess[ERROR_ATTR], '')
+                    self.assertNotEqual(sess[CONFIRMATION_ATTR], '')
+
+            self.assertEqual(len(mock.call_args_list), 4)
+            self.assertEqual(mock.call_args_list[0][0][0], '')
+            self.assertEqual(mock.call_args_list[0][0][1], '')
+            self.assertEqual(mock.call_args_list[1][0][0], TEST_EMAIL)
+            self.assertEqual(mock.call_args_list[1][0][1], '')
+            self.assertEqual(mock.call_args_list[2][0][0], TEST_EMAIL)
+            self.assertEqual(mock.call_args_list[2][0][1], 'incorrect')
+            self.assertEqual(mock.call_args_list[3][0][0], TEST_EMAIL)
+            self.assertEqual(mock.call_args_list[3][0][1], 'correct')
 
     def test_forgot_password(self):
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(user_util, 'reset_password')
+        with unittest.mock.patch('prog_code.util.user_util.get_user') as mock_get_user:
+            with unittest.mock.patch('prog_code.util.user_util.reset_password') as mock_reset_password:
+                mock_get_user.side_effect = [False, True]
 
-        user_util.get_user('fake_user').AndReturn(False)
-        user_util.get_user(TEST_EMAIL).AndReturn(True)
-        user_util.reset_password(TEST_EMAIL)
-        self.mox.ReplayAll()
+                with self.app.test_client() as client:
+                    resp = client.post('/base/account/forgot_password')
 
-        with self.app.test_client() as client:
-            resp = client.post('/base/account/forgot_password')
+                    with client.session_transaction() as sess:
+                        self.assertFalse(ERROR_ATTR in sess)
+                        self.assertTrue(CONFIRMATION_ATTR in sess)
 
-            with client.session_transaction() as sess:
-                self.assertFalse(ERROR_ATTR in sess)
-                self.assertTrue(CONFIRMATION_ATTR in sess)
+                    resp = client.post('/base/account/forgot_password', data={
+                        'email': 'fake_user'
+                    })
 
-            resp = client.post('/base/account/forgot_password', data={
-                'email': 'fake_user'
-            })
+                    with client.session_transaction() as sess:
+                        self.assertFalse(ERROR_ATTR in sess)
+                        self.assertTrue(CONFIRMATION_ATTR in sess)
 
-            with client.session_transaction() as sess:
-                self.assertFalse(ERROR_ATTR in sess)
-                self.assertTrue(CONFIRMATION_ATTR in sess)
+                    resp = client.post('/base/account/forgot_password', data={
+                        'email': TEST_EMAIL
+                    })
 
-            resp = client.post('/base/account/forgot_password', data={
-                'email': TEST_EMAIL
-            })
+                    with client.session_transaction() as sess:
+                        self.assertFalse(ERROR_ATTR in sess)
+                        self.assertTrue(CONFIRMATION_ATTR in sess)
 
-            with client.session_transaction() as sess:
-                self.assertFalse(ERROR_ATTR in sess)
-                self.assertTrue(CONFIRMATION_ATTR in sess)
+                self.assertEqual(len(mock_get_user.mock_calls), 2)
+                mock_get_user.assert_any_call('fake_user')
+                mock_get_user.assert_any_call(TEST_EMAIL)
+
+                self.assertEqual(len(mock_reset_password.mock_calls), 1)
+                mock_reset_password.assert_called_with(TEST_EMAIL)
 
     def test_logout(self):
         with self.app.test_client() as client:
@@ -133,126 +141,128 @@ class TestAccountControllers(mox.MoxTestBase):
                 self.assertFalse('email' in sess)
 
     def test_change_password_fail(self):
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(user_util, 'check_user_password')
-        self.mox.StubOutWithMock(user_util, 'change_user_password')
+        def callback():
+            with self.app.test_client() as client:
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        user_util.check_user_password(TEST_EMAIL, 'wrong password').AndReturn(
-            False)
+                resp = client.post('/base/account/change_password')
 
-        self.mox.ReplayAll()
+                self.assertIn('location', resp.headers)
+                self.assertNotEqual(
+                    resp.headers['location'].find('change_password'),
+                    -1
+                )
 
-        with self.app.test_client() as client:
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+                with client.session_transaction() as sess:
+                    self.assertNotEqual(sess[ERROR_ATTR], '')
+                    sess[ERROR_ATTR] = ''
 
-            resp = client.post('/base/account/change_password')
+                resp = client.post('/base/account/change_password', data={
+                    'current_password': 'current password'
+                })
 
-            self.assertIn('location', resp.headers)
-            self.assertNotEqual(
-                resp.headers['location'].find('change_password'),
-                -1
-            )
+                self.assertIn('location', resp.headers)
+                self.assertNotEqual(
+                    resp.headers['location'].find('change_password'),
+                    -1
+                )
 
-            with client.session_transaction() as sess:
-                self.assertNotEqual(sess[ERROR_ATTR], '')
-                sess[ERROR_ATTR] = ''
+                with client.session_transaction() as sess:
+                    self.assertNotEqual(sess[ERROR_ATTR], '')
+                    sess[ERROR_ATTR] = ''
 
-            resp = client.post('/base/account/change_password', data={
-                'current_password': 'current password'
-            })
+                resp = client.post('/base/account/change_password', data={
+                    'current_password': 'current password',
+                    'new_password': 'new password'
+                })
 
-            self.assertIn('location', resp.headers)
-            self.assertNotEqual(
-                resp.headers['location'].find('change_password'),
-                -1
-            )
+                self.assertIn('location', resp.headers)
+                self.assertNotEqual(
+                    resp.headers['location'].find('change_password'),
+                    -1
+                )
 
-            with client.session_transaction() as sess:
-                self.assertNotEqual(sess[ERROR_ATTR], '')
-                sess[ERROR_ATTR] = ''
+                with client.session_transaction() as sess:
+                    self.assertNotEqual(sess[ERROR_ATTR], '')
+                    sess[ERROR_ATTR] = ''
 
-            resp = client.post('/base/account/change_password', data={
-                'current_password': 'current password',
-                'new_password': 'new password'
-            })
+                resp = client.post('/base/account/change_password', data={
+                    'current_password': 'current password',
+                    'new_password': '',
+                    'confirm_new_password': ''
+                })
 
-            self.assertIn('location', resp.headers)
-            self.assertNotEqual(
-                resp.headers['location'].find('change_password'),
-                -1
-            )
+                self.assertIn('location', resp.headers)
+                self.assertNotEqual(
+                    resp.headers['location'].find('change_password'),
+                    -1
+                )
 
-            with client.session_transaction() as sess:
-                self.assertNotEqual(sess[ERROR_ATTR], '')
-                sess[ERROR_ATTR] = ''
+                with client.session_transaction() as sess:
+                    self.assertNotEqual(sess[ERROR_ATTR], '')
+                    sess[ERROR_ATTR] = ''
 
-            resp = client.post('/base/account/change_password', data={
-                'current_password': 'current password',
-                'new_password': '',
-                'confirm_new_password': ''
-            })
+                resp = client.post('/base/account/change_password', data={
+                    'current_password': 'wrong password',
+                    'new_password': 'new password',
+                    'confirm_new_password': 'new password'
+                })
 
-            self.assertIn('location', resp.headers)
-            self.assertNotEqual(
-                resp.headers['location'].find('change_password'),
-                -1
-            )
+                self.assertIn('location', resp.headers)
+                self.assertNotEqual(
+                    resp.headers['location'].find('change_password'),
+                    -1
+                )
 
-            with client.session_transaction() as sess:
-                self.assertNotEqual(sess[ERROR_ATTR], '')
-                sess[ERROR_ATTR] = ''
+                with client.session_transaction() as sess:
+                    self.assertNotEqual(sess[ERROR_ATTR], '')
+                    sess[ERROR_ATTR] = ''
 
-            resp = client.post('/base/account/change_password', data={
-                'current_password': 'wrong password',
-                'new_password': 'new password',
-                'confirm_new_password': 'new password'
-            })
+        with unittest.mock.patch('prog_code.util.user_util.get_user') as mock_get_user:
+            with unittest.mock.patch('prog_code.util.user_util.check_user_password') as mock_check:
+                with unittest.mock.patch('prog_code.util.user_util.change_user_password') as mock_change:
+                    mock_get_user.get_user.return_value = TEST_USER
+                    mock_check.return_value = False
 
-            self.assertIn('location', resp.headers)
-            self.assertNotEqual(
-                resp.headers['location'].find('change_password'),
-                -1
-            )
+                    callback()
 
-            with client.session_transaction() as sess:
-                self.assertNotEqual(sess[ERROR_ATTR], '')
-                sess[ERROR_ATTR] = ''
+                    mock_get_user.assert_called_with(TEST_EMAIL)
+                    mock_check.assert_called_with(TEST_EMAIL, 'wrong password')
+                    self.assertEqual(len(mock_change.mock_calls), 0)
 
     def test_change_password(self):
-        self.mox.StubOutWithMock(user_util, 'get_user')
+        def callback():
+            with self.app.test_client() as client:
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        self.mox.StubOutWithMock(user_util, 'check_user_password')
-        self.mox.StubOutWithMock(user_util, 'change_user_password')
+                resp = client.post('/base/account/change_password', data={
+                    'current_password': 'current password',
+                    'new_password': 'new password',
+                    'confirm_new_password': 'new password'
+                })
 
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        user_util.check_user_password(TEST_EMAIL,
-            'current password').AndReturn(True)
-        user_util.change_user_password(TEST_EMAIL, 'new password')
+                self.assertIn('location', resp.headers)
+                self.assertEqual(
+                    resp.headers['location'].find('change_password'),
+                    -1
+                )
 
-        self.mox.ReplayAll()
+                with client.session_transaction() as sess:
+                    self.assertFalse(ERROR_ATTR in sess)
+                    self.assertNotEqual(sess[CONFIRMATION_ATTR], '')
 
-        with self.app.test_client() as client:
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
 
-            resp = client.post('/base/account/change_password', data={
-                'current_password': 'current password',
-                'new_password': 'new password',
-                'confirm_new_password': 'new password'
-            })
+        with unittest.mock.patch('prog_code.util.user_util.get_user') as mock_get_user:
+            with unittest.mock.patch('prog_code.util.user_util.check_user_password') as mock_check:
+                with unittest.mock.patch('prog_code.util.user_util.change_user_password') as mock_change:
+                    mock_get_user.get_user.return_value = TEST_USER
+                    mock_check.return_value = True
 
-            self.assertIn('location', resp.headers)
-            self.assertEqual(
-                resp.headers['location'].find('change_password'),
-                -1
-            )
+                    callback()
 
-            with client.session_transaction() as sess:
-                self.assertFalse(ERROR_ATTR in sess)
-                self.assertNotEqual(sess[CONFIRMATION_ATTR], '')
+                    mock_get_user.assert_called_with(TEST_EMAIL)
+                    mock_check.assert_called_with(TEST_EMAIL, 'current password')
+                    self.assertEqual(len(mock_change.mock_calls), 1)
+                    mock_change.assert_called_with(TEST_EMAIL, 'new password')

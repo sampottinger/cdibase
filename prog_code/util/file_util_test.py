@@ -15,15 +15,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import re
+import unittest
+import unittest.mock
 
-import mox
-
-import file_util
+import prog_code.util.file_util as file_util
 
 
-class FileUtilTests(mox.MoxTestBase):
+class FileUtilTests(unittest.TestCase):
 
     def test_generate_filename(self):
         filename = file_util.generate_filename(
@@ -37,16 +36,13 @@ class FileUtilTests(mox.MoxTestBase):
         self.assertIsNotNone(chars_regex.match(filename))
 
     def test_generate_unique_filename(self):
-        self.mox.StubOutWithMock(file_util, 'upload_exists')
+        with unittest.mock.patch('prog_code.util.file_util.upload_exists') as mock:
+            mock.side_effect = [True, True, False]
 
-        file_util.upload_exists(mox.IsA(basestring)).AndReturn(True)
-        file_util.upload_exists(mox.IsA(basestring)).AndReturn(True)
-        file_util.upload_exists(mox.IsA(basestring)).AndReturn(False)
+            filename = file_util.generate_unique_filename('.csv')
+            self.assertIn('.csv', filename)
 
-        self.mox.ReplayAll()
-
-        filename = file_util.generate_unique_filename('.csv')
-        self.assertIn('.csv', filename)
+            self.assertEqual(len(mock.mock_calls), 3)
 
     def test_allowed_file(self):
         self.assertTrue(file_util.allowed_file('test.csv'))

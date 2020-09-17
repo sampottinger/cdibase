@@ -18,14 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v3
 """
+import typing
 
 import flask
 
 from ..struct import models
 
-import constants
-import user_util
-import db_util
+import prog_code.util.constants as constants
+import prog_code.util.user_util as user_util
+import prog_code.util.db_util as db_util
 
 LOGIN_AGAIN_MSG = 'Whoops! For security, please log in again.'
 NOT_AUTHORIZED_ACCESS_DATA_MSG = 'You are not authorized to access data.'
@@ -38,7 +39,19 @@ NOT_AUTHORIZED_CHANGE_FORMATS_MSG = 'You are not authorized to change formats.'
 NOT_AUTHORIZED_API_KEYS_MSG = 'You are not authorized to use API keys.'
 
 
-def get_standard_template_values():
+def get_user_if_provided(email: typing.Optional[str]) -> typing.Optional[models.User]:
+    """Get a user by the given email address.
+
+    @param email: The email address to look up.
+    @returns: None if email does not belong to any user or is None. User otherwise.
+    """
+    if email == None:
+        return None
+    email_realized: str = email # type: ignore
+    return user_util.get_user(email_realized)
+
+
+def get_standard_template_values() -> typing.Dict[str, typing.Any]:
     """Get session information necessary to render any application page.
 
     Get session information necessary to render any application page including
@@ -52,18 +65,23 @@ def get_standard_template_values():
         'email': get_user_email(),
         'confirmation': get_confirmation(),
         'error': get_error(),
-        'user': user_util.get_user(get_user_email()),
+        'user': get_user_if_provided(get_user_email()),
         'scroll': get_scroll()
     }
 
 
-def create_args_snapshot():
+def create_args_snapshot() -> typing.Dict[str, typing.Any]:
+    """Create a snapshot of arguments from a flask request.
+
+    @returns: Description of items provided.
+    """
     return flask.request.form.items() + flask.request.args.items()
 
 
-def require_login(access_data=False, admin=False, enter_data=False,
-    delete_data=False, import_data=False, edit_parents=False,
-    change_formats=False, use_api_key=False):
+def require_login(access_data: bool = False, admin: bool = False, enter_data: bool = False,
+        delete_data: bool = False, import_data: bool = False, edit_parents: bool = False,
+        change_formats: bool = False,
+        use_api_key: bool = False) -> typing.Callable[[typing.Callable], typing.Callable]:
     """Decorator that requires that a user be logged in to do an operation.
 
     Decorator that requires that a user be logged in to do an operation and
@@ -80,19 +98,19 @@ def require_login(access_data=False, admin=False, enter_data=False,
         access enter new data into the database. Defaults to False.
     @type enter_data: bool
     @keyword change_formats: If True, require that the user have permission to
-        access / edit MCDI forms, CSV presentation formats, and percentile
+        access / edit CDI forms, CSV presentation formats, and percentile
         tables. Defaults to False.
     @type access_data: bool
     @keyword use_api_key: If True, require that the user has permission to use
         API keys. Defaults to False.
-    @tyep: use_api_key: bool
+    @type: use_api_key: bool
     """
     def wrap(orig_view):
         def decorated_function(*args, **kwargs):
             if not is_logged_in():
                 flask.session[constants.ERROR_ATTR] = LOGIN_AGAIN_MSG
                 return flask.redirect("/base/account/login")
-            user = user_util.get_user(get_user_email())
+            user = get_user_if_provided(get_user_email())
             if not user:
                 del flask.session["email"]
                 flask.session[constants.ERROR_ATTR] = LOGIN_AGAIN_MSG
@@ -133,13 +151,13 @@ def require_login(access_data=False, admin=False, enter_data=False,
     return wrap
 
 
-def logout():
+def logout() -> None:
     """Remove user information from current visitor session."""
     if 'email' in flask.session:
         del flask.session['email']
 
 
-def is_logged_in():
+def is_logged_in() -> bool:
     """Determine if current user is authenticated as an application user.
 
     @return: True if the current user is currently authenticated and False
@@ -149,7 +167,7 @@ def is_logged_in():
     return 'email' in flask.session
 
 
-def get_error():
+def get_error() -> typing.Optional[str]:
     """Get any waiting errors for the current user.
 
     Get any errors waiting for the current user and delete that message as it is
@@ -164,7 +182,7 @@ def get_error():
     return error
 
 
-def get_user_email():
+def get_user_email() -> typing.Optional[str]:
     """Get the email of the currently logged in user.
 
     @return: The email of the user currently logged in who is making the current
@@ -174,15 +192,40 @@ def get_user_email():
     return flask.session.get('email', None)
 
 
-def get_user_id():
-    """Get the id of the user currently logged in."""
-    user = user_util.get_user(get_user_email())
+def get_user_email_force() -> str:
+    """Get the email of the currently logged in user.
+
+    @return: The email of the user currently logged in who is making the current
+        request. Throw error if it is not available.
+    @rtype: str
+    """
+    user_email = get_user_email()
+    assert user_email != None
+    return user_email # type: ignore
+
+
+def get_user_id() -> typing.Optional[int]:
+    """Get the id of the user currently logged in.
+
+    @returns: Current user ID or None if no session.
+    """
+    user = get_user_if_provided(get_user_email())
     if not user:
         return None
     return user.db_id
 
 
-def get_confirmation():
+def get_user_id_force() -> int:
+    """Get the id of the user currently logged in and assert not None
+
+    @returns: Current user ID.
+    """
+    result = get_user_id()
+    assert result != None
+    return result # type: ignore
+
+
+def get_confirmation() -> typing.Optional[str]:
     """Get any waiting confirmation messages for the current user.
 
     Get any confirmation messages waiting for the current user and delete that
@@ -261,7 +304,7 @@ def get_filters(session=None):
     filters = get_filters_serialized(session)
     if not filters:
         return []
-    return map(unserialize_filter, filters)
+    return list(map(unserialize_filter, filters))
 
 
 def add_filter(new_filter, sess=None):
@@ -277,7 +320,7 @@ def add_filter(new_filter, sess=None):
     if not filters:
         filters = []
     filters.append(new_filter)
-    sess['filters'] = map(serialize_filter, filters)
+    sess['filters'] = list(map(serialize_filter, filters))
 
 
 def delete_filter(index):

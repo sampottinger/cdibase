@@ -1,4 +1,4 @@
-"""Listing of special values encoded in the database for CDI information.
+"""Type definitions for controllers.
 
 Copyright (C) 2014 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
 
@@ -14,35 +14,16 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-@author: Sam Pottinger
-@license: GNU GPL v3
 """
 
-NO_DATA = -100
-UNKNOWN = -200
-POSSIBLY_WRONGLY_REC = -300
-EMERGENCY_REC = -400
-IMPLIED_FALSE = -500
-IMPLIED_TRUE = -501
-EXPLICIT_TRUE = 1
-EXPLICIT_FALSE = 0
-EXPLICIT_NONE = -600
-EXPLICIT_NA = -700
-EXPLICIT_OTHER = -800
-NO_EXTRA_CATEGORIES = -900
-EXTRA_CATEGORIES = -1000
-ELEVEN_PRESUMED_TRUE = -3000
-TRUE_VALS = [EXPLICIT_TRUE, ELEVEN_PRESUMED_TRUE]
+import typing
 
-MALE = -2001
-FEMALE = -2002
-OTHER_GENDER = -2003
+import flask
+import werkzeug.wrappers
 
-ERROR_ATTR = 'error'
-CONFIRMATION_ATTR = 'confirmation'
-FORMAT_SESSION_ATTR = 'format'
-SNAPSHOTS_DB_TABLE = 'snapshots'
-FORM_SELECTED_VALUE = 'on'
-
-BASE_URL = '/base'
+ValidFlaskReturnTypes = typing.Union[
+    str,
+    flask.Response,
+    werkzeug.wrappers.Response,
+    typing.Tuple[str, int]
+]

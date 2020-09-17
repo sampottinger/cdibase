@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v3
 """
-
 import datetime
 import json
+import typing
 
 import flask
 
@@ -35,7 +35,9 @@ from ..util import parent_account_util
 from ..util import session_util
 from ..util import user_util
 
-from daxlabbase import app
+from . import controller_types
+
+from cdibase import app
 
 SPECIAL_API_QUERY_FIELDS = {
     'min_percentile': {'field': 'percentile', 'op': 'gteq'},
@@ -85,8 +87,8 @@ USER_NOT_DB_AUTHORIZED_MSG = 'User not authorized to use access database.'
 MISMATCHED_CSV_LENGTHS_MSG = 'Mismatched CSV list lengths.'
 MISSING_PARENT_EMAIL_MSG = 'Parent email required.'
 NEW_API_KEY_MSG = 'New API key generated.'
-MISSING_MCDI_TYPE_MSG = 'Must specify mcdi_type.'
-INVALID_MCDI_TYPE_MSG = '%s not a valid mcdi_type.'
+MISSING_CDI_TYPE_MSG = 'Must specify cdi_type.'
+INVALID_CDI_TYPE_MSG = '%s not a valid cdi_type.'
 ISO_DATE_INVALID_MSG = 'Must provide ISO8601 date for birthday.'
 INVALID_GENDER_VALUE_MSG = 'The provided gender value is invalid for the ' \
     'selected presentation format.'
@@ -108,7 +110,7 @@ UNAUTHORIZED_STATUS = 403
 SNAPSHOTS_DB_TABLE = constants.SNAPSHOTS_DB_TABLE
 
 
-def generate_error(msg, code):
+def generate_error(msg: str, code: int) -> typing.Tuple[str, int]:
     """Generate a JSON serialized error message that the API can return.
 
     @param msg: The error message to provide to the API client.
@@ -123,7 +125,7 @@ def generate_error(msg, code):
     return json.dumps({ERROR_ATTR: msg}), code
 
 
-def generate_unauthorized_error(msg):
+def generate_unauthorized_error(msg: str) -> typing.Tuple[str, int]:
     """Generate an error indicating that the user attempted unauthorized action.
 
     Generate a JSON serialized error message that the API can return indicating
@@ -140,7 +142,7 @@ def generate_unauthorized_error(msg):
     return generate_error(msg, UNAUTHORIZED_STATUS)
 
 
-def generate_invalid_request_error(msg):
+def generate_invalid_request_error(msg: str) -> typing.Tuple[str, int]:
     """Return an error showing a user attempted an invalid / incomplete action.
 
     Generate a JSON serialized error message that the API can return. This error
@@ -157,7 +159,7 @@ def generate_invalid_request_error(msg):
     return generate_error(msg, INVALID_REQUEST_STATUS)
 
 
-def make_filter(field, value):
+def make_filter(field: str, value: str) -> models.Filter:
     """Add a filter to the serialized specification of a database query.
 
     Creates a Filter object that can be used with a filter_util search query.
@@ -177,9 +179,9 @@ def make_filter(field, value):
     @return: Filter created
     """
     if field in FLOAT_FIELDS:
-        value = float(value)
+        value = float(value) # type: ignore
     elif field in INTEGER_FIELDS:
-        value = int(value)
+        value = int(value) # type: ignore
 
     filter_const_info = None
     if field in SPECIAL_API_QUERY_FIELDS:
@@ -194,26 +196,38 @@ def make_filter(field, value):
     )
 
 
+def get_api_key_or_none(user_id: typing.Optional[int]) -> typing.Optional[models.APIKey]:
+    """Get API key info if not None.
+
+    @param user_id: The user to lookup.
+    @returns: Key info if found and user_id is not None.
+    """
+    if user_id == None:
+        return None
+    else:
+        return api_key_util.get_api_key(user_id) # type: ignore
+
+
 @app.route('/base/config_api_key')
 @session_util.require_login(use_api_key=True)
-def config_api_keys():
+def config_api_keys() -> controller_types.ValidFlaskReturnTypes:
     """GUI page for configuring API keys.
 
     @return: Current API key and controls to modify that key.
     @rtype: flask.Response
     """
-    user_id = session_util.get_user_id()
+    user_id = session_util.get_user_id_force()
     return flask.render_template(
         'edit_api_keys.html',
         cur_page='conifg_api_key',
-        api_key=api_key_util.get_api_key(user_id),
+        api_key=get_api_key_or_none(user_id),
         **session_util.get_standard_template_values()
     )
 
 
 @app.route('/base/config_api_key/new')
 @session_util.require_login(use_api_key=True)
-def create_api_key():
+def create_api_key() -> controller_types.ValidFlaskReturnTypes:
     """Controller that allows for the creation of a new API key.
 
     Controller that assigns a user a new API key. Note that this controller will
@@ -224,14 +238,14 @@ def create_api_key():
     @return: Redirect to the API configuration page.
     @rtype: Flask response
     """
-    user_id = session_util.get_user_id()
+    user_id = session_util.get_user_id_force()
     api_key_util.create_new_api_key(user_id)
     flask.session[CONFIRMATION_ATTR] = NEW_API_KEY_MSG
     return flask.redirect('/base/config_api_key')
 
 
-def verify_api_key_for_parent_forms(api_key):
-    """Verify that the user with the given API key can send parent MCDI forms.
+def verify_api_key_for_parent_forms(api_key: typing.Optional[str]) -> typing.Optional[controller_types.ValidFlaskReturnTypes]:
+    """Verify that the user with the given API key can send parent CDI forms.
 
     Check that the given API is valid, active (belongs to a user), that user
     is still authorized to use the API, and that the user has the ability to
@@ -265,30 +279,30 @@ def verify_api_key_for_parent_forms(api_key):
 
 
 @app.route('/base/api/v0/send_parent_form', methods=['GET', 'POST'])
-def send_parent_form():
-    """API controller that allows external applications to send an MCDI form.
+def send_parent_form() -> controller_types.ValidFlaskReturnTypes:
+    """API controller that allows external applications to send an CDI form.
 
     API controller that allows external applications and services to send a
-    single MCDI form to many parents. All parameters should be provided as form-
+    single CDI form to many parents. All parameters should be provided as form-
     encoded body parameters except for the API key which should be specified in
     the URL as a query string.
 
     ENDPOINT: /base/api/v0/send_parent_form
 
-    DESCRIPTION: Send a single MCDI form to many parents.
+    DESCRIPTION: Send a single CDI form to many parents.
 
     SUPPORTED METHODS: GET, POST
 
     RESPONSE: JSON-encoded object with a message field. Objects representing an
-        error have that message in an "error" attribute. 
+        error have that message in an "error" attribute.
 
     All of the following additional query parameters are required:
      - api_key
        // Executes this request on behalf of the user account with this API key.
      - &child_name={{child name}}
-       // note that this is never stored in the application or into the MCDI db.
-     - &mcdi_type={{type of MCDI form to send}}
-       // "fullenglishmcdi" without quotes is suggested if uncertain
+       // note that this is never stored in the application or into the CDI db.
+     - &cdi_type={{type of CDI form to send}}
+       // "fullenglishcdi" without quotes is suggested if uncertain
      - &parent_email={{parent's email address}}
 
     One of the following is required:
@@ -320,7 +334,7 @@ def send_parent_form():
        // Defaults to "standard" if not provided.
 
     If any of these fields are not provided, missing values will be loaded from
-    the most recent MCDI available for the child or, if there are no prior MCDIs
+    the most recent CDI available for the child or, if there are no prior CDIs
     available within the DB, the parent will be asked for this information
     within the form GUI.
 
@@ -329,61 +343,64 @@ def send_parent_form():
     """
     request = flask.request
     api_key = request.args.get(API_KEY_FIELD, None)
-    
-    # Ensure that the current user has premissions necessary to send parent MCDI
+
+    # Ensure that the current user has premissions necessary to send parent CDI
     # through the API layer.
-    problem = verify_api_key_for_parent_forms(api_key)
+    problem = verify_api_key_for_parent_forms(api_key) # type: ignore
     if problem != None:
-        return problem
+        return problem # type: ignore
 
     # Parse user provided information about the interpretation / presentation
     # format, mapping necessary to interpreting user input for this API
     # operation.
     interpretation_format_name = request.args.get(FORMAT_ATTR,
         DEFAULT_INTERPRETATION_FORMAT)
-    interpretation_format = db_util.load_presentation_model(
+    interpretation_format_maybe = db_util.load_presentation_model(
         interpretation_format_name)
 
     # Reject API request if the interpretation format was not provided or if the
     # user requested an interpretation format that was not recognized.
-    if interpretation_format == None:
+    if interpretation_format_maybe == None:
         return generate_invalid_request_error(INVALID_INTERPRETATION_MSG)
 
+    interpretation_format: models.PresentationFormat = interpretation_format_maybe # type: ignore
+
     # Parse the rest of user input.
-    form_id = parent_account_util.generate_unique_mcdi_form_id()
-    global_id = interp_util.safe_int_interpret(
-        request.args.get('database_id', ''))
-    study_id = request.args.get('study_id', '')
-    study = request.args.get('study', '')
-    gender = request.args.get('gender', '')
-    birthday = request.args.get('birthday', '')
-    items_excluded = interp_util.safe_int_interpret(
+    form_id = parent_account_util.generate_unique_cdi_form_id()
+    global_id_maybe = request.args.get('database_id', '')
+    study_id_maybe = request.args.get('study_id', '')
+    study_maybe = request.args.get('study', '')
+    gender_maybe = request.args.get('gender', '')
+    birthday_maybe = request.args.get('birthday', '')
+    items_excluded_maybe = interp_util.safe_int_interpret(
         request.args.get('items_excluded', ''))
-    extra_categories = interp_util.safe_int_interpret(
+    extra_categories_maybe = interp_util.safe_int_interpret(
         request.args.get('extra_categories', ''))
-    total_num_sessions = interp_util.safe_int_interpret(
+    total_num_sessions_maybe = interp_util.safe_int_interpret(
         request.args.get('total_num_sessions', ''))
     languages = request.args.get('languages', '')
     languages = languages.split('.')
     hard_of_hearing = request.args.get('hard_of_hearing')
     child_name = request.args.get('child_name', '')
     parent_email = request.args.get('parent_email', '')
-    mcdi_type = request.args.get('mcdi_type', None)
+    cdi_type_maybe = request.args.get('cdi_type', None)
 
-    # Check that an MCDI type was provided
-    if mcdi_type == None or mcdi_type == '':
-        return generate_invalid_request_error(MISSING_MCDI_TYPE_MSG)
+    # Check that an CDI type was provided
+    if cdi_type_maybe == None or cdi_type_maybe == '':
+        return generate_invalid_request_error(MISSING_CDI_TYPE_MSG)
 
-    # Ensure that the name of the desired MCDI format is specified / exists in
+    cdi_type: str = cdi_type_maybe # type: ignore
+
+    # Ensure that the name of the desired CDI format is specified / exists in
     # the application database.
-    if db_util.load_mcdi_model(mcdi_type) == None:
-        msg = INVALID_MCDI_TYPE_MSG % mcdi_type
+    if db_util.load_cdi_model(cdi_type) == None: # type: ignore
+        msg = INVALID_CDI_TYPE_MSG % cdi_type
         return generate_invalid_request_error(msg)
 
-    # Ensure that either a global ID or both a study and study ID were provided. 
-    global_id_missing = global_id == None or global_id == ''
-    study_id_missing = study_id == None or study_id == ''
-    study_missing = study == None or study == ''
+    # Ensure that either a global ID or both a study and study ID were provided.
+    global_id_missing = global_id_maybe == None or global_id_maybe == ''
+    study_id_missing = study_id_maybe == None or study_id_maybe == ''
+    study_missing = study_maybe == None or study_maybe == ''
     if global_id_missing and (study_id_missing or study_missing):
         return generate_invalid_request_error(NO_ID_MSG)
 
@@ -397,42 +414,42 @@ def send_parent_form():
 
     # Check that, if a birthday was provided, that the birthday has an
     # appropriate ISO date format.
-    if birthday != None and birthday != '':
+    if birthday_maybe != None and birthday_maybe != '':
         try:
-            birthday = datetime.datetime.strptime(birthday, ISO_PARSE_STR)
-            birthday = birthday.strftime(DATE_OUT_STR)
+            birthday_date = datetime.datetime.strptime(birthday_maybe, ISO_PARSE_STR)
+            birthday_maybe = birthday_date.strftime(DATE_OUT_STR)
         except ValueError as e:
             return generate_invalid_request_error(ISO_DATE_INVALID_MSG)
 
     # Use the specified interpretation / presentation format to parse the
     # provided gender value.
     interpretation_vals = interpretation_format.details
-    if gender != None and gender != '':
-        if isinstance(gender, int):
-            pass
-        elif gender == interpretation_vals['male']:
+    gender: typing.Optional[int] = None
+    if gender_maybe != None and gender_maybe != '':
+        if gender_maybe == interpretation_vals['male']:
             gender = constants.MALE
-        elif gender == interpretation_vals['female']:
+        elif gender_maybe == interpretation_vals['female']:
             gender = constants.FEMALE
-        elif gender == interpretation_vals['explicit_other']:
+        elif gender_maybe == interpretation_vals['explicit_other']:
             gender = constants.OTHER_GENDER
         else:
             return generate_invalid_request_error(INVALID_GENDER_VALUE_MSG)
 
     # use the specified interpretation / presentation formation to parse the
     # provided hard of hearing status.
+    hard_of_hearing_int: typing.Optional[int] = None
     if hard_of_hearing != None and hard_of_hearing != '':
         if isinstance(hard_of_hearing, bool):
             if hard_of_hearing:
-                hard_of_hearing = constants.EXPLICIT_TRUE
+                hard_of_hearing_int = constants.EXPLICIT_TRUE
             else:
-                hard_of_hearing = constants.EXPLICIT_FALSE
+                hard_of_hearing_int = constants.EXPLICIT_FALSE
         elif isinstance(hard_of_hearing, int):
-            pass
+            hard_of_hearing_int = hard_of_hearing # type: ignore
         elif hard_of_hearing == interpretation_vals['explicit_true']:
-            hard_of_hearing = constants.EXPLICIT_TRUE
+            hard_of_hearing_int = constants.EXPLICIT_TRUE
         elif hard_of_hearing == interpretation_vals['explicit_false']:
-            hard_of_hearing = constants.EXPLICIT_FALSE
+            hard_of_hearing_int = constants.EXPLICIT_FALSE
         else:
             return generate_invalid_request_error(INVALID_HARD_OF_HEARING_MSG)
 
@@ -442,39 +459,39 @@ def send_parent_form():
         form_id,
         child_name,
         parent_email,
-        mcdi_type,
-        global_id,
-        study_id,
-        study,
+        cdi_type,
+        global_id_maybe,
+        study_id_maybe,
+        study_maybe,
         gender,
-        birthday,
-        items_excluded,
-        extra_categories,
+        birthday_maybe,
+        items_excluded_maybe,
+        extra_categories_maybe,
         ','.join(languages),
         len(languages),
-        hard_of_hearing,
-        total_num_sessions
+        hard_of_hearing_int,
+        total_num_sessions_maybe
     )
 
     # If a parent form model is missing information about a child, load the rest
-    # of the missing information from a previous MCDI snapshot for the child.
+    # of the missing information from a previous CDI snapshot for the child.
     resolver = parent_account_util.AttributeResolutionResolver()
     resolver.fill_parent_form_defaults(new_form)
 
     # Save the filled parent form to the database and send a link for filling
     # out that form to the specified parent email address.
     db_util.insert_parent_form(new_form)
-    parent_account_util.send_mcdi_email(new_form)
+    parent_account_util.send_cdi_email(new_form)
 
     return SUCCESS_JSON_MSG
 
 
 @app.route('/base/api/v0/send_parent_forms', methods=['GET', 'POST'])
-def send_parent_forms():
-    """API controller that allows external applications to send many MCDI forms.
+def send_parent_forms() -> controller_types.ValidFlaskReturnTypes:
+    """API controller that allows external applications to send many CDI forms.
 
     API controller that allows external applications and services to send many
-    MCDI forms to many parents. All parameters should be provided as form-
+    CDI forms to many parents. All parameters should be provided as form-
     encoded body parameters except for the API key which should be specified in
     the URL as a query string.
 
@@ -482,9 +499,9 @@ def send_parent_forms():
      - api_key
        // Executes this request on behalf of the user account with this API key.
      - &child_name={{child name}}
-       // note that this is never stored in the application or into the MCDI db.
-     - &mcdi_type={{type of MCDI form to send}}
-       // "fullenglishmcdi" without quotes is suggested if uncertain
+       // note that this is never stored in the application or into the CDI db.
+     - &cdi_type={{type of CDI form to send}}
+       // "fullenglishcdi" without quotes is suggested if uncertain
      - &parent_email={{parent's email address}}
 
     One of the following is required:
@@ -517,12 +534,12 @@ def send_parent_forms():
 
     All fields (except api_key) take a CSV string (no quotes). Elements are
     zipped together so that the first child_name will be paired with the first
-    mcdi_type, parent_email, etc. while the second child_name will be paired
-    with the second mcdi_type and so on. This allows API clients to send many
+    cdi_type, parent_email, etc. while the second child_name will be paired
+    with the second cdi_type and so on. This allows API clients to send many
     emails with only one API call.
 
     If any of these fields are not provided, missing values will be loaded from
-    the most recent MCDI available for the child or, if there are no prior MCDIs
+    the most recent CDI available for the child or, if there are no prior CDIs
     available within the DB, the parent will be asked for this information
     within the form GUI.
 
@@ -531,58 +548,60 @@ def send_parent_forms():
     """
     request = flask.request
     api_key = request.args.get(API_KEY_FIELD, None)
-    
-    # Ensure that the current user has premissions necessary to send parent MCDI
+
+    # Ensure that the current user has premissions necessary to send parent CDI
     # through the API layer.
     problem = verify_api_key_for_parent_forms(api_key)
     if problem != None:
-        return problem
+        return problem # type: ignore
 
     # Parse user input.
     global_id_str = request.args.get('database_id', '')
     study_id_str = request.args.get('study_id', '')
     study_str = request.args.get('study', '')
-    gender_str = request.args.get('gender', '')
+    gender_raw = request.args.get('gender', '')
     birthday_str = request.args.get('birthday', '')
     items_excluded_str = request.args.get('items_excluded', '')
     total_num_sessions_str = request.args.get('total_num_sessions', '')
     extra_categories_str = request.args.get('extra_categories', '')
     languages_str = request.args.get('languages', '')
-    hard_of_hearing_str = request.args.get('hard_of_hearing', '')
+    hard_of_hearing_raw = request.args.get('hard_of_hearing', '')
     child_name_str = request.args.get('child_name', '')
     parent_email = request.args.get('parent_email', '')
-    mcdi_type_str = request.args.get('mcdi_type', '')
+    cdi_type_str = request.args.get('cdi_type', '')
 
     # Parse user provided information about the interpretation / presentation
     # format, mapping necessary to interpreting user input for this API
     # operation.
     interpretation_format_name = request.args.get(FORMAT_ATTR,
         DEFAULT_INTERPRETATION_FORMAT)
-    interpretation_format = db_util.load_presentation_model(
+    interpretation_format_maybe = db_util.load_presentation_model(
         interpretation_format_name)
 
     # Reject API request if the interpretation format was not provided or if the
     # user requested an interpretation format that was not recognized.
-    if interpretation_format == None:
+    if interpretation_format_maybe == None:
         return generate_invalid_request_error(INVALID_INTERPRETATION_MSG)
 
-    # To support sending multiple MCDI forms in a single API call, split
+    interpretation_format: models.PresentationFormat = interpretation_format_maybe # type: ignore
+
+    # To support sending multiple CDI forms in a single API call, split
     # specified values by comma. Note that this API version does not allow for
     # commas in the strings provided to this call unless they demark one input
     # value from another.
     global_id_vals = api_key_util.interp_csv_field(global_id_str)
     study_id_vals = api_key_util.interp_csv_field(study_id_str)
     study_vals = api_key_util.interp_csv_field(study_str)
-    gender_vals = api_key_util.interp_csv_field(gender_str)
+    gender_vals = api_key_util.interp_csv_field(gender_raw)
     birthday_vals = api_key_util.interp_csv_field(birthday_str)
     items_excluded_vals = api_key_util.interp_csv_field(items_excluded_str)
     total_num_sessions_vals = api_key_util.interp_csv_field(total_num_sessions_str)
     extra_categories_vals = api_key_util.interp_csv_field(extra_categories_str)
     languages_vals = api_key_util.interp_csv_field(languages_str)
-    hard_of_hearing_vals = api_key_util.interp_csv_field(hard_of_hearing_str)
+    hard_of_hearing_vals = api_key_util.interp_csv_field(hard_of_hearing_raw)
     child_name_vals = api_key_util.interp_csv_field(child_name_str)
     parent_email_vals = api_key_util.interp_csv_field(parent_email)
-    mcdi_type_vals = api_key_util.interp_csv_field(mcdi_type_str)
+    cdi_type_vals = api_key_util.interp_csv_field(cdi_type_str)
 
     # Ensure that the same number of values were provided for each API
     # parameter for this call.
@@ -598,13 +617,13 @@ def send_parent_forms():
         len(hard_of_hearing_vals),
         len(child_name_vals),
         len(parent_email_vals),
-        len(mcdi_type_vals),
+        len(cdi_type_vals),
         len(total_num_sessions_vals)
     ]
 
     length_set = set(lengths)
     length_set.remove(0)
-    
+
     if len(length_set) > 1:
         return generate_invalid_request_error(MISMATCHED_CSV_LENGTHS_MSG)
     num_records = list(length_set)[0]
@@ -619,11 +638,10 @@ def send_parent_forms():
 
         # Get the grouping of parameters across the parameter arrays. Note that
         # get if avail returns '' if the parameter is not provided.
-        global_id = interp_util.safe_int_interpret(
-            api_key_util.get_if_avail(global_id_vals, i))
+        global_id = api_key_util.get_if_avail(global_id_vals, i)
         study_id = api_key_util.get_if_avail(study_id_vals, i)
         study = api_key_util.get_if_avail(study_vals, i)
-        gender = api_key_util.get_if_avail(gender_vals, i)
+        gender_raw = api_key_util.get_if_avail(gender_vals, i)
         birthday = api_key_util.get_if_avail(birthday_vals, i)
         items_excluded = interp_util.safe_int_interpret(
             api_key_util.get_if_avail(items_excluded_vals, i))
@@ -632,22 +650,22 @@ def send_parent_forms():
         extra_categories = interp_util.safe_int_interpret(
             api_key_util.get_if_avail(extra_categories_vals, i))
         languages = api_key_util.get_if_avail(languages_vals, i)
-        hard_of_hearing = api_key_util.get_if_avail(hard_of_hearing_vals, i)
+        hard_of_hearing_raw = api_key_util.get_if_avail(hard_of_hearing_vals, i)
         child_name = api_key_util.get_if_avail(child_name_vals, i)
         parent_email = api_key_util.get_if_avail(parent_email_vals, i)
-        mcdi_type = api_key_util.get_if_avail(mcdi_type_vals, i)
+        cdi_type = api_key_util.get_if_avail(cdi_type_vals, i)
 
         # Generate a new unique randomly generated ID for this new parent form.
-        form_id = parent_account_util.generate_unique_mcdi_form_id()
+        form_id = parent_account_util.generate_unique_cdi_form_id()
 
-        # Ensure the desired type of MCDI form  was specified.
-        if mcdi_type == None or mcdi_type == '':
-            return generate_invalid_request_error(MISSING_MCDI_TYPE_MSG)
+        # Ensure the desired type of CDI form  was specified.
+        if cdi_type == None or cdi_type == '':
+            return generate_invalid_request_error(MISSING_CDI_TYPE_MSG)
 
-        # Ensure that the name of the desired MCDI format has been specified / 
-        # the MCDI format is in the application's database.
-        if db_util.load_mcdi_model(mcdi_type) == None:
-            msg = INVALID_MCDI_TYPE_MSG % mcdi_type
+        # Ensure that the name of the desired CDI format has been specified /
+        # the CDI format is in the application's database.
+        if db_util.load_cdi_model(cdi_type) == None:
+            msg = INVALID_CDI_TYPE_MSG % cdi_type
             return generate_invalid_request_error(msg)
 
         # Ensure that the API client provided either a global ID or both a study
@@ -669,56 +687,62 @@ def send_parent_forms():
         # Ensure that the provided birthday is in a correct ISO date string.
         if birthday != None and birthday != '':
             try:
-                birthday = datetime.datetime.strptime(birthday, ISO_PARSE_STR)
-                birthday = birthday.strftime(DATE_OUT_STR)
+                birthday_date = datetime.datetime.strptime(birthday, ISO_PARSE_STR)
+                birthday = birthday_date.strftime(DATE_OUT_STR)
             except:
                 return generate_invalid_request_error(ISO_DATE_INVALID_MSG)
 
         # Parse the languages as a period seperated value.
-        languages = languages.split('.')
+        languages_list = languages.split('.')
 
         interpretation_vals = interpretation_format.details
 
         # Use the specified interpretation / presentation format to parse the
         # provided gender value.
-        if gender != None and gender != '':
-            if isinstance(gender, int):
-                pass
-            elif gender == interpretation_vals['male']:
+        gender: typing.Optional[int]
+        if gender_raw == None or gender_raw == '':
+            gender = None
+        else:
+            if isinstance(gender_raw, int):
+                gender = gender_raw
+            elif gender_raw == interpretation_vals['male']:
                 gender = constants.MALE
-            elif gender == interpretation_vals['female']:
+            elif gender_raw == interpretation_vals['female']:
                 gender = constants.FEMALE
-            elif gender == interpretation_vals['explicit_other']:
+            elif gender_raw == interpretation_vals['explicit_other']:
                 gender = constants.OTHER_GENDER
             else:
                 return generate_invalid_request_error(INVALID_GENDER_VALUE_MSG)
 
-
         # Use the specified interpretation / presentation formation to parse the
         # provided hard of hearing status.
-        if hard_of_hearing != None and hard_of_hearing != '':
-            if isinstance(hard_of_hearing, bool):
-                if hard_of_hearing:
+        hard_of_hearing: typing.Optional[int]
+        if hard_of_hearing_raw == None or hard_of_hearing_raw == '':
+            hard_of_hearing = None
+        else:
+            if isinstance(hard_of_hearing_raw, bool):
+                if hard_of_hearing_raw:
                     hard_of_hearing = constants.EXPLICIT_TRUE
                 else:
                     hard_of_hearing = constants.EXPLICIT_FALSE
-            elif isinstance(hard_of_hearing, int):
-                pass
-            if hard_of_hearing == interpretation_vals['explicit_true']:
+            elif isinstance(hard_of_hearing_raw, int):
+                hard_of_hearing = hard_of_hearing_raw # type: ignore
+            if hard_of_hearing_raw == interpretation_vals['explicit_true']:
                 hard_of_hearing = constants.EXPLICIT_TRUE
-            elif hard_of_hearing == interpretation_vals['explicit_false']:
+            elif hard_of_hearing_raw == interpretation_vals['explicit_false']:
                 hard_of_hearing = constants.EXPLICIT_FALSE
             else:
                 return generate_invalid_request_error(
-                    INVALID_HARD_OF_HEARING_MSG)
+                    INVALID_HARD_OF_HEARING_MSG
+                )
 
-        # Create a new parent form model but wait to save it until resolving 
+        # Create a new parent form model but wait to save it until resolving
         # missing values by using a previous entry for the specified child.
         new_form = models.ParentForm(
             form_id,
             child_name,
             parent_email,
-            mcdi_type,
+            cdi_type,
             global_id,
             study_id,
             study,
@@ -726,14 +750,14 @@ def send_parent_forms():
             birthday,
             items_excluded,
             extra_categories,
-            ','.join(languages),
-            len(languages),
+            ','.join(languages_list),
+            len(languages_list),
             hard_of_hearing,
             total_num_sessions
         )
 
         # If a parent form model is missing information about a child, load the
-        # rest of the missing information from a previous MCDI snapshot for the
+        # rest of the missing information from a previous CDI snapshot for the
         # child.
         resolver = parent_account_util.AttributeResolutionResolver()
         resolver.fill_parent_form_defaults(new_form)
@@ -745,21 +769,21 @@ def send_parent_forms():
         # Save the filled parent form to the database and send a link for
         # filling out that form to the specified parent email address.
         db_util.insert_parent_form(new_form)
-        parent_account_util.send_mcdi_email(new_form)
+        parent_account_util.send_cdi_email(new_form)
 
     return SUCCESS_JSON_MSG
 
 
-@app.route("/base/api/v0/mcdi_metadata.json")
-def get_child_info_by_api():
-    """Get information about a child in the MCDI database.
+@app.route("/base/api/v0/cdi_metadata.json")
+def get_child_info_by_api() -> controller_types.ValidFlaskReturnTypes:
+    """Get information about a child in the CDI database.
 
-    Controller that allows other applications and services to look up MCDI
+    Controller that allows other applications and services to look up CDI
     metadata and information about available results for a chid.
 
-    DESCRIPTION: Get information about children and the MCDIs they have
-                 completed. Note that this call provides summaries of MCDIs and
-                 does not return the complete MCDIs with their full word
+    DESCRIPTION: Get information about children and the CDIs they have
+                 completed. Note that this call provides summaries of CDIs and
+                 does not return the complete CDIs with their full word
                  listings.
 
     SUPPORTED METHODS: GET
@@ -771,7 +795,7 @@ def get_child_info_by_api():
     OPTIONAL PARAMETERS:
      - format
        // The format to return responses in. Recommended: "standard" (without
-       // quotes). 
+       // quotes).
      - child_id
        // Kelp Child ID.
      - min_percentile
@@ -787,40 +811,40 @@ def get_child_info_by_api():
        // ISO 8601 date. Only children born before this date will be returned.
        // (ex: 2010/12/30)
      - min_session_date
-       // ISO 8601 date. Only MCDIs taken after this date will be returned.
+       // ISO 8601 date. Only CDIs taken after this date will be returned.
        // (ex: 2010/12/30)
      - max_session_date
-       // ISO 8601 date. Only MCDIs taken before this date will be returned.
+       // ISO 8601 date. Only CDIs taken before this date will be returned.
        // (ex: 2010/12/30)
      - gender
        // Only return children of this gender. (Should be "male" or "female" or
        // "other" without quotes).
      - session_num
-       // Children may have many sessions and MCDIs. Only return MCDIs from the
+       // Children may have many sessions and CDIs. Only return CDIs from the
        // nth session where n = the provided session_num.
      - total_num_sessions
-       // Children may have many sessions. Only provide MCDIs for those that had
+       // Children may have many sessions. Only provide CDIs for those that had
        // exactly this many sessions.
      - words_spoken
-       // The raw number of words reported as spoken on the child's MCDI.
+       // The raw number of words reported as spoken on the child's CDI.
      - items_excluded
-       // Only return MCDIs that had this many items excluded while taking the
-       // MCDI.
+       // Only return CDIs that had this many items excluded while taking the
+       // CDI.
      - extra_categories
-       // Only return MCDIs with this many additional categories included.
+       // Only return CDIs with this many additional categories included.
      - num_languages
        // Only return children that speak this many languages.
      - hard_of_hearing
        // Only return children that are or are not hard of hearing. (Should be
        // "1" or "0" without quotes).
      - study_id
-       // Only return MCDIs from the study with this ID.
+       // Only return CDIs from the study with this ID.
      - study
-       // Only return MCDIs from the study by this name.
+       // Only return CDIs from the study by this name.
      - age
-       // Only return MCDIs taken from children of this age in months.
-     - mcdi_type
-       // Only return MCDIs of this type.
+       // Only return CDIs taken from children of this age in months.
+     - cdi_type
+       // Only return CDIs of this type.
 
     All parameters should be provided as a URI query component.
     """
@@ -842,41 +866,46 @@ def get_child_info_by_api():
     if not user.can_access_data:
         return generate_unauthorized_error(USER_NOT_DB_AUTHORIZED_MSG)
 
-    fields = filter(lambda (name, value): name not in INGORE_FIELDS,
-        flask.request.args.items())
+    fields = filter(
+        lambda x: x[0] not in INGORE_FIELDS,
+        flask.request.args.items()
+    )
     db_filters = map(lambda x: make_filter(*x), fields)
 
     present_format = flask.request.args.get(FORMAT_ATTR, None)
     if present_format:
         present_format = db_util.load_presentation_model(present_format)
-    
+
     matching_snapshots = filter_util.run_search_query(
         db_filters,
         SNAPSHOTS_DB_TABLE,
         True
     )
-    serialized_snapshots_by_child_id = {}
+    serialized_snapshots_by_child_id: typing.Dict[int, typing.List[typing.Dict]] = {}
 
     for snapshot in matching_snapshots:
-        child_id = snapshot.child_id
-        
+        child_id_maybe = snapshot.child_id
+        assert child_id_maybe != None
+
+        child_id: int = child_id_maybe # type: ignore
+
         if not child_id in serialized_snapshots_by_child_id:
             serialized_snapshots_by_child_id[child_id] = []
-        
+
         snapshot_serialized = report_util.serialize_snapshot(
             snapshot,
             presentation_format=present_format,
             report_dict=True,
             include_words=False
         )
-        
-        serialized_snapshots_by_child_id[child_id].append(snapshot_serialized)
+
+        serialized_snapshots_by_child_id[child_id].append(snapshot_serialized) # type: ignore
 
     return json.dumps(serialized_snapshots_by_child_id)
 
 
 @app.route('/base/api/v0/get_child_words.json', methods=['GET', 'POST'])
-def get_child_words_by_api():
+def get_child_words_by_api() -> controller_types.ValidFlaskReturnTypes:
     """Get the words a child knows and when those words were first learned.
 
     Controller that allows other applications and services to look up the words

@@ -29,7 +29,9 @@ from ..util import session_util
 from ..util import user_util
 from ..util import db_util
 
-from daxlabbase import app
+from . import controller_types
+
+from cdibase import app
 
 USER_NOT_FOUND_MSG = 'User \"%s\" could not be found.'
 USER_ALREADY_EXISTS_MSG = 'User \"%s\" already exists. User not updated.'
@@ -39,9 +41,10 @@ EMAIL_NOT_PROVIDED_MSG = 'Email not provided. Please try again.'
 ACCOUNT_CREATED_MSG = 'Account created for %s.'
 ADD_USERS_URL = '/base/edit_users/_add'
 
+
 @app.route('/base/edit_users')
 @session_util.require_login(admin=True)
-def edit_users():
+def edit_users() -> controller_types.ValidFlaskReturnTypes:
     """Edit users with access to the application.
 
     @return: List of users with access to the application with links to add to,
@@ -58,7 +61,7 @@ def edit_users():
 
 @app.route('/base/edit_users/<email>/delete')
 @session_util.require_login(admin=True)
-def delete_user(email):
+def delete_user(email: str) -> controller_types.ValidFlaskReturnTypes:
     """Controller to remove a user's access to this application.
 
     Controller that removes a record of a user account and ends that user's
@@ -86,7 +89,7 @@ def delete_user(email):
 
 @app.route('/base/edit_users/<email>/edit', methods=['GET', 'POST'])
 @session_util.require_login(admin=True)
-def edit_user(email):
+def edit_user(email: str) -> controller_types.ValidFlaskReturnTypes:
     """Controller to edit a user's account in this application.
 
     @param email: The email of the user account to edit.
@@ -103,7 +106,7 @@ def edit_user(email):
             action_label='Edit User Account',
             **session_util.get_standard_template_values()
         )
-    
+
     else:
         new_email = request.form.get('new_email', '')
 
@@ -142,7 +145,7 @@ def edit_user(email):
 
 @app.route('/base/edit_users/_add', methods=['GET', 'POST'])
 @session_util.require_login(admin=True)
-def add_user():
+def add_user() -> controller_types.ValidFlaskReturnTypes:
     """Controller to add a new user account to this application.
 
     @return: HTML form on GET and redirect on POST
@@ -157,7 +160,7 @@ def add_user():
             **session_util.get_standard_template_values()
         )
 
-    elif request.method == 'POST':
+    else:
         email = request.form.get('new_email', '')
 
         if email == '':

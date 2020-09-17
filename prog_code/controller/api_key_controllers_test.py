@@ -15,14 +15,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import json
 import math
+import unittest
 import urllib
 
-import mox
-
-import daxlabbase
+import cdibase
 from ..controller import api_key_controllers
 from ..struct import models
 from ..util import api_key_util
@@ -42,8 +40,8 @@ TEST_PARENT_FORM_ID = 20
 TEST_CHILD_NAME = 'Test Child'
 TEST_PARENT_EMAIL = 'parent@example.com'
 TEST_EMAIL = 'test_mail'
-TEST_DB_ID = 123
-TEST_STUDY_ID = 456
+TEST_DB_ID = '123'
+TEST_STUDY_ID = '456'
 TEST_SNAPSHOT_ID = 789
 TEST_ITEMS_EXCLUDED = 3
 TEST_EXTRA_CATEGORIES = 4
@@ -55,7 +53,7 @@ TEST_BIRTHDAY = '2011/09/12'
 TEST_PARENT_FORM_ID_MOD = 30
 TEST_CHILD_NAME_MOD = 'Test Child2'
 TEST_PARENT_EMAIL_MOD = 'parent2@example.com'
-TEST_DB_ID_MOD = 321
+TEST_DB_ID_MOD = '321'
 TEST_STUDY_ID_MOD = 654
 TEST_STUDY_MOD = 'test study 2'
 TEST_BIRTHDAY_MOD = '2011/09/13'
@@ -103,7 +101,7 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
     TEST_HARD_OF_HEARING,
     False
 )
-TEST_FORMAT = models.MCDIFormat(
+TEST_FORMAT = models.CDIFormat(
     'standard',
     'standard',
     'standard.yaml',
@@ -163,16 +161,47 @@ EXPECTED_MODIFIED_PARENT_FORM = models.ParentForm(
 )
 
 
-class TestAPIKeyControllers(mox.MoxTestBase):
+class TestAPIKeyControllers(unittest.TestCase):
 
     def setUp(self):
-        mox.MoxTestBase.setUp(self)
-        self.app = daxlabbase.app
+        self.app = cdibase.app
         self.app.debug = True
+        self.__callback_called = False
+
+    def __run_with_mocks(self, on_start, body, on_end):
+        with unittest.mock.patch('prog_code.util.user_util.get_user') as mock_get_user:
+            with unittest.mock.patch('prog_code.util.session_util.get_user_id') as mock_get_user_id:
+                with unittest.mock.patch('prog_code.util.api_key_util.create_new_api_key') as mock_create_new_api_key:
+                    with unittest.mock.patch('prog_code.util.db_util.get_api_key') as mock_get_api_key:
+                        with unittest.mock.patch('prog_code.util.db_util.load_cdi_model') as mock_load_cdi_model:
+                            with unittest.mock.patch('prog_code.util.db_util.load_presentation_model') as mock_load_presentation_model:
+                                with unittest.mock.patch('prog_code.util.parent_account_util.generate_unique_cdi_form_id') as mock_generate_unique_cdi_form_id:
+                                    with unittest.mock.patch('prog_code.util.filter_util.run_search_query') as mock_run_search_query:
+                                        with unittest.mock.patch('prog_code.util.db_util.insert_parent_form') as mock_insert_parent_form:
+                                            with unittest.mock.patch('prog_code.util.report_util.summarize_snapshots') as mock_summarize_snapshots:
+                                                mocks = {
+                                                    'get_user': mock_get_user,
+                                                    'get_user_id': mock_get_user_id,
+                                                    'create_new_api_key': mock_create_new_api_key,
+                                                    'get_api_key': mock_get_api_key,
+                                                    'load_cdi_model': mock_load_cdi_model,
+                                                    'load_presentation_model': mock_load_presentation_model,
+                                                    'generate_unique_cdi_form_id': mock_generate_unique_cdi_form_id,
+                                                    'run_search_query': mock_run_search_query,
+                                                    'insert_parent_form': mock_insert_parent_form,
+                                                    'summarize_snapshots': mock_summarize_snapshots
+                                                }
+                                                on_start(mocks)
+                                                body()
+                                                on_end(mocks)
+                                                self.__callback_called = True
+
+    def __assert_callback(self):
+        self.assertTrue(self.__callback_called)
 
     def test_generate_error(self):
         test_message = 'test_message'
-        
+
         ret_str, status = api_key_controllers.generate_error(test_message,
             TEST_DB_ID)
         self.assertEqual(json.loads(ret_str)[constants.ERROR_ATTR],
@@ -210,788 +239,734 @@ class TestAPIKeyControllers(mox.MoxTestBase):
         self.assertEqual(filterModel.operator, 'eq')
 
     def test_create_api_key(self):
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(session_util, 'get_user_id')
-        self.mox.StubOutWithMock(api_key_util, 'create_new_api_key')
+        def body():
+            with self.app.test_client() as client:
 
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        session_util.get_user_id().AndReturn(TEST_DB_ID)
-        api_key_util.create_new_api_key(TEST_DB_ID)
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        self.mox.ReplayAll()
+                resp = client.get('/base/config_api_key/new')
+                self.assertEqual(resp.status_code, 302)
 
-        with self.app.test_client() as client:
-            
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+                with client.session_transaction() as sess:
+                    self.assertNotEqual(sess[constants.CONFIRMATION_ATTR], '')
+                    self.assertFalse(constants.ERROR_ATTR in sess)
 
-            resp = client.get('/base/config_api_key/new')
-            self.assertEqual(resp.status_code, 302)
+        def on_start(mocks):
+            mocks['get_user'].return_value = TEST_USER
+            mocks['get_user_id'].return_value = TEST_DB_ID
 
-            with client.session_transaction() as sess:
-                self.assertNotEqual(sess[constants.CONFIRMATION_ATTR], '')
-                self.assertFalse(constants.ERROR_ATTR in sess)
+        def on_end(mocks):
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+            mocks['create_new_api_key'].assert_called_with(TEST_DB_ID)
+
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_verify_api_key_for_parent_forms(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
-        self.mox.StubOutWithMock(user_util, 'get_user')
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(None)
+        def body():
+            problem = api_key_controllers.verify_api_key_for_parent_forms(
+                TEST_API_KEY)
+            self.assertNotEqual(problem, None)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(models.User(
-            TEST_DB_ID,
-            TEST_EMAIL,
-            None,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False
-        ))
+            problem = api_key_controllers.verify_api_key_for_parent_forms(
+                TEST_API_KEY)
+            self.assertNotEqual(problem, None)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(models.User(
-            TEST_DB_ID,
-            TEST_EMAIL,
-            None,
-            False,
-            False,
-            True,
-            False,
-            False,
-            False,
-            False,
-            False
-        ))
+            problem = api_key_controllers.verify_api_key_for_parent_forms(
+                TEST_API_KEY)
+            self.assertNotEqual(problem, None)
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+            problem = api_key_controllers.verify_api_key_for_parent_forms(
+                TEST_API_KEY)
+            self.assertEqual(problem, None)
 
-        self.mox.ReplayAll()
+        def on_start(mocks):
+            mocks['get_api_key'].side_effect = [
+                None,
+                TEST_API_KEY_ENTRY,
+                TEST_API_KEY_ENTRY,
+                TEST_API_KEY_ENTRY
+            ]
 
-        problem = api_key_controllers.verify_api_key_for_parent_forms(
-            TEST_API_KEY)
-        self.assertNotEqual(problem, None)
+            user_1 = models.User(
+                TEST_DB_ID,
+                TEST_EMAIL,
+                None,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False,
+                False
+            )
 
-        problem = api_key_controllers.verify_api_key_for_parent_forms(
-            TEST_API_KEY)
-        self.assertNotEqual(problem, None)
+            user_2 = models.User(
+                TEST_DB_ID,
+                TEST_EMAIL,
+                None,
+                False,
+                False,
+                True,
+                False,
+                False,
+                False,
+                False,
+                False
+            )
 
-        problem = api_key_controllers.verify_api_key_for_parent_forms(
-            TEST_API_KEY)
-        self.assertNotEqual(problem, None)
+            user_3 = TEST_USER
 
-        problem = api_key_controllers.verify_api_key_for_parent_forms(
-            TEST_API_KEY)
-        self.assertEqual(problem, None)
+            mocks['get_user'].side_effect = [user_1, user_2, user_3]
+
+        def on_end(mocks):
+            mocks['get_api_key'].assert_called_with(TEST_API_KEY)
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_send_parent_form_missing_params(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
-        self.mox.StubOutWithMock(user_util, 'get_user')
+        def body():
+            with self.app.test_client() as client:
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+                resp = client.get('/base/api/v0/send_parent_form')
+                self.assertTrue('error' in json.loads(resp.data))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+                resp = client.get('/base/api/v0/send_parent_form?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+                resp = client.get('/base/api/v0/send_parent_form?' +
+                        urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name'
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        self.mox.ReplayAll()
+                resp = client.get('/base/api/v0/send_parent_form?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard'
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        with self.app.test_client() as client:
-            
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+                resp = client.get('/base/api/v0/send_parent_form?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard',
+                        'parent_email': 'test parent'
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-            resp = client.get('/base/api/v0/send_parent_form')
-            self.assertTrue('error' in json.loads(resp.data))
+        def on_start(mocks):
+            mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
+            mocks['get_user'].return_value = TEST_USER
 
-            resp = client.get('/base/api/v0/send_parent_form?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
+        def on_end(mocks):
+            mocks['get_api_key'].assert_called_with(TEST_API_KEY)
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
 
-            resp = client.get('/base/api/v0/send_parent_form?' +
-                    urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name'
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_form?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard'
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_form?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'parent_email': 'test parent'
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_send_parent_form_invalid_params(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
-        self.mox.StubOutWithMock(parent_account_util,
-            'generate_unique_mcdi_form_id')
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('invalid_format').AndReturn(None)
+        def body():
+            with self.app.test_client() as client:
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('invalid_format').AndReturn(None)
-        db_util.load_mcdi_model('standard').AndReturn(None)
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+                resp = client.get('/base/api/v0/send_parent_form?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'invalid_format',
+                        'parent_email': TEST_PARENT_EMAIL,
+                        'database_id': TEST_DB_ID
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+                resp = client.get('/base/api/v0/send_parent_form?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard',
+                        'format': 'invalid_format',
+                        'parent_email': TEST_PARENT_EMAIL,
+                        'database_id': TEST_DB_ID
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+                resp = client.get('/base/api/v0/send_parent_form?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard',
+                        'parent_email': TEST_PARENT_EMAIL,
+                        'database_id': 'invalid type'
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+                resp = client.get('/base/api/v0/send_parent_form?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard',
+                        'parent_email': 'test',
+                        'database_id': TEST_DB_ID
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+                resp = client.get('/base/api/v0/send_parent_form?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard',
+                        'parent_email': TEST_PARENT_EMAIL,
+                        'database_id': str(TEST_DB_ID),
+                        'gender': 'invalid'
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
+                resp = client.get('/base/api/v0/send_parent_form?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard',
+                        'parent_email': TEST_PARENT_EMAIL,
+                        'database_id': str(TEST_DB_ID),
+                        'hard_of_hearing': 'invalid'
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        self.mox.ReplayAll()
+                resp = client.get('/base/api/v0/send_parent_form?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard',
+                        'parent_email': TEST_PARENT_EMAIL,
+                        'database_id': str(TEST_DB_ID),
+                        'birthday': 'invalid'
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        with self.app.test_client() as client:
-            
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+                resp = client.get('/base/api/v0/send_parent_form?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard',
+                        'parent_email': 'test email',
+                        'database_id': str(TEST_DB_ID)
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-            resp = client.get('/base/api/v0/send_parent_form?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'invalid_format',
-                    'parent_email': TEST_PARENT_EMAIL,
-                    'database_id': TEST_DB_ID
-                })
+        def on_start(mocks):
+            mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
+            mocks['get_user'].return_value = TEST_USER
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID
+            mocks['load_presentation_model'].side_effect = [
+                TEST_PRESENTATION_FORMAT_METADATA,
+                None,
+                TEST_PRESENTATION_FORMAT_METADATA,
+                TEST_PRESENTATION_FORMAT_METADATA,
+                TEST_PRESENTATION_FORMAT_METADATA,
+                TEST_PRESENTATION_FORMAT_METADATA,
+                TEST_PRESENTATION_FORMAT_METADATA,
+                TEST_PRESENTATION_FORMAT_METADATA
+            ]
+            mocks['load_cdi_model'].side_effect = [
+                None,
+                None,
+                TEST_FORMAT,
+                TEST_FORMAT,
+                TEST_FORMAT,
+                TEST_FORMAT,
+                TEST_FORMAT
+            ]
+
+        def on_end(mocks):
+            mocks['get_api_key'].assert_called_with(TEST_API_KEY)
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+
+            self.assertEqual(
+                len(mocks['load_presentation_model'].mock_calls),
+                8
             )
-            self.assertTrue('error' in json.loads(resp.data))
+            mocks['load_presentation_model'].assert_any_call('standard')
+            mocks['load_presentation_model'].assert_any_call('invalid_format')
 
-            resp = client.get('/base/api/v0/send_parent_form?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'format': 'invalid_format',
-                    'parent_email': TEST_PARENT_EMAIL,
-                    'database_id': TEST_DB_ID
-                })
+            self.assertEqual(
+                len(mocks['load_cdi_model'].mock_calls),
+                7
             )
-            self.assertTrue('error' in json.loads(resp.data))
+            mocks['load_presentation_model'].assert_any_call('standard')
+            mocks['load_presentation_model'].assert_any_call('invalid_format')
 
-            resp = client.get('/base/api/v0/send_parent_form?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'parent_email': TEST_PARENT_EMAIL,
-                    'database_id': 'invalid type'
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_form?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'parent_email': 'test',
-                    'database_id': TEST_DB_ID
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_form?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'parent_email': TEST_PARENT_EMAIL,
-                    'database_id': str(TEST_DB_ID),
-                    'gender': 'invalid'
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_form?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'parent_email': TEST_PARENT_EMAIL,
-                    'database_id': str(TEST_DB_ID),
-                    'hard_of_hearing': 'invalid'
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_form?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'parent_email': TEST_PARENT_EMAIL,
-                    'database_id': str(TEST_DB_ID),
-                    'birthday': 'invalid'
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_form?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'parent_email': 'test email',
-                    'database_id': str(TEST_DB_ID)
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_send_parent_form_defaults(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
-        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
-        self.mox.StubOutWithMock(parent_account_util,
-            'generate_unique_mcdi_form_id')
+        def body():
+            with self.app.test_client() as client:
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
-            [TEST_SNAPSHOT])
-        db_util.insert_parent_form(EXPECTED_PARENT_FORM)
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        self.mox.ReplayAll()
+                resp = client.get('/base/api/v0/send_parent_form?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': TEST_CHILD_NAME,
+                        'cdi_type': 'standard',
+                        'parent_email': TEST_PARENT_EMAIL,
+                        'database_id': TEST_DB_ID
+                    })
+                )
+                self.assertFalse('error' in json.loads(resp.data))
 
-        with self.app.test_client() as client:
-            
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+        def on_start(mocks):
+            mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
+            mocks['get_user'].return_value = TEST_USER
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID
+            mocks['load_presentation_model'].return_value = TEST_PRESENTATION_FORMAT_METADATA
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
+            mocks['run_search_query'].return_value = [TEST_SNAPSHOT]
 
-            resp = client.get('/base/api/v0/send_parent_form?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': TEST_CHILD_NAME,
-                    'mcdi_type': 'standard',
-                    'parent_email': TEST_PARENT_EMAIL,
-                    'database_id': TEST_DB_ID
-                })
+        def on_end(mocks):
+            mocks['get_api_key'].assert_called_with(TEST_API_KEY)
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+            mocks['generate_unique_cdi_form_id'].assert_called()
+            mocks['load_presentation_model'].assert_called_with('standard')
+            mocks['load_cdi_model'].assert_called_with('standard')
+            mocks['run_search_query'].assert_called_with(
+                unittest.mock.ANY,
+                'snapshots'
             )
-            self.assertFalse('error' in json.loads(resp.data))
+            mocks['insert_parent_form'].assert_called_with(EXPECTED_PARENT_FORM)
+
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_send_parent_form_non_defaults(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
-        self.mox.StubOutWithMock(parent_account_util,
-            'generate_unique_mcdi_form_id')
+        def body():
+            with self.app.test_client() as client:
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID_MOD)
-        db_util.load_presentation_model('standard_mod').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard_mod').AndReturn(TEST_FORMAT)
-        filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
-            [TEST_SNAPSHOT])
-        db_util.insert_parent_form(EXPECTED_MODIFIED_PARENT_FORM)
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        self.mox.ReplayAll()
+                resp = client.get('/base/api/v0/send_parent_form?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': TEST_CHILD_NAME_MOD,
+                        'cdi_type': 'standard_mod',
+                        'parent_email': TEST_PARENT_EMAIL_MOD,
+                        'study': TEST_STUDY_MOD,
+                        'study_id': TEST_STUDY_ID_MOD,
+                        'gender': 'female',
+                        'birthday': TEST_BIRTHDAY_MOD_ISO,
+                        'items_excluded': TEST_ITEMS_EXCLUDED_MOD,
+                        'extra_categories': TEST_EXTRA_CATEGORIES_MOD,
+                        'languages': 'english',
+                        'hard_of_hearing': 'true',
+                        'format': 'standard_mod'
+                    })
+                )
 
-        with self.app.test_client() as client:
-            
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+                self.assertFalse('error' in json.loads(resp.data))
 
-            resp = client.get('/base/api/v0/send_parent_form?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': TEST_CHILD_NAME_MOD,
-                    'mcdi_type': 'standard_mod',
-                    'parent_email': TEST_PARENT_EMAIL_MOD,
-                    'study': TEST_STUDY_MOD,
-                    'study_id': TEST_STUDY_ID_MOD,
-                    'gender': 'female',
-                    'birthday': TEST_BIRTHDAY_MOD_ISO,
-                    'items_excluded': TEST_ITEMS_EXCLUDED_MOD,
-                    'extra_categories': TEST_EXTRA_CATEGORIES_MOD,
-                    'languages': 'english',
-                    'hard_of_hearing': 'true',
-                    'format': 'standard_mod'
-                })
+        def on_start(mocks):
+            mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
+            mocks['get_user'].return_value = TEST_USER
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID_MOD
+            mocks['load_presentation_model'].return_value = TEST_PRESENTATION_FORMAT_METADATA
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
+            mocks['run_search_query'].return_value = [TEST_SNAPSHOT]
+
+        def on_end(mocks):
+            mocks['get_api_key'].assert_called_with(TEST_API_KEY)
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+            mocks['generate_unique_cdi_form_id'].assert_called()
+            mocks['load_presentation_model'].assert_called_with('standard_mod')
+            mocks['load_cdi_model'].assert_called_with('standard_mod')
+            mocks['run_search_query'].assert_called_with(
+                unittest.mock.ANY,
+                'snapshots'
+            )
+            mocks['insert_parent_form'].assert_called_with(
+                EXPECTED_MODIFIED_PARENT_FORM
             )
 
-            self.assertFalse('error' in json.loads(resp.data))
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_send_parent_forms_missing_params(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
-        self.mox.StubOutWithMock(user_util, 'get_user')
+        def body():
+            with self.app.test_client() as client:
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+                resp = client.get('/base/api/v0/send_parent_forms')
+                self.assertTrue('error' in json.loads(resp.data))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+                resp = client.get('/base/api/v0/send_parent_form?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+                resp = client.get('/base/api/v0/send_parent_forms?' +
+                        urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name'
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        self.mox.ReplayAll()
+                resp = client.get('/base/api/v0/send_parent_forms?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard'
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        with self.app.test_client() as client:
-            
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+                resp = client.get('/base/api/v0/send_parent_forms?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard',
+                        'parent_email': 'test parent'
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-            resp = client.get('/base/api/v0/send_parent_forms')
-            self.assertTrue('error' in json.loads(resp.data))
+        def on_start(mocks):
+            mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
+            mocks['get_user'].return_value = TEST_USER
 
-            resp = client.get('/base/api/v0/send_parent_form?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
+        def on_end(mocks):
+            mocks['get_api_key'].assert_called_with(TEST_API_KEY)
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
 
-            resp = client.get('/base/api/v0/send_parent_forms?' +
-                    urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name'
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_forms?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard'
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_forms?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'parent_email': 'test parent'
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_send_parent_forms_invalid_params(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
-        self.mox.StubOutWithMock(parent_account_util,
-            'generate_unique_mcdi_form_id')
+        def body():
+            with self.app.test_client() as client:
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('invalid_format').AndReturn(None)
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        db_util.load_presentation_model('invalid_format').AndReturn(None)
+                resp = client.get('/base/api/v0/send_parent_forms?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'invalid_format',
+                        'parent_email': TEST_PARENT_EMAIL,
+                        'database_id': TEST_DB_ID
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+                resp = client.get('/base/api/v0/send_parent_forms?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard',
+                        'format': 'invalid_format',
+                        'parent_email': TEST_PARENT_EMAIL,
+                        'database_id': TEST_DB_ID
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+                resp = client.get('/base/api/v0/send_parent_forms?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard',
+                        'parent_email': 'test wrong email',
+                        'database_id': str(TEST_DB_ID)
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+                resp = client.get('/base/api/v0/send_parent_forms?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard',
+                        'parent_email': TEST_PARENT_EMAIL,
+                        'database_id': str(TEST_DB_ID),
+                        'gender': 'invalid'
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+                resp = client.get('/base/api/v0/send_parent_forms?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard',
+                        'parent_email': TEST_PARENT_EMAIL,
+                        'database_id': str(TEST_DB_ID),
+                        'hard_of_hearing': 'invalid'
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+                resp = client.get('/base/api/v0/send_parent_forms?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard',
+                        'parent_email': TEST_PARENT_EMAIL,
+                        'database_id': str(TEST_DB_ID),
+                        'birthday': 'invalid'
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+                resp = client.get('/base/api/v0/send_parent_forms?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': 'test name',
+                        'cdi_type': 'standard',
+                        'parent_email': 'test email',
+                        'database_id': str(TEST_DB_ID)
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        self.mox.ReplayAll()
+        def on_start(mocks):
+            mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
+            mocks['get_user'].return_value = TEST_USER
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID
+            mocks['load_presentation_model'].side_effect = [
+                TEST_PRESENTATION_FORMAT_METADATA,
+                None,
+                TEST_PRESENTATION_FORMAT_METADATA,
+                TEST_PRESENTATION_FORMAT_METADATA,
+                TEST_PRESENTATION_FORMAT_METADATA,
+                TEST_PRESENTATION_FORMAT_METADATA,
+                TEST_PRESENTATION_FORMAT_METADATA,
+                TEST_PRESENTATION_FORMAT_METADATA
+            ]
+            mocks['load_cdi_model'].side_effect = [
+                None,
+                TEST_FORMAT,
+                TEST_FORMAT,
+                TEST_FORMAT,
+                TEST_FORMAT,
+                TEST_FORMAT,
+                TEST_FORMAT
+            ]
 
-        with self.app.test_client() as client:
-            
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+        def on_end(mocks):
+            mocks['get_api_key'].assert_called_with(TEST_API_KEY)
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+            mocks['generate_unique_cdi_form_id'].assert_called()
+            mocks['load_presentation_model'].assert_any_call('standard')
+            mocks['load_presentation_model'].assert_any_call('invalid_format')
+            mocks['load_cdi_model'].assert_any_call('invalid_format')
+            mocks['load_cdi_model'].assert_any_call('standard')
 
-            resp = client.get('/base/api/v0/send_parent_forms?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'invalid_format',
-                    'parent_email': TEST_PARENT_EMAIL,
-                    'database_id': TEST_DB_ID
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_forms?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'format': 'invalid_format',
-                    'parent_email': TEST_PARENT_EMAIL,
-                    'database_id': TEST_DB_ID
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_forms?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'parent_email': TEST_PARENT_EMAIL,
-                    'database_id': 'invalid type'
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_forms?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'parent_email': 'test wrong email',
-                    'database_id': str(TEST_DB_ID)
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_forms?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'parent_email': TEST_PARENT_EMAIL,
-                    'database_id': str(TEST_DB_ID),
-                    'gender': 'invalid'
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_forms?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'parent_email': TEST_PARENT_EMAIL,
-                    'database_id': str(TEST_DB_ID),
-                    'hard_of_hearing': 'invalid'
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_forms?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'parent_email': TEST_PARENT_EMAIL,
-                    'database_id': str(TEST_DB_ID),
-                    'birthday': 'invalid'
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
-
-            resp = client.get('/base/api/v0/send_parent_forms?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': 'test name',
-                    'mcdi_type': 'standard',
-                    'parent_email': 'test email',
-                    'database_id': str(TEST_DB_ID)
-                })
-            )
-            self.assertTrue('error' in json.loads(resp.data))
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_send_parent_forms_defaults(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
-        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
-        self.mox.StubOutWithMock(parent_account_util,
-            'generate_unique_mcdi_form_id')
+        def body():
+            with self.app.test_client() as client:
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
-            [TEST_SNAPSHOT])
-        db_util.insert_parent_form(EXPECTED_PARENT_FORM)
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        self.mox.ReplayAll()
+                resp = client.get('/base/api/v0/send_parent_forms?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': TEST_CHILD_NAME,
+                        'cdi_type': 'standard',
+                        'parent_email': TEST_PARENT_EMAIL,
+                        'database_id': TEST_DB_ID
+                    })
+                )
+                self.assertFalse('error' in json.loads(resp.data))
 
-        with self.app.test_client() as client:
-            
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+        def on_start(mocks):
+            mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
+            mocks['get_user'].return_value = TEST_USER
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID
+            mocks['load_presentation_model'].return_value = TEST_PRESENTATION_FORMAT_METADATA
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
+            mocks['run_search_query'].return_value = [TEST_SNAPSHOT]
 
-            resp = client.get('/base/api/v0/send_parent_forms?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': TEST_CHILD_NAME,
-                    'mcdi_type': 'standard',
-                    'parent_email': TEST_PARENT_EMAIL,
-                    'database_id': TEST_DB_ID
-                })
+        def on_end(mocks):
+            mocks['get_api_key'].assert_called_with(TEST_API_KEY)
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+            mocks['generate_unique_cdi_form_id'].assert_called()
+            mocks['load_presentation_model'].assert_called_with('standard')
+            mocks['load_cdi_model'].assert_called_with('standard')
+            mocks['run_search_query'].assert_called_with(
+                unittest.mock.ANY,
+                'snapshots'
             )
-            self.assertFalse('error' in json.loads(resp.data))
+            mocks['insert_parent_form'].assert_called_with(EXPECTED_PARENT_FORM)
+
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_send_parent_forms_fila_part_way(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
-        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
-        self.mox.StubOutWithMock(parent_account_util,
-            'generate_unique_mcdi_form_id')
+        def body():
+            with self.app.test_client() as client:
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_presentation_model('standard').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
-        filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
-            [TEST_SNAPSHOT])
+                resp = client.get('/base/api/v0/send_parent_forms?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': ','.join(['name1','name2']),
+                        'cdi_type': 'standard,standard',
+                        'parent_email': ','.join([TEST_PARENT_EMAIL, 'fail']),
+                        'database_id': ','.join(
+                            [str(TEST_DB_ID), str(TEST_DB_ID_MOD)]
+                        )
+                    })
+                )
+                self.assertTrue('error' in json.loads(resp.data))
 
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID)
-        db_util.load_mcdi_model('standard').AndReturn(TEST_FORMAT)
+        def on_start(mocks):
+            mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
+            mocks['get_user'].return_value = TEST_USER
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID
+            mocks['load_presentation_model'].return_value = TEST_PRESENTATION_FORMAT_METADATA
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
+            mocks['run_search_query'].return_value = [TEST_SNAPSHOT]
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID
 
-        self.mox.ReplayAll()
-
-        with self.app.test_client() as client:
-            
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
-
-            resp = client.get('/base/api/v0/send_parent_forms?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': ','.join(['name1','name2']),
-                    'mcdi_type': 'standard,standard',
-                    'parent_email': ','.join([TEST_PARENT_EMAIL, 'fail']),
-                    'database_id': ','.join(
-                        [str(TEST_DB_ID), str(TEST_DB_ID_MOD)]
-                    )
-                })
+        def on_end(mocks):
+            mocks['get_api_key'].assert_called_with(TEST_API_KEY)
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+            mocks['generate_unique_cdi_form_id'].assert_called()
+            mocks['load_presentation_model'].assert_called_with('standard')
+            mocks['load_cdi_model'].assert_called_with('standard')
+            mocks['run_search_query'].assert_called_with(
+                unittest.mock.ANY,
+                'snapshots'
             )
-            self.assertTrue('error' in json.loads(resp.data))
+            mocks['generate_unique_cdi_form_id'].assert_called()
 
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_send_parent_forms_non_defaults(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_presentation_model')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'insert_parent_form')
-        self.mox.StubOutWithMock(parent_account_util,
-            'generate_unique_mcdi_form_id')
+        def body():
+            with self.app.test_client() as client:
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        parent_account_util.generate_unique_mcdi_form_id().AndReturn(
-            TEST_PARENT_FORM_ID_MOD)
-        db_util.load_presentation_model('standard_mod').AndReturn(
-            TEST_PRESENTATION_FORMAT_METADATA)
-        db_util.load_mcdi_model('standard_mod').AndReturn(TEST_FORMAT)
-        filter_util.run_search_query(mox.IsA(list), 'snapshots').AndReturn(
-            [TEST_SNAPSHOT])
-        db_util.insert_parent_form(EXPECTED_MODIFIED_PARENT_FORM)
+                resp = client.get('/base/api/v0/send_parent_forms?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_name': TEST_CHILD_NAME_MOD,
+                        'cdi_type': 'standard_mod',
+                        'parent_email': TEST_PARENT_EMAIL_MOD,
+                        'study': TEST_STUDY_MOD,
+                        'study_id': TEST_STUDY_ID_MOD,
+                        'gender': 'female',
+                        'birthday': TEST_BIRTHDAY_MOD_ISO,
+                        'items_excluded': TEST_ITEMS_EXCLUDED_MOD,
+                        'extra_categories': TEST_EXTRA_CATEGORIES_MOD,
+                        'languages': 'english',
+                        'hard_of_hearing': 'true',
+                        'format': 'standard_mod'
+                    })
+                )
+                self.assertFalse('error' in json.loads(resp.data))
 
-        self.mox.ReplayAll()
+        def on_start(mocks):
+            mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
+            mocks['get_user'].return_value = TEST_USER
+            mocks['generate_unique_cdi_form_id'].return_value = TEST_PARENT_FORM_ID_MOD
+            mocks['load_presentation_model'].return_value = TEST_PRESENTATION_FORMAT_METADATA
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
+            mocks['run_search_query'].return_value = [TEST_SNAPSHOT]
 
-        with self.app.test_client() as client:
-
-            resp = client.get('/base/api/v0/send_parent_forms?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_name': TEST_CHILD_NAME_MOD,
-                    'mcdi_type': 'standard_mod',
-                    'parent_email': TEST_PARENT_EMAIL_MOD,
-                    'study': TEST_STUDY_MOD,
-                    'study_id': TEST_STUDY_ID_MOD,
-                    'gender': 'female',
-                    'birthday': TEST_BIRTHDAY_MOD_ISO,
-                    'items_excluded': TEST_ITEMS_EXCLUDED_MOD,
-                    'extra_categories': TEST_EXTRA_CATEGORIES_MOD,
-                    'languages': 'english',
-                    'hard_of_hearing': 'true',
-                    'format': 'standard_mod'
-                })
+        def on_end(mocks):
+            mocks['get_api_key'].assert_called_with(TEST_API_KEY)
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+            mocks['generate_unique_cdi_form_id'].assert_called()
+            mocks['load_presentation_model'].assert_called_with('standard_mod')
+            mocks['load_cdi_model'].assert_called_with('standard_mod')
+            mocks['run_search_query'].assert_called_with(
+                unittest.mock.ANY,
+                'snapshots'
             )
-            self.assertFalse('error' in json.loads(resp.data))
+            mocks['insert_parent_form'].assert_called_with(
+                EXPECTED_MODIFIED_PARENT_FORM
+            )
+
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_get_child_words_by_api(self):
-        self.mox.StubOutWithMock(db_util, 'get_api_key')
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(report_util, 'summarize_snapshots')
+        def body():
+            with self.app.test_client() as client:
 
-        db_util.get_api_key(TEST_API_KEY).AndReturn(TEST_API_KEY_ENTRY)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+                resp = client.get('/base/api/v0/get_child_words.json?' +
+                    urllib.parse.urlencode({
+                        'api_key': TEST_API_KEY,
+                        'child_id': 123
+                    })
+                )
 
-        filter_util.run_search_query(
-            mox.IsA(list),
-            'snapshots',
-            True
-        ).AndReturn([TEST_SNAPSHOT])
+                resp_info = json.loads(resp.data)
+                self.assertFalse('error' in resp_info)
 
-        report_util.summarize_snapshots([TEST_SNAPSHOT]).AndReturn(
-            {'word1': None, 'word2': '2015/01/02'}
-        )
+                word_vals = resp_info['words']
+                self.assertEqual(word_vals['word1'], None)
+                self.assertEqual(word_vals['word2'], '2015/01/02')
 
-        self.mox.ReplayAll()
+        def on_start(mocks):
+            mocks['get_api_key'].return_value = TEST_API_KEY_ENTRY
+            mocks['get_user'].return_value = TEST_USER
+            mocks['run_search_query'].return_value = [TEST_SNAPSHOT]
+            mocks['summarize_snapshots'].return_value = {'word1': None, 'word2': '2015/01/02'}
 
-        with self.app.test_client() as client:
-
-            resp = client.get('/base/api/v0/get_child_words.json?' +
-                urllib.urlencode({
-                    'api_key': TEST_API_KEY,
-                    'child_id': 123
-                })
+        def on_end(mocks):
+            mocks['get_api_key'].assert_called_with(TEST_API_KEY)
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+            mocks['run_search_query'].assert_called_with(
+                unittest.mock.ANY,
+                'snapshots',
+                True
             )
+            mocks['summarize_snapshots'].assert_called_with([TEST_SNAPSHOT])
 
-            resp_info = json.loads(resp.data)
-            self.assertFalse('error' in resp_info)
-
-            word_vals = resp_info['words']
-            self.assertEqual(word_vals['word1'], None)
-            self.assertEqual(word_vals['word2'], '2015/01/02')
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()

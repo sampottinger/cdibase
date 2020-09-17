@@ -25,14 +25,16 @@ from ..util import constants
 from ..util import session_util
 from ..util import user_util
 
-from daxlabbase import app
+from . import controller_types
+
+from cdibase import app
 
 WRONG_CREDENTIALS_MSG = 'Whoops! Either your username or password was wrong.'
 CONFIRM_PASSWORD_MISMATCH_MSG = 'New password and confirmation of new ' \
     'password are not the same.'
 CURRENT_PASSWORD_INCORRECT_MSG = 'Current password incorrect.'
 SUCCESS_LOGIN_MSG = 'Hello %s! You logged in successfully.'
-PASSWORD_RESET_MSG = 'A new password has been sent to %s.'
+PASSWORD_RESET_MSG = 'A new password has been sent to your email.'
 LOGGED_OUT_MSG = 'Logged out.'
 UPDATED_PASSWORD_MSG = 'Your password has been updated.'
 
@@ -48,7 +50,7 @@ ACCOUNT_MANAGEMENT_URL = '/base/account'
 
 
 @app.route('/base/account/login', methods=['GET', 'POST'])
-def login():
+def login() -> controller_types.ValidFlaskReturnTypes:
     """Controller to let a user authenticate with the application.
 
     Controller that allows a user to log into the application. Note that this
@@ -66,7 +68,7 @@ def login():
             **session_util.get_standard_template_values()
         )
 
-    elif request.method == 'POST':
+    else:
         email = request.form.get(EMAIL_ATTR, '')
         password = request.form.get(PASSWORD_ATTR, '')
 
@@ -80,7 +82,7 @@ def login():
 
 
 @app.route('/base/account/forgot_password', methods=['GET', 'POST'])
-def forgot_password():
+def forgot_password() -> controller_types.ValidFlaskReturnTypes:
     """Controller to let a user reset their password if they forgot it.
 
     Controller that allows users to reset their passwords. Note that this
@@ -98,18 +100,22 @@ def forgot_password():
             **session_util.get_standard_template_values()
         )
 
-    elif request.method == 'POST':
+    else:
         email = request.form.get(EMAIL_ATTR, None)
+        flask.session[CONFIRMATION_ATTR] = PASSWORD_RESET_MSG
 
-        if email != None and user_util.get_user(email):
-            user_util.reset_password(email)
+        if email == None:
+            return flask.redirect(LOGIN_URL)
 
-        flask.session[CONFIRMATION_ATTR] = PASSWORD_RESET_MSG % email
+        email_realized: str = email # type: ignore
+        if user_util.get_user(email_realized):
+            user_util.reset_password(email_realized)
+
         return flask.redirect(LOGIN_URL)
 
 
 @app.route('/base/account/logout')
-def logout():
+def logout() -> controller_types.ValidFlaskReturnTypes:
     """Controller to end a user's session with the application.
 
     @return: Redirect
@@ -122,7 +128,7 @@ def logout():
 
 @app.route('/base/account')
 @session_util.require_login()
-def account():
+def account() -> controller_types.ValidFlaskReturnTypes:
     """Controller to render index page of controlls for editing a user account.
 
     @return: HTML listing of controls
@@ -137,7 +143,7 @@ def account():
 
 @app.route('/base/account/change_password', methods=['GET', 'POST'])
 @session_util.require_login()
-def change_password():
+def change_password() -> controller_types.ValidFlaskReturnTypes:
     """Controller to change a user password.
 
     Controller that allows a user to change his / her password. Will reject
@@ -158,8 +164,11 @@ def change_password():
             **session_util.get_standard_template_values()
         )
 
-    elif request.method == 'POST':
-        email = session_util.get_user_email()
+    else:
+        email_maybe = session_util.get_user_email()
+        assert email_maybe != None
+
+        email: str = email_maybe # type: ignore
         cur_password = request.form.get('current_password', '')
         new_password = request.form.get('new_password', '')
         confirm_new_password = request.form.get('confirm_new_password', '')

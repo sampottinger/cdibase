@@ -16,14 +16,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# Do not type check in tests
+# type: ignore
+
 import collections
 import copy
 import datetime
 import json
+import unittest
+import unittest.mock
 
-import mox
-
-import daxlabbase
+import cdibase
 from ..struct import models
 from ..util import constants
 from ..util import db_util
@@ -33,7 +36,7 @@ from ..util import recalc_util
 from ..util import user_util
 
 TEST_EMAIL = 'test.email@example.com'
-TEST_DB_ID = 1
+TEST_DB_ID = '1'
 TEST_USER = models.User(
     TEST_DB_ID,
     TEST_EMAIL,
@@ -50,8 +53,8 @@ TEST_USER = models.User(
 MALE_TEST_PERCENTILE_NAME = 'male_test_percentiles'
 FEMALE_TEST_PERCENTILE_NAME = 'female_test_percentiles'
 OTHER_TEST_PERCENTILE_NAME = 'other_test_percentiles'
-TEST_MCDI_FORMAT_NAME = 'standard'
-TEST_FORMAT = models.MCDIFormat(
+TEST_CDI_FORMAT_NAME = 'standard'
+TEST_FORMAT = models.CDIFormat(
     'standard',
     'standard',
     'standard.yaml',
@@ -76,7 +79,7 @@ TEST_FORMAT = models.MCDIFormat(
             {'name': 'not said', 'value': 0}
         ],
         'count_as_spoken': [1],
-        'meta': {'mcdi_type': 'standard'}
+        'meta': {'cdi_type': 'standard'}
     }
 )
 
@@ -86,7 +89,7 @@ TEST_SNAPSHOT_ID = 789
 TEST_ITEMS_EXCLUDED = 3
 TEST_EXTRA_CATEGORIES = 4
 TEST_SESSION_NUM = 4
-TEST_LANGUAGES = 'english'
+TEST_LANGUAGES = ['english']
 TEST_NUM_LANGUAGES = 1
 TEST_HARD_OF_HEARING = False
 TEST_STUDY = 'test study'
@@ -181,12 +184,62 @@ TEST_EXPECTED_WORD_ENTRIES = {
 }
 
 
-class EnterDataControllersTests(mox.MoxTestBase):
+class EnterDataControllersTests(unittest.TestCase):
 
     def setUp(self):
-        mox.MoxTestBase.setUp(self)
-        self.app = daxlabbase.app
+        self.app = cdibase.app
         self.app.debug = True
+        self.__callback_called = False
+
+    def __run_with_mocks(self, on_start, body, on_end):
+        with unittest.mock.patch('prog_code.util.user_util.get_user') as mock_get_user:
+            with unittest.mock.patch('prog_code.util.db_util.load_cdi_model') as mock_load_cdi_model:
+                with unittest.mock.patch('prog_code.util.db_util.insert_snapshot') as mock_insert_snapshot:
+                    with unittest.mock.patch('prog_code.util.db_util.report_usage') as mock_report_usage:
+                        with unittest.mock.patch('prog_code.util.db_util.load_percentile_model') as mock_load_percentile_model:
+                            with unittest.mock.patch('prog_code.util.math_util.find_percentile') as mock_find_percentile:
+                                with unittest.mock.patch('prog_code.util.filter_util.run_search_query') as mock_run_search_query:
+                                    with unittest.mock.patch('prog_code.util.db_util.lookup_global_participant_id') as mock_lookup_global_participant_id:
+                                        with unittest.mock.patch('prog_code.util.db_util.update_participant_metadata') as mock_update_participant_metadata:
+                                            with unittest.mock.patch('prog_code.util.recalc_util.recalculate_ages_and_percentiles') as mock_recalculate_ages_and_percentiles:
+                                                with unittest.mock.patch('prog_code.util.db_util.load_cdi_model_listing') as mock_load_cdi_model_listing:
+                                                    mocks = {
+                                                        'get_user': mock_get_user,
+                                                        'load_cdi_model': mock_load_cdi_model,
+                                                        'insert_snapshot': mock_insert_snapshot,
+                                                        'report_usage': mock_report_usage,
+                                                        'load_percentile_model': mock_load_percentile_model,
+                                                        'find_percentile': mock_find_percentile,
+                                                        'run_search_query': mock_run_search_query,
+                                                        'lookup_global_participant_id': mock_lookup_global_participant_id,
+                                                        'update_participant_metadata': mock_update_participant_metadata,
+                                                        'recalculate_ages_and_percentiles': mock_recalculate_ages_and_percentiles,
+                                                        'load_cdi_model_listing': mock_load_cdi_model_listing
+                                                    }
+
+                                                    on_start(mocks)
+                                                    body()
+                                                    on_end(mocks)
+
+                                                    self.__callback_called = True
+
+    def __default_on_start(self, mocks):
+        mocks['get_user'].return_value = TEST_USER
+        mocks['load_cdi_model'].return_value = TEST_FORMAT
+
+    def __default_on_end(self, mocks):
+        mocks['get_user'].assert_called_with(TEST_EMAIL)
+        mocks['load_cdi_model'].assert_called_with(TEST_CDI_FORMAT_NAME)
+
+    def __run_with_default_mocks(self, body):
+        self.__run_with_mocks(
+            lambda mocks: self.__default_on_start(mocks),
+            body,
+            lambda mocks: self.__default_on_end(mocks),
+        )
+
+    def __assert_callback(self):
+        self.assertTrue(self.__callback_called)
 
     def check_lookup_studies_metadata(self, returned_metadata):
         """Run assertions that the provided metadata matches the test snapshot.
@@ -215,477 +268,476 @@ class EnterDataControllersTests(mox.MoxTestBase):
         )
 
     def test_format_for_enter_data(self):
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
-        self.mox.StubOutWithMock(db_util, 'report_usage')
-        
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        db_util.load_mcdi_model(TEST_MCDI_FORMAT_NAME).AndReturn(TEST_FORMAT)
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+        def body():
+            with self.app.test_client() as client:
 
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        db_util.load_mcdi_model('invalid format').AndReturn(None)
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        self.mox.ReplayAll()
+                url = '/base/enter_data/%s' % TEST_CDI_FORMAT_NAME
+                client.get(url)
 
-        with self.app.test_client() as client:
-            
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+                with client.session_transaction() as sess:
+                    err = sess.get(constants.ERROR_ATTR, None)
+                    self.assertEqual(err, None)
 
-            url = '/base/enter_data/%s' % TEST_MCDI_FORMAT_NAME
-            client.get(url)
+                url = '/base/enter_data/%s' % 'invalid format'
+                client.get(url)
 
-            with client.session_transaction() as sess:
-                err = sess.get(constants.ERROR_ATTR, None)
-                self.assertEqual(err, None)
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
 
-            url = '/base/enter_data/%s' % 'invalid format'
-            client.get(url)
+        def on_start(mocks):
+            mocks['get_user'].return_value = TEST_USER
+            mocks['load_cdi_model'].side_effect = [
+                TEST_FORMAT,
+                None
+            ]
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
+        def on_end(mocks):
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+            mocks['load_cdi_model'].assert_any_call(TEST_CDI_FORMAT_NAME)
+            mocks['load_cdi_model'].assert_any_call('invalid format')
+
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_missing_enter_data_params(self):
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
-        self.mox.StubOutWithMock(db_util, 'report_usage')
+        def body():
+            target_url = '/base/enter_data/%s' % TEST_CDI_FORMAT_NAME
 
-        for i in range(0, 10):
-            user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-            db_util.load_mcdi_model(TEST_MCDI_FORMAT_NAME).AndReturn(
-                TEST_FORMAT)
+            with self.app.test_client() as client:
 
-        self.mox.ReplayAll()
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        target_url = '/base/enter_data/%s' % TEST_MCDI_FORMAT_NAME
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                del test_params['study_id']
+                client.post(target_url, data=test_params)
 
-        with self.app.test_client() as client:
-            
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            del test_params['study_id']
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                del test_params['study']
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            del test_params['study']
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                del test_params['gender']
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            del test_params['gender']
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                del test_params['age']
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            del test_params['age']
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                del test_params['birthday']
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            del test_params['birthday']
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                del test_params['session_date']
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            del test_params['session_date']
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                del test_params['session_num']
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            del test_params['session_num']
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                del test_params['items_excluded']
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            del test_params['items_excluded']
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                del test_params['extra_categories']
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            del test_params['extra_categories']
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                del test_params['total_num_sessions']
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            del test_params['total_num_sessions']
-            client.post(target_url, data=test_params)
-
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+        self.__run_with_default_mocks(body)
+        self.__assert_callback()
 
     def test_invalid_enter_data_params(self):
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
-        self.mox.StubOutWithMock(db_util, 'report_usage')
 
-        for i in range(0, 8):
-            user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-            db_util.load_mcdi_model(TEST_MCDI_FORMAT_NAME).AndReturn(
-                TEST_FORMAT)
+        def body():
+            target_url = '/base/enter_data/%s' % TEST_CDI_FORMAT_NAME
 
+            with self.app.test_client() as client:
 
-        self.mox.ReplayAll()
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        target_url = '/base/enter_data/%s' % TEST_MCDI_FORMAT_NAME
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                test_params['gender'] = 'invalid'
+                client.post(target_url, data=test_params)
 
-        with self.app.test_client() as client:
-            
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            test_params['gender'] = 'invalid'
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                test_params['age'] = 'invalid'
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            test_params['age'] = 'invalid'
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                test_params['birthday'] = 'invalid'
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            test_params['birthday'] = 'invalid'
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                test_params['session_date'] = 'invalid'
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            test_params['session_date'] = 'invalid'
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                test_params['session_num'] = 'invalid'
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            test_params['session_num'] = 'invalid'
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                test_params['items_excluded'] = 'invalid'
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            test_params['items_excluded'] = 'invalid'
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                test_params['extra_categories'] = 'invalid'
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            test_params['extra_categories'] = 'invalid'
-            client.post(target_url, data=test_params)
+                test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
+                test_params['total_num_sessions'] = 'invalid'
+                client.post(target_url, data=test_params)
 
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+                with client.session_transaction() as sess:
+                    self.assertTrue(constants.ERROR_ATTR in sess)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(confirmation_attr, None)
+                    del sess[constants.ERROR_ATTR]
 
-            test_params = copy.copy(TEST_SUCCESSFUL_PARAMS)
-            test_params['total_num_sessions'] = 'invalid'
-            client.post(target_url, data=test_params)
-
-            with client.session_transaction() as sess:
-                self.assertTrue(constants.ERROR_ATTR in sess)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(confirmation_attr, None)
-                del sess[constants.ERROR_ATTR]
+        self.__run_with_default_mocks(body)
+        self.__assert_callback()
 
     def test_success_enter_data(self):
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'load_mcdi_model')
-        self.mox.StubOutWithMock(db_util, 'load_percentile_model')
-        self.mox.StubOutWithMock(math_util, 'find_percentile')
-        self.mox.StubOutWithMock(db_util, 'insert_snapshot')
-        self.mox.StubOutWithMock(db_util, 'report_usage')
 
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        db_util.load_mcdi_model(TEST_MCDI_FORMAT_NAME).AndReturn(
-            TEST_FORMAT)
-        db_util.load_percentile_model(MALE_TEST_PERCENTILE_NAME).AndReturn(
-            TEST_PERCENTILE_MODEL
-        )
-        math_util.find_percentile('test details', 3, TEST_AGE, 6).AndReturn(
-            TEST_PERCENTILE
-        )
+        def body():
+            target_url = '/base/enter_data/%s' % TEST_CDI_FORMAT_NAME
 
-        db_util.report_usage(
-            'test.email@example.com',
-            'Enter Data',
-            '{"study_id": "456", "study": "test study", "global_id": 1}'
-        )
+            with self.app.test_client() as client:
 
-        db_util.insert_snapshot(
-            TEST_EXPECTED_SNAPSHOT,
-            TEST_EXPECTED_WORD_ENTRIES
-        )
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        self.mox.ReplayAll()
+                client.post(target_url, data=TEST_SUCCESSFUL_PARAMS)
 
-        target_url = '/base/enter_data/%s' % TEST_MCDI_FORMAT_NAME
+                with client.session_transaction() as sess:
+                    error_attr = sess.get(constants.ERROR_ATTR, None)
+                    confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
+                    self.assertEqual(error_attr, None)
+                    self.assertNotEqual(confirmation_attr, None)
 
-        with self.app.test_client() as client:
-            
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+        def on_start(mocks):
+            mocks['get_user'].return_value = TEST_USER
+            mocks['load_cdi_model'].return_value = TEST_FORMAT
+            mocks['load_percentile_model'].return_value = TEST_PERCENTILE_MODEL
+            mocks['find_percentile'].return_value = TEST_PERCENTILE
 
-            client.post(target_url, data=TEST_SUCCESSFUL_PARAMS)
+        def on_end(mocks):
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+            mocks['load_cdi_model'].assert_called_with(TEST_CDI_FORMAT_NAME)
+            mocks['load_percentile_model'].assert_called_with(
+                MALE_TEST_PERCENTILE_NAME
+            )
+            mocks['find_percentile'].assert_called_with(
+                'test details',
+                3,
+                TEST_AGE,
+                6
+            )
+            mocks['report_usage'].assert_called_with(
+                'test.email@example.com',
+                'Enter Data',
+                unittest.mock.ANY
+            )
+            mocks['insert_snapshot'].assert_called_with(
+                TEST_EXPECTED_SNAPSHOT,
+                TEST_EXPECTED_WORD_ENTRIES
+            )
 
-            with client.session_transaction() as sess:
-                error_attr = sess.get(constants.ERROR_ATTR, None)
-                confirmation_attr = sess.get(constants.CONFIRMATION_ATTR, None)
-                self.assertEqual(error_attr, None)
-                self.assertNotEqual(confirmation_attr, None)
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_lookup_studies_by_global_id(self):
-        ret_list = [
-            TEST_EXPECTED_SNAPSHOT,
-            TEST_EXPECTED_SNAPSHOT_2
-        ]
 
-        self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'report_usage')
+        def body():
+            with self.app.test_client() as client:
 
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        filter_util.run_search_query(
-            [models.Filter('child_id', 'eq', TEST_DB_ID)],
-            constants.SNAPSHOTS_DB_TABLE
-        ).AndReturn(ret_list)
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        self.mox.ReplayAll()
+                lookup_user_data = {
+                    'method': 'by_global_id',
+                    'global_id': TEST_DB_ID
+                }
+                result_info = client.post(
+                    '/base/edit_data/lookup_user',
+                    data=lookup_user_data
+                )
 
-        with self.app.test_client() as client:
+            result = json.loads(result_info.data)
+            returned_global_id = result['global_id']
+            returned_studies = result['cdis']
 
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+            self.assertEqual(returned_global_id, TEST_DB_ID)
 
-            lookup_user_data = {
-                'method': 'by_global_id',
-                'global_id': TEST_DB_ID
-            }
-            result_info = client.post(
-                '/base/edit_data/lookup_user',
-                data=lookup_user_data
+            self.assertEqual(len(returned_studies), 2)
+
+            if returned_studies[0]['study'] == TEST_STUDY:
+                self.assertEqual(returned_studies[0]['study'], TEST_STUDY)
+                self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID)
+                self.assertEqual(returned_studies[1]['study'], TEST_STUDY_2)
+                self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID_2)
+            else:
+                self.assertEqual(returned_studies[0]['study'], TEST_STUDY_2)
+                self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID_2)
+                self.assertEqual(returned_studies[1]['study'], TEST_STUDY)
+                self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID)
+
+            self.check_lookup_studies_metadata(result['metadata'])
+
+        def on_start(mocks):
+            ret_list = [
+                TEST_EXPECTED_SNAPSHOT,
+                TEST_EXPECTED_SNAPSHOT_2
+            ]
+
+            mocks['get_user'].return_value = TEST_USER
+            mocks['run_search_query'].return_value = ret_list
+
+        def on_end(mocks):
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+            mocks['run_search_query'].assert_called_with(
+                [models.Filter('child_id', 'eq', TEST_DB_ID)],
+                constants.SNAPSHOTS_DB_TABLE
             )
 
-        result = json.loads(result_info.data)
-        returned_global_id = result['global_id']
-        returned_studies = result['cdis']
-        
-        self.assertEqual(returned_global_id, TEST_DB_ID)
-
-        self.assertEqual(len(returned_studies), 2)
-
-        if returned_studies[0]['study'] == TEST_STUDY:
-            self.assertEqual(returned_studies[0]['study'], TEST_STUDY)
-            self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID)
-            self.assertEqual(returned_studies[1]['study'], TEST_STUDY_2)
-            self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID_2)
-        else:
-            self.assertEqual(returned_studies[0]['study'], TEST_STUDY_2)
-            self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID_2)
-            self.assertEqual(returned_studies[1]['study'], TEST_STUDY)
-            self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID)
-
-        self.check_lookup_studies_metadata(result['metadata'])
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_lookup_studies_by_study_id(self):
-        ret_list = [
-            TEST_EXPECTED_SNAPSHOT,
-            TEST_EXPECTED_SNAPSHOT_2
-        ]
 
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'lookup_global_participant_id')
-        self.mox.StubOutWithMock(db_util, 'report_usage')
+        def body():
+            with self.app.test_client() as client:
 
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
-        db_util.lookup_global_participant_id(TEST_STUDY, TEST_STUDY_ID
-            ).AndReturn(TEST_DB_ID)
-        filter_util.run_search_query(
-            [models.Filter('child_id', 'eq', TEST_DB_ID)],
-            constants.SNAPSHOTS_DB_TABLE
-        ).AndReturn(ret_list)
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        self.mox.ReplayAll()
+                lookup_user_data = {
+                    'method': 'by_study_id',
+                    'study': TEST_STUDY,
+                    'study_id': TEST_STUDY_ID
+                }
+                result_info = client.post(
+                    '/base/edit_data/lookup_user',
+                    data=lookup_user_data
+                )
 
-        with self.app.test_client() as client:
+            result = json.loads(result_info.data)
+            returned_global_id = result['global_id']
+            returned_studies = result['cdis']
 
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
+            self.assertEqual(returned_global_id, TEST_DB_ID)
 
-            lookup_user_data = {
-                'method': 'by_study_id',
-                'study': TEST_STUDY,
-                'study_id': TEST_STUDY_ID
-            }
-            result_info = client.post(
-                '/base/edit_data/lookup_user',
-                data=lookup_user_data
+            self.assertEqual(len(returned_studies), 2)
+
+            if returned_studies[0]['study'] == TEST_STUDY:
+                self.assertEqual(returned_studies[0]['study'], TEST_STUDY)
+                self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID)
+                self.assertEqual(returned_studies[1]['study'], TEST_STUDY_2)
+                self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID_2)
+            else:
+                self.assertEqual(returned_studies[0]['study'], TEST_STUDY_2)
+                self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID_2)
+                self.assertEqual(returned_studies[1]['study'], TEST_STUDY)
+                self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID)
+
+            self.check_lookup_studies_metadata(result['metadata'])
+
+        def on_start(mocks):
+            ret_list = [
+                TEST_EXPECTED_SNAPSHOT,
+                TEST_EXPECTED_SNAPSHOT_2
+            ]
+
+            mocks['get_user'].return_value = TEST_USER
+            mocks['lookup_global_participant_id'].return_value = TEST_DB_ID
+            mocks['run_search_query'].return_value = ret_list
+
+        def on_end(mocks):
+            mocks['get_user'].assert_called_with(TEST_EMAIL)
+            mocks['lookup_global_participant_id'].assert_called_with(
+                TEST_STUDY,
+                TEST_STUDY_ID
+            )
+            mocks['run_search_query'].assert_called_with(
+                [models.Filter('child_id', 'eq', TEST_DB_ID)],
+                constants.SNAPSHOTS_DB_TABLE
             )
 
-        result = json.loads(result_info.data)
-        returned_global_id = result['global_id']
-        returned_studies = result['cdis']
-        
-        self.assertEqual(returned_global_id, TEST_DB_ID)
-
-        self.assertEqual(len(returned_studies), 2)
-
-        if returned_studies[0]['study'] == TEST_STUDY:
-            self.assertEqual(returned_studies[0]['study'], TEST_STUDY)
-            self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID)
-            self.assertEqual(returned_studies[1]['study'], TEST_STUDY_2)
-            self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID_2)
-        else:
-            self.assertEqual(returned_studies[0]['study'], TEST_STUDY_2)
-            self.assertEqual(returned_studies[0]['study_id'], TEST_STUDY_ID_2)
-            self.assertEqual(returned_studies[1]['study'], TEST_STUDY)
-            self.assertEqual(returned_studies[1]['study_id'], TEST_STUDY_ID)
-
-        self.check_lookup_studies_metadata(result['metadata'])
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()
 
     def test_edit_metadata(self):
-        new_birthday = '2014/12/28'
-        new_languages = ['english', 'spanish']
-        ret_list = [
+        self.__new_birthday = '2014/12/28'
+        self.__new_languages = ['english', 'spanish']
+        self.__ret_list = [
             TEST_EXPECTED_SNAPSHOT,
             TEST_EXPECTED_SNAPSHOT_2,
         ]
 
-        self.mox.StubOutWithMock(user_util, 'get_user')
-        self.mox.StubOutWithMock(db_util, 'update_participant_metadata')
-        self.mox.StubOutWithMock(filter_util, 'run_search_query')
-        self.mox.StubOutWithMock(db_util, 'report_usage')
-        self.mox.StubOutWithMock(
-            recalc_util,
-            'recalculate_ages_and_percentiles'
-        )
-        
-        user_util.get_user(TEST_EMAIL).AndReturn(TEST_USER)
+        def body():
+            with self.app.test_client() as client:
 
-        db_util.report_usage(
-            'test.email@example.com',
-            'Update Metadata',
-            '{"global_id": 1}'
-        )
+                with client.session_transaction() as sess:
+                    sess['email'] = TEST_EMAIL
 
-        db_util.update_participant_metadata(
-            TEST_DB_ID,
-            constants.FEMALE,
-            new_birthday,
-            constants.EXPLICIT_TRUE,
-            new_languages,
-            snapshot_ids=[
-                {'study': TEST_STUDY, 'id': 1},
-                {'study': TEST_STUDY_2, 'id': 2}
-            ]
-        )
-        filter_util.run_search_query(
-            [models.Filter('child_id', 'eq', TEST_DB_ID)],
-            constants.SNAPSHOTS_DB_TABLE
-        ).AndReturn(ret_list)
-        recalc_util.recalculate_ages_and_percentiles(ret_list)
+                new_metadata = {
+                    'global_id': TEST_DB_ID,
+                    'gender': constants.FEMALE,
+                    'birthday': self.__new_birthday,
+                    'hard_of_hearing': constants.EXPLICIT_TRUE,
+                    'languages': ','.join(self.__new_languages),
+                    'snapshot_ids': json.dumps([
+                        {'study': TEST_STUDY, 'id': '1'},
+                        {'study': TEST_STUDY_2, 'id': '2'}
+                    ])
+                }
 
-        self.mox.ReplayAll()
+                client.post(
+                    '/base/edit_data',
+                    data=new_metadata
+                )
 
-        with self.app.test_client() as client:
+        def on_start(mocks):
+            mocks['get_user'].return_value = TEST_USER
+            mocks['run_search_query'].return_value = self.__ret_list
 
-            with client.session_transaction() as sess:
-                sess['email'] = TEST_EMAIL
-
-            new_metadata = {
-                'global_id': TEST_DB_ID,
-                'gender': constants.FEMALE,
-                'birthday': new_birthday,
-                'hard_of_hearing': constants.EXPLICIT_TRUE,
-                'languages': ','.join(new_languages),
-                'snapshot_ids': json.dumps([
-                    {'study': TEST_STUDY, 'id': 1},
-                    {'study': TEST_STUDY_2, 'id': 2}
-                ])
-            }
-
-            client.post(
-                '/base/edit_data',
-                data=new_metadata
+        def on_end(mocks):
+            mocks['get_user'].assert_called_with(
+                TEST_EMAIL
             )
+            mocks['report_usage'].assert_called_with(
+                'test.email@example.com',
+                'Update Metadata',
+                '{"global_id": "1"}'
+            )
+            mocks['update_participant_metadata'].assert_called_with(
+                TEST_DB_ID,
+                constants.FEMALE,
+                self.__new_birthday,
+                constants.EXPLICIT_TRUE,
+                self.__new_languages,
+                snapshot_ids=[
+                    {'study': TEST_STUDY, 'id': '1'},
+                    {'study': TEST_STUDY_2, 'id': '2'}
+                ]
+            )
+            mocks['run_search_query'].assert_called_with(
+                [models.Filter('child_id', 'eq', TEST_DB_ID)],
+                constants.SNAPSHOTS_DB_TABLE
+            )
+            mocks['recalculate_ages_and_percentiles'].assert_called_with(
+                self.__ret_list
+            )
+
+        self.__run_with_mocks(on_start, body, on_end)
+        self.__assert_callback()

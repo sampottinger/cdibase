@@ -27,7 +27,7 @@ $(window).load(function () {
         $('#coming-msg').hide();
         $('#download-button-holder').hide();
         $('#coming-msg').slideDown(function () {
-            $('#mcdi-form').submit();
+            $('#cdi-form').submit();
             $('#download-button-holder').fadeIn();
         });
         return false;

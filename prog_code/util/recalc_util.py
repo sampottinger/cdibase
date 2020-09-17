@@ -18,32 +18,73 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author Sam Pottinger
 @license GNU GPL v3
 """
+import typing
 
-import constants
-import db_util
-import filter_util
-import interp_util
-import math_util
+import prog_code.util.constants as constants
+import prog_code.util.db_util as db_util
+import prog_code.util.filter_util as filter_util
+import prog_code.util.interp_util as interp_util
+import prog_code.util.math_util as math_util
 
 from ..struct import models
 
 
-class CachedMCDIAdapter:
+DEFAULT_CDI = 'fullenglishcdi'
+
+
+def get_cdi_model_by_name_or_default(
+        adapter: 'CachedCDIAdapter',
+        model_name: str,
+        default_cdi: str = DEFAULT_CDI) -> models.CDIFormat:
+    """Try getting a CDI format by name or use a default if not found.
+
+    @param adapter: The adapter to use to query for the model.
+    @param model_maybe: The model to test to see if None.
+    @param default_cdi: The name of the model to use if model_maybe is None.
+    """
+    cdi_model = adapter.load_cdi_model(model_name)
+    return realize_cdi_model(adapter, cdi_model)
+
+
+def realize_cdi_model(
+        adapter: 'CachedCDIAdapter',
+        model_maybe: typing.Optional[models.CDIFormat],
+        default_cdi: str = DEFAULT_CDI) -> models.CDIFormat:
+    """If the given model is None, use a default.
+
+    @param adapter: The adapter to use to query for the model.
+    @param model_maybe: The model to test to see if None.
+    @param default_cdi: The name of the model to use if model_maybe is None.
+    """
+    if model_maybe == None:
+        model_maybe = adapter.load_cdi_model(DEFAULT_CDI)
+
+    assert model_maybe != None
+    return model_maybe # type: ignore
+
+
+class CachedCDIAdapter:
+    """Adapter around db_util that caches CDI information."""
 
     def __init__(self):
+        """Create an empty adapter."""
         self.percentiles = {}
-        self.mcdi_models = {}
+        self.cdi_models = {}
         self.max_word_counts = {}
 
-    def load_mcdi_model(self, type_name):
-        if type_name in self.mcdi_models:
-            return self.mcdi_models[type_name]
+    def load_cdi_model(self,
+            type_name: str) -> typing.Optional[models.CDIFormat]:
+        """See db_util.load_cdi_model"""
+        if type_name in self.cdi_models:
+            return self.cdi_models[type_name]
 
-        mcdi_model = db_util.load_mcdi_model(type_name)
-        self.mcdi_models[type_name] = mcdi_model
-        return mcdi_model
+        cdi_model = db_util.load_cdi_model(type_name)
+        self.cdi_models[type_name] = cdi_model
+        return cdi_model
 
-    def load_percentile_model(self, type_name):
+    def load_percentile_model(self,
+            type_name: str) -> typing.Optional[models.PercentileTable]:
+        """See db_util.load_percentile_model"""
         if type_name in self.percentiles:
             return self.percentiles[type_name]
 
@@ -51,68 +92,87 @@ class CachedMCDIAdapter:
         self.percentiles[type_name] = percentile_model
         return percentile_model
 
-    def get_max_mcdi_words(self, type_name):
+    def get_max_cdi_words(self, type_name: str) -> int:
+        """Get the maximum number of words seen across all CDIs.
+
+        @param type_name: The type of CDI.
+        @returns: The maximum observed number of words.
+        """
         if type_name in self.max_word_counts:
             return self.max_word_counts[type_name]
 
         words = 0
-        mcdi_model = self.load_mcdi_model(type_name)
-        if mcdi_model == None:
-            mcdi_model = self.load_mcdi_model('fullenglishmcdi')
+        cdi_model_realized = get_cdi_model_by_name_or_default(self, type_name)
 
-        categories = mcdi_model.details['categories']
+        categories = cdi_model_realized.details['categories']
         category_num_words = map(lambda x: len(x['words']), categories)
         total_words = sum(category_num_words)
         self.max_word_counts[type_name] = total_words
         return total_words
 
 
-def recalculate_age(snapshot):
-    """
-    @type snapshot: SnapshotMetadata
+def recalculate_age(snapshot: models.SnapshotMetadata) -> None:
+    """Recalculate the age for a snapshot to be modified in place.
+
+    @param snapshot: The snapshot to modify.
     """
     snapshot.age = recalculate_age_raw(snapshot.birthday, snapshot.session_date)
 
 
-def recalculate_age_raw(birthday_str, session_date_str):
+def recalculate_age_raw(birthday_str: str, session_date_str: str) -> float:
+    """Recalculate the age for a snapshot.
+
+    @param birthday_str: The birthday of the participant.
+    @param session_date_str: Date of the session.
+    @returns: Age in amoritized months.
+    """
     birthday = interp_util.interpret_date(birthday_str)
     session_date = interp_util.interpret_date(session_date_str)
     return interp_util.monthdelta(birthday, session_date)
 
 
-def recalculate_percentile(snapshot, cached_adapter):
+def recalculate_percentile(snapshot: models.SnapshotMetadata,
+        cached_adapter: CachedCDIAdapter) -> None:
+    """Recalculate the percentile for a snapshot to be modified in place.
+
+    @param snapshot: The snapshot to modify.
     """
-    @type snapshot: SnapshotMetadata
-    """
-    mcdi_type = snapshot.mcdi_type
+    cdi_type = snapshot.cdi_type
     gender = snapshot.gender
     individual_words = db_util.load_snapshot_contents(snapshot)
 
     snapshot.words_spoken = get_words_spoken(
         cached_adapter,
-        mcdi_type,
+        cdi_type,
         individual_words
     )
 
     snapshot.percentile = recalculate_percentile_raw(
         cached_adapter,
-        mcdi_type,
+        cdi_type,
         gender,
         snapshot.words_spoken,
         snapshot.age
     )
 
 
-def recalculate_percentile_raw(cached_adapter, mcdi_type, gender,
-    words_spoken, age):
+def recalculate_percentile_raw(cached_adapter: CachedCDIAdapter, cdi_type: str,
+        gender: int, words_spoken: int, age: float) -> float:
+    """Recalculate the percentile for a snapshot.
 
+    @param cached_adapter: Adapter to get CDI information.
+    @param cdi_type: The type of CDI in which the percentile is being
+        calculated.
+    @param gender: The gender of the participant.
+    @param words_spoken: Number of words spoken in snapshot.
+    @param age: Participant age in months at time of snapshot.
+    @returns: Newly calculated percentile.
+    """
     # Load CDI information
-    mcdi_model = cached_adapter.load_mcdi_model(mcdi_type)
-    if mcdi_model == None:
-        mcdi_model = cached_adapter.load_mcdi_model('fullenglishmcdi')
+    cdi_model = get_cdi_model_by_name_or_default(cached_adapter, cdi_type)
 
     # Get percentile information
-    meta_percentile_info = mcdi_model.details['percentiles']
+    meta_percentile_info = cdi_model.details['percentiles']
 
     percentiles_name = None
     if gender == constants.MALE or gender == constants.OTHER_GENDER:
@@ -121,21 +181,30 @@ def recalculate_percentile_raw(cached_adapter, mcdi_type, gender,
         percentiles_name = meta_percentile_info['female']
 
     percentiles = cached_adapter.load_percentile_model(percentiles_name)
+    assert percentiles != None
+
+    percentiles_realized: models.PercentileTable = percentiles # type: ignore
 
     # Calculate percentile
     return math_util.find_percentile(
-        percentiles.details,
+        percentiles_realized.details,
         words_spoken,
         age,
-        cached_adapter.get_max_mcdi_words(mcdi_type)
+        cached_adapter.get_max_cdi_words(cdi_type)
     )
 
-def get_words_spoken(cached_adapter, mcdi_type, individual_words):
-    mcdi_model = cached_adapter.load_mcdi_model(mcdi_type)
-    if mcdi_model == None:
-        mcdi_model = cached_adapter.load_mcdi_model('fullenglishmcdi')
+def get_words_spoken(cached_adapter: CachedCDIAdapter, cdi_type: str,
+        individual_words: typing.Iterable[models.SnapshotContent]) -> int:
+    """Get the number of words spoken from a snapshot's word records.
 
-    count_as_spoken_vals = mcdi_model.details['count_as_spoken']
+    @param cached_adapter: Adapter though which to get CDI format data.
+    @param cdi_type: The name of the CDI format from which the word records are collected.
+    @param individual_words: Records of words.
+    @returns: Number of words spoken or spoken-equivalent.
+    """
+    cdi_model = get_cdi_model_by_name_or_default(cached_adapter, cdi_type)
+
+    count_as_spoken_vals = cdi_model.details['count_as_spoken']
 
     words_spoken = 0
     for word in individual_words:
@@ -144,29 +213,42 @@ def get_words_spoken(cached_adapter, mcdi_type, individual_words):
 
     return words_spoken
 
-def recalculate_ages(snapshots):
+def recalculate_ages(snapshots: typing.Iterable[models.SnapshotMetadata]) -> None:
+    """Recalculate all ages in a collection of snapshots, modifying in place.
+
+    @param snapshots: Snapshots to modify.
+    """
     for snapshot in snapshots:
         recalculate_age(snapshot)
 
 
-def recalculate_percentiles(snapshots):
-    adapter = CachedMCDIAdapter()
+def recalculate_percentiles(snapshots: typing.Iterable[models.SnapshotMetadata]) -> None:
+    """Recalculate all percentiles in a collection of snapshots, modifying in place.
+
+    @param snapshots: Snapshots to modify.
+    """
+    adapter = CachedCDIAdapter()
     for snapshot in snapshots:
         recalculate_percentile(snapshot, adapter)
 
 
-def update_snapshots(snapshots):
-    connection = db_util.get_db_connection()
-    cursor = connection.cursor()
+def update_snapshots(snapshots: typing.Iterable[models.SnapshotMetadata]) -> None:
+    """Persist updated snapshots to database.
 
-    for snapshot in snapshots:
-        db_util.update_snapshot(snapshot, cursor)
+    @param snapshots: Snapshots to persist.
+    """
+    with db_util.get_cursor() as cursor:
+        for snapshot in snapshots:
+            db_util.update_snapshot(snapshot, cursor)
 
-    connection.commit()
-    connection.close()
 
+def recalculate_ages_and_percentiles(snapshots: typing.Iterable[models.SnapshotMetadata],
+        save: bool = True) -> None:
+    """Recalculate all percentiles and ages in a collection of snapshots, modifying in place.
 
-def recalculate_ages_and_percentiles(snapshots, save=True):
+    @param snapshots: Snapshots to modify.
+    @param save: Flag indicating if the updated snapshots should be persisted after modification.
+    """
     recalculate_ages(snapshots)
     recalculate_percentiles(snapshots)
 
@@ -174,7 +256,13 @@ def recalculate_ages_and_percentiles(snapshots, save=True):
         update_snapshots(snapshots)
 
 
-def get_session_number(study, study_id):
+def get_session_number(study: str, study_id: str) -> int:
+    """Get the current session number (next to be submitted session number) for a study participant.
+
+    @param study: The name of the study.
+    @param study_id: The ID of the participant in the study.
+    @returns: Next session number (number of previous results + 1).
+    """
     study_filter = models.Filter('study', 'eq', study)
     study_id_filter = models.Filter('study_id', 'eq', study_id)
     results = filter_util.run_search_query([study_filter, study_id_filter],

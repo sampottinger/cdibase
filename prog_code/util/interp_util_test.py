@@ -15,17 +15,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import datetime
-
-import mox
+import unittest
 
 from ..struct import models
 
-import interp_util
+import prog_code.util.interp_util as interp_util
 
 
-class InterpUtilTests(mox.MoxTestBase):
+class InterpUtilTests(unittest.TestCase):
 
     def test_interpret_date(self):
         expected_date = datetime.date(2010, 3, 20)

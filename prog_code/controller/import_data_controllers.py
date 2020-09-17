@@ -24,7 +24,7 @@ import json
 
 import flask
 
-from daxlabbase import app
+from cdibase import app
 
 from ..util import constants
 from ..util import legacy_csv_import_util
@@ -32,12 +32,14 @@ from ..util import new_csv_import_util
 from ..util import db_util
 from ..util import session_util
 
+from . import controller_types
+
 CONFIRM_MSG = 'CSV imported into the database.'
 
 
 @app.route('/base/import_data', methods=['GET', 'POST'])
 @session_util.require_login(import_data=True)
-def import_data():
+def import_data() -> controller_types.ValidFlaskReturnTypes:
     """Controller to import a CSV file into the lab database.
 
     @return: Form to perform the import if GET and redirect if POST with info
@@ -46,32 +48,35 @@ def import_data():
     """
     default_format = flask.session.get(
         'last_format_used',
-        db_util.load_mcdi_model_listing()[0].safe_name
+        db_util.load_cdi_model_listing()[0].safe_name
     )
 
     if flask.request.method == 'GET':
         return flask.render_template(
             'import_data.html',
             cur_page='import_data',
-            formats=db_util.load_mcdi_model_listing(),
+            formats=db_util.load_cdi_model_listing(),
             default_format=default_format,
             **session_util.get_standard_template_values()
         )
 
     else:
-        contents = io.StringIO(
-            unicode(flask.request.files['file'].read()), newline=None
-        )
-        mcdi_type = flask.request.form.get('cdi-type', '')
+        contents = flask.request.files['file'].read()
+        cdi_type = flask.request.form.get('cdi-type', '')
         file_format = flask.request.form['file-format']
 
         if file_format == "new":
             return import_data_new(contents)
         else:
-            return import_data_legacy(contents, mcdi_type)
+            return import_data_legacy(contents, cdi_type)
 
 
-def import_data_new(contents):
+def import_data_new(contents: str) -> controller_types.ValidFlaskReturnTypes:
+    """Strategy to import data from the "new" CSV format.
+
+    @param: Contents to parse.
+    @returns: Redirect
+    """
     results = new_csv_import_util.process_csv(contents)
 
     if results.had_error:
@@ -95,10 +100,15 @@ def import_data_new(contents):
     return flask.redirect('/base/import_data')
 
 
-def import_data_legacy(contents, mcdi_type):
+def import_data_legacy(contents: str, cdi_type: str) -> controller_types.ValidFlaskReturnTypes:
+    """Strategy to import data from the "legacy" CSV format.
+
+    @param: Contents to parse.
+    @returns: Redirect
+    """
     results = legacy_csv_import_util.parse_csv(
         contents,
-        mcdi_type,
+        cdi_type,
         ['english'],
         constants.EXPLICIT_FALSE,
         True
@@ -118,7 +128,7 @@ def import_data_legacy(contents, mcdi_type):
         })
     )
 
-    if mcdi_type != '':
-        flask.session['last_format_used'] = mcdi_type
+    if cdi_type != '':
+        flask.session['last_format_used'] = cdi_type
 
     return flask.redirect('/base/import_data')

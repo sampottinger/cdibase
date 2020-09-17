@@ -20,7 +20,7 @@ This web (public Internet or private Intranet) application allows lab members to
 * Remotely enter CDI data directly into a centralized database.
 * Send forms to parents over email and automatically collect responses to CDIs securely over the Internet.
 * Download existing CDI data in CSV files using different "presentation formats" that, to support lab members' various custom and commercial software solutions, specifies how standard values like true, false, male, and female are reported in the resulting download.
-* Download CDI data from multiple studies even if different MCDI forms were used. The application allows the user to specify if the application should combine all results in a single CSV or if Daxlabbase should render a ZIP archive with a CSV file for each type of CDI used.
+* Download CDI data from multiple studies even if different CDI forms were used. The application allows the user to specify if the application should combine all results in a single CSV or if Cdibase should render a ZIP archive with a CSV file for each type of CDI used.
 * Fine tune user access control, specifying which lab members should have access to what functionality of the web application.
 * Automatically control and integrate with other lab software through a programmatically accesible API.
 
@@ -29,7 +29,7 @@ At the time of writing, only [sqlite3](www.sqlite.org) databases are supported. 
 <br>
 ### Technologies Used
 
-Daxlabbase itself is written in [Flask](flask.pocoo.org/). The original version targets a [sqlite3](www.sqlite.org) database but any SQL database can be used with minimal modification. There is planned future support for MongoDB backends. The front-end, rendered by [Jinja2](jinja.pocoo.org) templates, uses some [jQuery](http://jquery.com/).
+Cdibase itself is written in [Flask](flask.pocoo.org/). The original version targets a [sqlite3](www.sqlite.org) database but any SQL database can be used with minimal modification. There is planned future support for MongoDB backends. The front-end, rendered by [Jinja2](jinja.pocoo.org) templates, uses some [jQuery](http://jquery.com/).
 
 The suggested production (server) environment runs a [Gunicorn](http://gunicorn.org/) instance managed by [Supervisor](http://supervisord.org/) behind public facing [nginx](http://wiki.nginx.org/Main).
 
@@ -52,7 +52,7 @@ $ pip install virtualenv
 
 * [Optional] Create a new virtual environment:
 ```
-$ cd daxlabbase
+$ cd cdibase
 $ virtualenv venv
 ```
 
@@ -77,7 +77,7 @@ DEBUG_PRINT_EMAIL = False // [boolean] True if the contents of emails being send
 MAIL_PORT = 25 // [integer] The port the SMTP server is running on.
 ```
 
-At this time, only sqlite databases at ./db/daxlab.db are supported. We would love to improve on this so, if you have other types of databases you want to see supported, speak up or submit a patch!
+At this time, only sqlite databases at ./db/cdi.db are supported. We would love to improve on this so, if you have other types of databases you want to see supported, speak up or submit a patch!
 
 * If you are creating a flask_config.cfg from scratch, generate a secret key with:
 ```
@@ -93,7 +93,7 @@ At this time, only sqlite databases at ./db/daxlab.db are supported. We would lo
 * Create a local development db:
 ```
 $ cd db
-$ sqlite3 daxlab.db < create_local_db.sql
+$ sqlite3 cdi.db < create_local_db.sql
 ```
 
 * Create an uploads directory
@@ -112,19 +112,19 @@ Start the local development server with:
 $ python runserver.py
 ```
 
-Navigate to ```http://localhost:5000/base``` to access the locally running development server. 
+Navigate to ```http://localhost:5000/base``` to access the locally running development server.
 
 You may find it useful to have mail printed to the console as it does not send while in debug mode. Simply edit flask_config.cfg to read ```DEBUG_PRINT_EMAIL = True```.
 
 Note that, if you created the local testing DB, the local copy of the application does not have any user accounts. To create a test account for test@example.com,
 ```
 $ cd db
-$ sqlite3 daxlab.db < create_test_user.sql
+$ sqlite3 cdi.db < create_test_user.sql
 ```
 
 Use the forgot password feature to get a temporary password for that new user. Please be aware that ```create_test_user.sql``` gives test@example.com full permissions.
 
-Finally, before some features of the application can be used, you will also need to provide YAML descriptions of MCDI forms, a CSV of percentile information, and a YAML specification of a presentation format. Examples are available in a [private gist](https://gist.github.com/Samnsparky/db2ac1b742b98f954245).
+Finally, before some features of the application can be used, you will also need to provide YAML descriptions of CDI forms, a CSV of percentile information, and a YAML specification of a presentation format. Examples are available in a [private gist](https://gist.github.com/Samnsparky/db2ac1b742b98f954245).
 
 These can be provided through the edit formats tab or at ```http://127.0.0.1:5000/base/edit_formats```.
 
@@ -136,7 +136,7 @@ At this time, this project, unfortunately, does not have a staging server featur
 <br>
 ### Deployment / Production Server
 
-You will need to be given the location of the code as well as directory access permissions by the server superuser. After securing that, navigate to the daxlabbase environment.
+You will need to be given the location of the code as well as directory access permissions by the server superuser. After securing that, navigate to the cdibase environment.
 
 The code can be uploaded by pulling from the master branch of the project's repository.
 ```
@@ -148,10 +148,10 @@ The suggested deployment is a gunicorn server processes monitored by supervisor.
 However, after setting up the server, reload the application with:
 ```
 $ sudo supervisorctl
-supervisor> stop daxlabbase
-daxlabbase: stopped
-supervisor> start daxlabbase
-daxlabbase: started
+supervisor> stop cdibase
+cdibase: stopped
+supervisor> start cdibase
+cdibase: started
 supervisor> exit
 ```
 
@@ -167,9 +167,9 @@ $ python run_test.py
 
 You should see output that looks like:
 ```
-$ python run_test.py 
+$ python run_test.py
 
-Ran XX tests in 0.545s 
+Ran XX tests in 0.545s
 
 OK
 ```
@@ -182,4 +182,4 @@ The application consists of models, views (templates), controllers, and utilitie
 <br>
 ### Standards, Conventions, and State of Development
 
-Ideally future development should follow an 80% unit testing coverage guidelines for the controllers with discretionary unit test coverage for the utilities. Python code should include [epydoc](http://epydoc.sourceforge.net/) inline documentation and should follow [Google's Python Style Guidelines](http://google-styleguide.googlecode.com/svn/trunk/pyguide.html).
+Ideally future development should follow an 80% unit testing coverage guidelines for the controllers with discretionary unit test coverage for the utilities. Python code should include [epydoc](http://epydoc.sourceforge.net/) inline documentation and should follow [Google's Python Style Guidelines](http://google-styleguide.googlecode.com/svn/trunk/pyguide.html). Note, after the drop of mox, test code is excluded from the style guidelines due to things like line length but conformance is still recommended when convenient.

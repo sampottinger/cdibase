@@ -15,14 +15,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 import collections
+import unittest
+import unittest.mock
 
-import mox
-
-import db_util
-import mail_util
-import parent_account_util
+import prog_code.util.db_util as db_util
+import prog_code.util.mail_util as mail_util
+import prog_code.util.parent_account_util as parent_account_util
 
 TEST_PARENT_FORM = collections.namedtuple(
     'TestParentForm',
@@ -30,7 +29,7 @@ TEST_PARENT_FORM = collections.namedtuple(
 )
 
 
-class ParentAccountUtilTests(mox.MoxTestBase):
+class ParentAccountUtilTests(unittest.TestCase):
 
     def test_is_likely_email_address(self):
         test_email = 'Test Parent at somewhere.com'
@@ -41,31 +40,25 @@ class ParentAccountUtilTests(mox.MoxTestBase):
         test_result = parent_account_util.is_likely_email_address(test_email)
         self.assertTrue(test_result)
 
-    def test_generate_unique_mcdi_form_id(self):
-        self.mox.StubOutWithMock(db_util, 'get_parent_form_by_id')
+    def test_generate_unique_cdi_form_id(self):
+        with unittest.mock.patch('prog_code.util.db_util.get_parent_form_by_id') as mock:
+            mock.side_effect = [True, True, None]
+            parent_account_util.generate_unique_cdi_form_id()
+            self.assertEqual(len(mock.mock_calls), 3)
 
-        db_util.get_parent_form_by_id(mox.IsA(basestring)).AndReturn(True)
-        db_util.get_parent_form_by_id(mox.IsA(basestring)).AndReturn(True)
-        db_util.get_parent_form_by_id(mox.IsA(basestring)).AndReturn(None)
+    def test_send_cdi_email(self):
+        with unittest.mock.patch('prog_code.util.mail_util.send_msg') as mock:
+            form_url = parent_account_util.URL_TEMPLATE % 'url'
+            msg = parent_account_util.get_cdi_email_template() % (
+                'child',
+                form_url
+            )
 
-        self.mox.ReplayAll()
+            test_form = TEST_PARENT_FORM('child', 'url', 'test email')
+            parent_account_util.send_cdi_email(test_form)
 
-        parent_account_util.generate_unique_mcdi_form_id()
-
-    def test_send_mcdi_email(self):
-        self.mox.StubOutWithMock(mail_util, 'send_msg')
-
-        form_url = parent_account_util.URL_TEMPLATE % 'url'
-        msg = parent_account_util.MCDI_EMAIL_TEMPLATE % ('child', form_url)
-
-        mail_util.send_msg(
-            'test email',
-            parent_account_util.MCDI_EMAIL_SUBJECT,
-            msg
-        )
-
-        self.mox.ReplayAll()
-
-        test_form = TEST_PARENT_FORM('child', 'url', 'test email')
-        parent_account_util.send_mcdi_email(test_form)
-
+            mock.assert_called_with(
+                'test email',
+                parent_account_util.CDI_EMAIL_SUBJECT,
+                msg
+            )

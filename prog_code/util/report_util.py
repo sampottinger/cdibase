@@ -20,12 +20,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import csv
-import StringIO as string_io
-import urllib
+import io
+import typing
+import urllib.parse
 import zipfile
 
-import constants
-import db_util
+import prog_code.util.constants as constants
+import prog_code.util.db_util as db_util
+
+import prog_code.struct.models as models
 
 PRESENTATION_VALUE_NAME_MAP = {
     constants.NO_DATA: 'no_data',
@@ -47,7 +50,7 @@ PRESENTATION_VALUE_NAME_MAP = {
     constants.ELEVEN_PRESUMED_TRUE: 'explicit_true'
 }
 
-DEFAULT_MCDI = 'fullenglishmcdi'
+DEFAULT_CDI = 'fullenglishcdi'
 
 
 class NotFoundSnapshotContent:
@@ -62,7 +65,8 @@ class NotFoundSnapshotContent:
         self.value = constants.NO_DATA
 
 
-def interpret_word_value(value, presentation_format):
+def interpret_word_value(value: int,
+        presentation_format: typing.Optional[models.PresentationFormat]) -> typing.Union[str, int]:
     """Convert underlying special database value to a string descriptions.
 
     @param value: The value to get a string description for.
@@ -81,33 +85,42 @@ def interpret_word_value(value, presentation_format):
 
     name = PRESENTATION_VALUE_NAME_MAP.get(value, value)
 
-    if presentation_format == None or not name in presentation_format.details:
+    presentation_format_realized: models.PresentationFormat = presentation_format # type: ignore
+
+    if presentation_format == None or not name in presentation_format_realized.details:
         return value
-    return presentation_format.details[name]
+    return presentation_format_realized.details[name]
 
 
-def summarize_snapshots(snapshot_metas):
+def summarize_snapshots(snapshot_metas: typing.Iterable[models.SnapshotMetadata]) -> typing.Dict[
+        str, typing.Any]:
+    """Summarize snapshots as primitives.
+
+    @param snapshot_metas: The snapshots to serialize.
+    @return: The snapshots serialized into primitives.
+    """
     cdi_spoken_set = {}
-    ret_serialization = {}
+    ret_serialization: typing.Dict[str, typing.Any] = {}
 
     for meta in snapshot_metas:
-        
+
         # Get the values that count as "spoken"
-        mcdi_name = meta.mcdi_type
+        cdi_name = meta.cdi_type
         cdi_date = meta.session_date
-        if not mcdi_name in cdi_spoken_set:
-            mcdi_info = db_util.load_mcdi_model(mcdi_name)
-            words_spoken_set = mcdi_info.details['count_as_spoken']
-            cdi_spoken_set[mcdi_name] = words_spoken_set
+        if not cdi_name in cdi_spoken_set:
+            cdi_info = db_util.load_cdi_model(cdi_name)
+            assert cdi_info != None
+            words_spoken_set = cdi_info.details['count_as_spoken'] # type: ignore
+            cdi_spoken_set[cdi_name] = words_spoken_set
         else:
-            words_spoken_set = cdi_spoken_set[mcdi_name]
+            words_spoken_set = cdi_spoken_set[cdi_name]
 
         # Parse the words
         contents = db_util.load_snapshot_contents(meta)
         for word_info in contents:
             word = word_info.word
             value = word_info.value
-            
+
             # Replace existing if this snapshot is earlier
             if value in words_spoken_set:
                 to_enter = not word in ret_serialization
@@ -123,8 +136,11 @@ def summarize_snapshots(snapshot_metas):
     return ret_serialization
 
 
-def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
-    report_dict=False, include_words=True):
+def serialize_snapshot(snapshot: models.SnapshotMetadata,
+        presentation_format: models.PresentationFormat = None,
+        word_listing: typing.List[str] = None,
+        report_dict: bool = False,
+        include_words: bool = True) -> typing.Union[dict, typing.List]:
     """Turn a snapshot uft8 encoded list of strings.
 
     @param snapshot: The snapshot to serialize.
@@ -132,6 +148,10 @@ def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
     @param presentation_format: The presentation format to use to render the
         string serialization.
     @type presentation_format: models.PresentationFormat
+    @param word_listing: Vocabulary for the snapshot.
+    @param report_dict: Flag indicating if the result should be a dictionary of primitives or list
+        of values in sorted order.
+    @param include_words: Flag indicating if the individual word values should be included.
     @return: Serialized version of the snapshot.
     @rtype: List of str
     """
@@ -151,10 +171,10 @@ def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
             word_listing
         )
 
-        word_values = map(
+        word_values = list(map(
             lambda x: interpret_word_value(x.value, presentation_format),
             snapshot_contents_sorted
-        )
+        ))
 
     if report_dict:
         gender = interpret_word_value(snapshot.gender, presentation_format)
@@ -178,13 +198,13 @@ def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
             'revision': snapshot.revision,
             'languages': snapshot.languages,
             'num_languages': snapshot.num_languages,
-            'mcdi_type': snapshot.mcdi_type,
+            'cdi_type': snapshot.cdi_type,
             'hard_of_hearing': snapshot.hard_of_hearing,
             'deleted': snapshot.deleted
         }
 
         if include_words:
-            return_dict['words'] = word_values
+            return_dict['words'] = word_values # type: ignore
 
         return return_dict
 
@@ -207,7 +227,7 @@ def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
             snapshot.revision,
             snapshot.languages,
             snapshot.num_languages,
-            snapshot.mcdi_type,
+            snapshot.cdi_type,
             snapshot.hard_of_hearing,
             snapshot.deleted
         ]
@@ -215,15 +235,11 @@ def serialize_snapshot(snapshot, presentation_format=None, word_listing=None,
         if include_words:
             return_list.extend(word_values)
 
-        return_list = map(
-            lambda x: x.encode('utf-8','ignore') if isinstance(x, str) else x,
-            return_list
-        )
-
         return return_list
 
 
-def generate_study_report_rows(snapshots_from_study, presentation_format):
+def generate_study_report_rows(snapshots_from_study: typing.List[models.SnapshotMetadata],
+        presentation_format: models.PresentationFormat) -> typing.List[typing.Tuple[str, typing.Any]]:
     """Serialize a set of snapshots to a collection of lists of strings.
 
     @param snapshots_by_study: The snapshots to serialize.
@@ -235,11 +251,11 @@ def generate_study_report_rows(snapshots_from_study, presentation_format):
         header information.
     @rtype: List of list of str.
     """
-    word_listing_set = set()
+    word_listing_set: typing.Set[str] = set()
     for snapshot in snapshots_from_study:
         snapshot_contents = db_util.load_snapshot_contents(snapshot)
         candidate_word_listing = set(map(
-            lambda x: x.word.encode('utf-8','ignore'),
+            lambda x: x.word,
             snapshot_contents
         ))
         word_listing_set = word_listing_set.union(candidate_word_listing)
@@ -251,7 +267,7 @@ def generate_study_report_rows(snapshots_from_study, presentation_format):
         lambda x: serialize_snapshot(x, presentation_format, word_listing),
         snapshots_from_study
     )
-    
+
     header_col = [
         'database id',
         'child id',
@@ -270,35 +286,35 @@ def generate_study_report_rows(snapshots_from_study, presentation_format):
         'revision',
         'languages',
         'num languages',
-        'mcdi type',
+        'cdi type',
         'hard of hearing',
         'deleted'
     ]
     header_col.extend(word_listing)
 
     cols = [header_col]
-    cols.extend(serialized_snapshots)
+    cols.extend(serialized_snapshots) # type: ignore
 
-    return zip(*cols)
+    return list(zip(*cols)) # type: ignore
 
 
-def sort_by_study_order(rows, mcdi_format):
-    """Sort report output rows such that they are in the same order as the MCDI.
+def sort_by_study_order(rows: typing.List[typing.Any], cdi_format: models.CDIFormat) -> typing.List:
+    """Sort report output rows such that they are in the same order as the CDI.
 
     Sort the reourt output rows such that the header rows come first followed
     by the word value rows in the same order as they appear in the original
-    MCDI.
+    CDI.
 
-    @param rows: The rows to sort including both the 20 header rows and the 
+    @param rows: The rows to sort including both the 20 header rows and the
         word value rows.
     @type rows: iterable over iterable over primitive
-    @param mcdi_format: Information about the presentation format whose
-        MCDI format should be sorted against.
-    @type mcdi_format: models.MCDIFormat
+    @param cdi_format: Information about the presentation format whose
+        CDI format should be sorted against.
+    @type cdi_format: models.CDIFormat
     @return: Rows sorted acording to the presentation format.
     @rtype: iterable over iterable over primitive
     """
-    categories = mcdi_format.details['categories']
+    categories = cdi_format.details['categories']
     word_index = {}
     i = 0
     for category in categories:
@@ -307,17 +323,33 @@ def sort_by_study_order(rows, mcdi_format):
             i+=1
 
     rows_header = rows[:20]
-    rows_content_indexed = map(
-        lambda x: (word_index.get(x[0].lower().replace('*', ''), -1), x),
+    def process(x):
+        word_maybe_bytes = x[0]
+
+        if isinstance(word_maybe_bytes, bytes):
+            word = word_maybe_bytes.decode('utf-8')
+        else:
+            word = word_maybe_bytes
+
+        word_lower = word.lower()
+        word_lower
+        word_clean = word_lower.replace('*', '')
+
+        value = word_index.get(word_clean, -1)
+        return (value, x)
+
+    rows_content_indexed = list(map(
+        process,
         rows[20:]
-    )
+    ))
     rows_content_sorted = sorted(rows_content_indexed, key=lambda x: x[0])
-    rows_content_sorted = map(lambda x: x[1], rows_content_sorted)
+    rows_content_sorted = list(map(lambda x: x[1], rows_content_sorted))
     return rows_header + rows_content_sorted
 
 
-def generate_study_report_csv(snapshots_from_study, presentation_format):
-    """Generate a CSV file for a set of snapshots with the same MCDI format.
+def generate_study_report_csv(snapshots_from_study: typing.List[models.SnapshotMetadata],
+        presentation_format: models.PresentationFormat) -> io.StringIO:
+    """Generate a CSV file for a set of snapshots with the same CDI format.
 
     @param snapshots_from_study: The snapshots to create a CSV report for.
     @type snapshots_from_study: Iterable over models.SnapshotMetadata
@@ -327,33 +359,47 @@ def generate_study_report_csv(snapshots_from_study, presentation_format):
     @return: Contents of the CSV file.
     @rtype: StringIO.StringIO
     """
-    faux_file = string_io.StringIO()
+    faux_file = io.StringIO()
     csv_writer = csv.writer(faux_file)
-    mcdi_type_name = snapshots_from_study[0].mcdi_type
-    safe_mcdi_name = mcdi_type_name.replace(' ', '')
-    safe_mcdi_name = urllib.quote_plus(safe_mcdi_name).lower()
-    mcdi_format = db_util.load_mcdi_model(safe_mcdi_name)
-    if mcdi_format == None:
-        mcdi_format = db_util.load_mcdi_model(DEFAULT_MCDI)
+    cdi_type_name = snapshots_from_study[0].cdi_type
+    safe_cdi_name = cdi_type_name.replace(' ', '')
+    safe_cdi_name = urllib.parse.quote_plus(safe_cdi_name).lower()
+
+    cdi_format = db_util.load_cdi_model(safe_cdi_name)
+    if cdi_format == None:
+        cdi_format = db_util.load_cdi_model(DEFAULT_CDI)
+
+    assert cdi_format != None
+    cdi_format_realized: models.CDIFormat = cdi_format #type: ignore
+
     rows = generate_study_report_rows(snapshots_from_study, presentation_format)
-    rows = sort_by_study_order(rows, mcdi_format)
+    rows = sort_by_study_order(rows, cdi_format_realized)
+
+    def prep_string(target):
+        if isinstance(target, bytes):
+            return target.decode('utf-8')
+        else:
+            return target
+
     csv_writer.writerows(
-        [[unicode(val).encode('ascii', 'ignore') for val in row] for row in rows]
+        [[prep_string(val) for val in row] for row in rows]
     )
     return faux_file
 
 
-def generate_consolidated_study_report(snapshots, presentation_format):
+def generate_consolidated_study_report(snapshots_iter: typing.Iterable[models.SnapshotMetadata],
+        presentation_format: models.PresentationFormat) -> io.StringIO:
     """Generate a unified CSV file for a set of snapshots
 
-    @param snapshots_from_study: The snapshots to create a CSV report for.
-    @type snapshots_from_study: Iterable over models.SnapshotMetadata
-    @param presentation_format: The presentation format to use to render the
+    @param snapshots_iter: The snapshots to create a CSV report for.
+    @type snapshots_iter: Iterable over models.SnapshotMetadata
+    @param snapshots_iter: The presentation format to use to render the
         string serialization.
     @type: presentation_format: models.PresentationFormat
     @return: Contents of the zip archive file.
-    @rtype: StringIO.StringIO
+    @rtype: io.StringIO
     """
+    snapshots = list(snapshots_iter)
     snapshots.sort(key=lambda x: '%s_%s' % (x.session_num, x.study_id))
 
     return generate_study_report_csv(
@@ -374,7 +420,7 @@ def generate_study_report(snapshots, presentation_format):
         string serialization.
     @type: presentation_format: models.PresentationFormat
     @return: Contents of the zip archive file.
-    @rtype: StringIO.StringIO
+    @rtype: io.StringIO
     """
     snapshots.sort(key=lambda x: '%s_%s' % (x.session_num, x.study_id))
 
@@ -393,7 +439,7 @@ def generate_study_report(snapshots, presentation_format):
         )
         faux_files['%s.csv' % study_name] = report
 
-    faux_zip_file = string_io.StringIO()
+    faux_zip_file = io.BytesIO()
     zip_file = zipfile.ZipFile(faux_zip_file, mode='w')
     for (filename, faux_file) in faux_files.items():
         zip_file.writestr(filename, faux_file.getvalue())

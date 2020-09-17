@@ -18,43 +18,58 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Sam Pottinger
 @license: GNU GPL v3
 """
+import typing
 
-def get_with_end_max(collection, index):
+
+def get_mapped_with_end_max(collection: typing.List, index: int,
+        mapping: typing.Mapping[str, int]) -> int:
+    """Get the value at index or the last value in the colleciton.
+
+    Get a value from collection if index is in range or the final value if the
+    index is out of range.
+
+    @param collection: The collection to get the value from.
+    @param index: The index at which to get the value.
+    @return: The target value.
+    """
     if index >= len(collection):
         ret_val = collection[-1]
     else:
         ret_val = collection[index]
 
-    if ret_val == '%':
-        return 0
-    else:
-        return ret_val
+    if ret_val in mapping:
+        return mapping[ret_val]
+
+    return int(ret_val)
 
 
-def find_percentile(table_entries, target_num_words, age_months, max_words):
-    """Find the MCDI perentile for a child.
+def find_percentile(table_entries: typing.List[typing.List[float]],
+        target_num_words: int, age_months: float, max_words: int) -> float:
+    """Find the CDI perentile for a child.
 
     @param table_entries: The percentile table to use to calculate the
-        child MCDI percentile.
+        child CDI percentile.
     @type table_entries: 2D float array (list of list of numbers)
     @param target_num_words: The number of words reported as spoken by the
-        child for which an MCDI percentile is desired.
+        child for which an CDI percentile is desired.
     @type target_num_words: int
     @param age_months: The age of the child in months.
     @type age_months: int
-    @param max_words: The number of words from the MCDI format that the child
+    @param max_words: The number of words from the CDI format that the child
         could know.
     @type max_words: int
     """
-    percentiles = map(lambda x: int(x[0]), table_entries[1:])
+    percentiles = list(map(lambda x: int(x[0]), table_entries[1:]))
     percentiles.insert(0,0)
     percentiles.append(0)
 
     first_month = int(table_entries[0][1])
     month_index = int(age_months - first_month + 1)
 
-    words_per_percentile = map(lambda x: int(get_with_end_max(x, month_index)),
-        table_entries)
+    words_per_percentile = list(map(lambda x:
+        get_mapped_with_end_max(x, month_index, {'%': 0}),
+        table_entries
+    ))
     words_per_percentile.append(0)
     words_per_percentile[0] = max_words
 
@@ -72,7 +87,7 @@ def find_percentile(table_entries, target_num_words, age_months, max_words):
         lower_section_words = words_per_percentile[percentile_index+1]
     else:
         lower_section_words = upper_section_words - 1
-    
+
     upper_section_percentile = percentiles[percentile_index]
     if len(percentiles) > percentile_index+1:
         lower_section_percentile = percentiles[percentile_index+1]

@@ -1,13 +1,13 @@
 CREATE TABLE "api_keys" ("user_id" INTEGER, "api_key" TEXT);
 
-CREATE TABLE mcdi_formats (human_name TEXT, safe_name TEXT, filename TEXT);
+CREATE TABLE cdi_formats (human_name TEXT, safe_name TEXT, filename TEXT);
 
 CREATE TABLE parent_forms 
 (
     form_id TEXT,
     child_name TEXT,
     parent_email TEXT,
-    mcdi_type TEXT,
+    cdi_type TEXT,
     child_id INTEGER,
     study_id TEXT,
     study TEXT,
@@ -62,7 +62,7 @@ CREATE TABLE snapshots
     revision INTEGER,
     languages TEXT,
     num_languages INTEGER,
-    mcdi_type TEXT,
+    cdi_type TEXT,
     hard_of_hearing INTEGER,
     deleted INTEGER
 );

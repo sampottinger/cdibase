@@ -16,5 +16,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 
-from daxlabbase import app
+from cdibase import app
 app.run(debug=True)

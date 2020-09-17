@@ -34,7 +34,9 @@ from ..util import session_util
 
 from ..struct import models
 
-from daxlabbase import app
+from . import controller_types
+
+from cdibase import app
 
 NO_FILTER_MESSAGE = 'No filters selected! Please add at least one filter.'
 NO_MATCHING_DATA_MSG = 'No matching data found.'
@@ -46,13 +48,13 @@ FILTER_DELETED_MSG = 'Filter deleted.'
 FILTER_ALREADY_DELETED_MSG = 'Filter already deleted.'
 UNKNOWN_PRESENTATION_FORMAT_MSG = 'Unknown presentation format specified.'
 
-CONTENT_DISPOISTION_ZIP = 'attachment; filename=mcdi_results.zip'
-CONTENT_DISPOISTION_CSV = 'attachment; filename=mcdi_results.csv'
+CONTENT_DISPOISTION_ZIP = 'attachment; filename=cdi_results.zip'
+CONTENT_DISPOISTION_CSV = 'attachment; filename=cdi_results.csv'
 CSV_MIME_TYPE = 'text/csv'
 OCTET_MIME_TYPE = 'application/octet-stream'
 
-CONSOLIDATED_FILE_URL = '/base/access_data/download_mcdi_results.csv?deleted=%s'
-ARCHIVE_FILE_URL = '/base/access_data/download_mcdi_results.zip?deleted=%s'
+CONSOLIDATED_FILE_URL = '/base/access_data/download_cdi_results.csv?deleted=%s'
+ARCHIVE_FILE_URL = '/base/access_data/download_cdi_results.zip?deleted=%s'
 ACCESS_DATA_URL = '/base/access_data'
 
 DOWNLOAD_WAITING_ATTR = 'is_waiting'
@@ -68,10 +70,10 @@ HTML_CHECKBOX_SELECTED = 'on'
 
 @app.route('/base/access_data')
 @session_util.require_login(access_data=True)
-def access_data():
+def access_data() -> controller_types.ValidFlaskReturnTypes:
     """Index page for building database queries.
 
-    @return: Listing of available CSV rendering "formats" 
+    @return: Listing of available CSV rendering "formats"
     @rtype: flask.Response
     """
     formats = list(db_util.load_presentation_model_listing())
@@ -86,15 +88,15 @@ def access_data():
     )
 
 
-@app.route('/base/access_data/download_mcdi_results', methods=['POST'])
+@app.route('/base/access_data/download_cdi_results', methods=['POST'])
 @session_util.require_login(access_data=True)
-def execute_access_request():
-    """Execute a MCDI database query and download the results.
+def execute_access_request() -> controller_types.ValidFlaskReturnTypes:
+    """Execute a CDI database query and download the results.
 
-    Execute an MCDI database query queued in a user's session and return the
+    Execute an CDI database query queued in a user's session and return the
     results in either a single "consolidated" CSV or a zip archive of CSVs. The
-    request should include format as an argument indicating the presentation 
-    format that the MCDIs should be provided in (name of a presentation format
+    request should include format as an argument indicating the presentation
+    format that the CDIs should be provided in (name of a presentation format
     provided via configuration file) as it will be saved to the session and
     used by execute_zip_access_request. The request should also include
     a consolidated_csv argument that, if equal to "on" will have the requset
@@ -116,7 +118,7 @@ def execute_access_request():
         'deleted',
         'ignore'
     )
-    
+
     if use_consolidated == HTML_CHECKBOX_SELECTED:
         return flask.redirect(CONSOLIDATED_FILE_URL % include_deleted_str)
     else:
@@ -125,11 +127,11 @@ def execute_access_request():
 
 @app.route('/base/access_data/is_waiting')
 @session_util.require_login(access_data=True)
-def is_waiting_on_download():
+def is_waiting_on_download() -> controller_types.ValidFlaskReturnTypes:
     """Determine if the user is waiting on a download to start.
 
     Determine if a user is waiting for CSV file contents to be generated in
-    response to an MCDI database query.
+    response to an CDI database query.
 
     @return: JSON serialization of the status of the download. Will be a
         serialization of an JS-object with the single attribute: is_waiting
@@ -142,11 +144,11 @@ def is_waiting_on_download():
 
 @app.route('/base/access_data/abort')
 @session_util.require_login(access_data=True)
-def abort_download():
+def abort_download() -> controller_types.ValidFlaskReturnTypes:
     """Have the session indicate that the user gave up on waiting for download.
 
     Have the user's session indicate that the user decided not to wait for CSV
-    file contents to be generated from an MCDI database query.
+    file contents to be generated from an CDI database query.
 
     @return: JSON serialization of the updated status of the user's download.
         Will be a serialization of an JS-object with the single attribute:
@@ -161,7 +163,7 @@ def abort_download():
 
 @app.route('/base/access_data/distribution')
 @session_util.require_login(access_data=True)
-def get_study_distribution():
+def get_study_distribution() -> controller_types.ValidFlaskReturnTypes:
     """Get a JSON file describing how many CDIs there are per study.
 
     @return: JSON serialization of CDI frequency distribution.
@@ -178,7 +180,7 @@ def get_study_distribution():
 
 @app.route('/base/access_data/add_filter', methods=['POST'])
 @session_util.require_login(access_data=True)
-def add_filter():
+def add_filter() -> controller_types.ValidFlaskReturnTypes:
     """Controller to add a filter to the query the user is currently building.
 
     Controller that adds an additional AND clause to the query the user is
@@ -210,7 +212,7 @@ def add_filter():
         return flask.redirect(ACCESS_DATA_URL)
 
     # Create new filter
-    new_filter = models.Filter(field, operator, operand)
+    new_filter = models.Filter(field, operator, operand) # type: ignore
     session_util.add_filter(new_filter)
 
     #flask.session[CONFIRMATION_ATTR] = FILTER_CREATED_MSG
@@ -220,13 +222,13 @@ def add_filter():
 
 @app.route('/base/access_data/delete_filter/<int:filter_index>')
 @session_util.require_login(access_data=True)
-def delete_filter(filter_index):
+def delete_filter(filter_index) -> controller_types.ValidFlaskReturnTypes:
     """Controller to delete a filter from query the user is currently building.
 
     Controller that removes an AND clause from the query the user is currently
     building against the database. Will set either an error or a conformation
     message in the user session.
-    
+
     @param filter_index: The numerical index of filter to be deleted. Index goes
         to element in list of filters for user's current query.
     @type filter_index: int
@@ -242,9 +244,9 @@ def delete_filter(filter_index):
         return flask.redirect(ACCESS_DATA_URL)
 
 
-@app.route('/base/access_data/download_mcdi_results.zip')
+@app.route('/base/access_data/download_cdi_results.zip')
 @session_util.require_login(access_data=True)
-def execute_zip_access_request():
+def execute_zip_access_request() -> controller_types.ValidFlaskReturnTypes:
     """Controller for finding and rendering archive of database query results.
 
     Controller that executes a request (that must have atleast one filter) using
@@ -307,9 +309,9 @@ def execute_zip_access_request():
     return response
 
 
-@app.route('/base/access_data/download_mcdi_results.csv')
+@app.route('/base/access_data/download_cdi_results.csv')
 @session_util.require_login(access_data=True)
-def execute_csv_access_request():
+def execute_csv_access_request() -> controller_types.ValidFlaskReturnTypes:
     """Controller for finding and rendering archives of database query results.
 
     @return: ZIP archive where each study with results has a CSV file.
@@ -351,8 +353,11 @@ def execute_csv_access_request():
         flask.session[ERROR_ATTR] = UNKNOWN_PRESENTATION_FORMAT_MSG
         return flask.redirect(ACCESS_DATA_URL)
 
-    csv_file = report_util.generate_consolidated_study_report(snapshots,
-        presentation_format)
+    presentation_format_realized: models.PresentationFormat = presentation_format # type: ignore
+    csv_file = report_util.generate_consolidated_study_report(
+        snapshots,
+        presentation_format_realized
+    )
     csv_contents = csv_file.getvalue()
 
     response = flask.Response(

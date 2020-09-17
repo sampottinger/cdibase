@@ -1,9 +1,6 @@
-{% extends "base.html" %}
+"""Utilities to support dependency injection for unit testing.
 
-{% block contents %}
-<!-- Interface for managing user accounts.
-
-Copyright (C) 2014 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
+Copyright (C) 2020 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,18 +14,18 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
--->
 
-<div class="hero-unit">
-    <h3>Manage your account information.</h3>
-    <p>
-        CdiBase makes it easy to keep your account information up to date.
-    </p>
-</div>
-<div class="small-center-content">
-    <h3>Options</h3>
-    <ul>
-        <li><a href="/base/account/change_password">Change password</a></li>
-    </ul>
-</div>
-{% endblock %}
+@author: Sam Pottinger
+@license: GNU GPL v3
+"""
+
+
+def get_or_default(target, default_val):
+    return default_val if target == None else target
+
+def assert_str(target):
+    assert isinstance(target, str)
+
+def create_generator(values):
+    results = collections.deque([None, True, True, None])
+    return lambda: results.popleft()

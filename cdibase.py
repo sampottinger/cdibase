@@ -1,4 +1,4 @@
-"""Driver for the DaxlabBase web application / database manager
+"""Driver for the CdiBase web application / database manager
 
 Copyright (C) 2014 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
 
@@ -19,11 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @license: GNU GPL v3
 """
 
-# TODO(apottinger): Change to cdibase.py
-
 import flask
 
-from flask_mail import Mail
+from flask_mail import Mail # type: ignore
 
 from prog_code.util import session_util
 from prog_code.util import file_util
@@ -50,9 +48,9 @@ from prog_code.controller import import_data_controllers
 
 @app.route("/base")
 def main():
-    """Controller for the daxlabbase homepage.
+    """Controller for the cdibase homepage.
 
-    @return: Rendered version of the DaxlabBase homepage.
+    @return: Rendered version of the CdiBase homepage.
     @rtype: flask.Response
     """
     if session_util.is_logged_in():

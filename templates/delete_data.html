@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <div class="hero-unit">
     <h3>Delete from the lab's CDI database.</h3>
     <p>
-        DaxlabBase supports moving entries from the lab's dataset to a "recyle bin" and, thus, removing them from search / query results. Start by selecting filters on the left. When finished, confirm then move those entries to and from the recyle bin on the right.
+        CdiBase supports moving entries from the lab's dataset to a "recyle bin" and, thus, removing them from search / query results. Start by selecting filters on the left. When finished, confirm then move those entries to and from the recyle bin on the right.
     </p>
 </div>
 <div class="row-fluid">
@@ -62,7 +62,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                         <option value="total_num_sessions">total num sessions</option>
                         <option value="percentile">percentile</option>
                         <option value="extra_categories">extra categories</option>
-                        <option value="mcdi_type">CDI type</option>
+                        <option value="cdi_type">CDI type</option>
                         <option value="specific_language">specific language</option>
                         <option value="num_languages">num languages</option>
                         <option value="hard_of_hearing">hard of hearing</option>
@@ -90,7 +90,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <div class="span2"></div>
     <div class="span5">
         <h3>Update Matching Entries</h3>
-        <form method="POST" id="delete-form" action="/base/delete_data/delete_mcdi_results">
+        <form method="POST" id="delete-form" action="/base/delete_data/delete_cdi_results">
             <div class="form-entry">
                 <label>Presentation format</label>
                 <select name="format">

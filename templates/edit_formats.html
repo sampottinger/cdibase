@@ -26,21 +26,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <div class="hero-unit">
     <h3>Configure the presentation and formatting of CDIs.</h3>
     <p>
-        To support many software packages, DaxlabBase supports many different types of CDIs and data formatting options. These formats are defined through YAML files as described in the project wiki.
+        To support many software packages, CdiBase supports many different types of CDIs and data formatting options. These formats are defined through YAML files as described in the project wiki.
     </p>
 </div>
 <div class="format-control">
     <h3>CDI Formats</h3>
     <table class="table table-striped"><tbody>
-    {% for format in mcdi_formats %}
+    {% for format in cdi_formats %}
         <tr>
             <td>{{ format.human_name }}</td>
             <td><a href="/base/edit_formats/download/{{ format.filename }}">download</a></td>
-            <td><a href="/base/edit_formats/mcdi/{{ format.safe_name }}/delete">delete</a></td>
+            <td><a href="/base/edit_formats/cdi/{{ format.safe_name }}/delete">delete</a></td>
         </tr>
     {% endfor %}
     </tbody></table>
-    <a href="/base/edit_formats/mcdi/_add">Upload new CDI format >></a>
+    <a href="/base/edit_formats/cdi/_add">Upload new CDI format >></a>
 </div>
 <div class="format-control">
     <h3>Data Presentation Formats</h3>
