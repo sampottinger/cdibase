@@ -29,21 +29,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 <div id="viz-body">
-    <h2 class="compact-title">How many CDIs do I have?</h2>
-    <div class="compact-subtitle">Number of CDI's completed by study and per participant.</div>
+
+    <div class="jumbotron">
+        <div class="container">
+            <h3 class="compact-title">How many CDIs do I have?</h3>
+            <div class="compact-subtitle">Number of CDI's completed by study and per participant.</div>
+        </div>
+    </div>
 
     <div id="main-body">
-        <div class="controls-section-holder">
-            <div id="top-controls" class="controls-section row">
-                <div class="span2"></div>
-                <div class="span3 span-no-left span-top-offset ctrl-subsection"><a id="change-studies-link" href="#">Include / exclude studies</a></div>
-                <div class="span5 ctrl-subsection">
+        <div class="controls-section-holder container-flex" id="top-controls">
+            <div class="controls-section row">
+                <div class="col-2 span-no-left span-top-offset ctrl-subsection"><a id="change-studies-link" href="#">Include / exclude studies</a></div>
+                <div class="col-8 ctrl-subsection">
                     Show <select id="aggregation-drop">
                         <option value="sum">sum</option>
                         <option value="max">max</option>
                     </select> for participant across all studies
                 </div>
-                <div class="span3 span-top-offset ctrl-subsection"><a id="change-histograms-link" href="#">Modify histogram buckets</a></div>
+                <div class="col-2 span-top-offset ctrl-subsection"><a id="change-histograms-link" href="#">Modify histogram buckets</a></div>
             </div>
         </div>
 
@@ -74,7 +78,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 <tbody id="bucket-list-bod">
                 </tbody>
             </table>
-            <a class="btn" id="add-bucket-link" href="#">Add bucket</a>
+            <a class="btn btn-success" id="add-bucket-link" href="#">Add bucket</a>
             <a class="btn btn-primary" id="finish-buckets-link" href="#">Update studies displayed</a>
         </form>
     </div>

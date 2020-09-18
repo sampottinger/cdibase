@@ -38,6 +38,7 @@ PRESENTATION_VALUE_NAME_MAP = {
     constants.IMPLIED_FALSE: 'implied_false',
     constants.IMPLIED_TRUE: 'implied_true',
     constants.EXPLICIT_TRUE: 'explicit_true',
+    constants.LEGACY_TRUE: 'explicit_true',
     constants.EXPLICIT_FALSE: 'explicit_false',
     constants.EXPLICIT_NONE: 'explicit_none',
     constants.EXPLICIT_NA: 'explicit_na',
@@ -50,7 +51,7 @@ PRESENTATION_VALUE_NAME_MAP = {
     constants.ELEVEN_PRESUMED_TRUE: 'explicit_true'
 }
 
-DEFAULT_CDI = 'fullenglishcdi'
+DEFAULT_CDI = 'fullenglishmcdi'
 
 
 class NotFoundSnapshotContent:
@@ -196,7 +197,7 @@ def serialize_snapshot(snapshot: models.SnapshotMetadata,
             'percentile': snapshot.percentile,
             'extra_categories': extra_categories,
             'revision': snapshot.revision,
-            'languages': snapshot.languages,
+            'languages': ','.join(snapshot.languages),
             'num_languages': snapshot.num_languages,
             'cdi_type': snapshot.cdi_type,
             'hard_of_hearing': snapshot.hard_of_hearing,
