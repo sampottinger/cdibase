@@ -24,9 +24,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<div class="row-fluid">
-    <div class="span3 well">
-        <h3>CDI format</h3>
+<div class="jumbotron">
+    <div class="container">
+        <h3>Enter Data</h3>
         <ul>
             {% for format in formats %}
             <li>
@@ -38,89 +38,88 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             {% endfor %}
         </ul>
     </div>
-    <div class="span9">
-        <h3>{{ selected_format.human_name }}</h3>
-        <form method="POST">
-            <div>
-                <div class="tiling-form-input">
-                    <label>Study</label>
-                    <input id="study-input" type="text" name="study" placeholder="ex Traj-Wave2">
-                </div>
-                <div class="tiling-form-input">
-                    <label>Participant study ID</label>
-                    <input id="study-id-input" type="text" name="study_id" placeholder="ex TR27-5">
-                </div>
-                <div class="tiling-form-input">
-                    <label id="global-id-label">Participant global ID</label>
-                    <input type="text" id="global-id-input" name="global_id" placeholder="ex 4810">
-                </div>
-                <div class="tiling-form-input">
-                    <label>Participant birthday</label>
-                    <input type="text" name="birthday" placeholder="ex 1992/12/30">
-                </div>
-                <div class="tiling-form-input">
-                    <label>Participant age (months)</label>
-                    <input type="text" name="age" placeholder="ex 22.6">
-                </div>
-                <div class="tiling-form-input">
-                    <label>Participant gender</label>
-                    <select name="gender">
-                        <option value="{{ male_val }}">male</option>
-                        <option value="{{ female_val }}">female</option>
-                        <option value="{{ other_gender_val }}">other</option>
-                    </select>
-                </div>
-                <div class="tiling-form-input">
-                    <label>Session num</label>
-                    <input type="text" name="session_num" placeholder="ex 5">
-                </div>
-                <div class="tiling-form-input">
-                    <label>Session date</label>
-                    <input type="text" name="session_date" placeholder="ex 2012/12/30">
-                </div>
-                <div class="tiling-form-input">
-                    <label>Items excluded</label>
-                    <input type="text" name="items_excluded" placeholder="ex 0">
-                </div>
-                <div class="tiling-form-input">
-                    <label>Extra categories</label>
-                    <input type="text" name="extra_categories" placeholder="ex 0">
-                </div>
-                <div class="tiling-form-input">
-                    <label>Total number sessions</label>
-                    <input type="text" name="total_num_sessions" placeholder="ex 12">
-                </div>
-                {% if selected_format.details.meta.has_hard_of_hearing %}
-                <div class="tiling-form-input">
-                    <label>Hard of hearing</label>
-                    <label class="checkbox">
-                        <input name="hard_of_hearing" type="checkbox">
-                        Hard of hearing
-                    </label>
-                </div>
-                {% endif %}
+</div>
+<div>
+    <h3>{{ selected_format.human_name }}</h3>
+    <form method="POST">
+        <div>
+            <div class="tiling-form-input form-group">
+                <label for=" type">Study</label>
+                <input class="form-control" id="study-input" type="text" name="study" placeholder="ex Traj-Wave2">
             </div>
-            <div>
-                {% for category in selected_format.details.categories %}
-                    <div class="form-category">
-                        <h4>{{ category.name }} ({{ category.language }})</h4>
-                        {% for word in category.words %}
-                            <div class="word-entry tiling-form-input">
-                                {{ word }}:
-                                <div class="word-entry-options">
-                                {% for option in selected_format.details.options %}
-                                    <label class="checkbox">
-                                        <input type="radio" name="{{ word }}_report" value="{{ option.value }}"> {{ option.name }}
-                                    </label>
-                                {% endfor %}
-                                </div>
+            <div class="tiling-form-input form-group">
+                <label for="input">Participant study ID</label>
+                <input class="form-control" id="study-id-input" type="text" name="study_id" placeholder="ex TR27-5">
+            </div>
+            <div class="tiling-form-input form-group">
+                <label for="global" id="global-id-label">Participant global ID</label>
+                <input class="form-control" type="text" id="global-id-input" name="global_id" placeholder="ex 4810">
+            </div>
+            <div class="tiling-form-input form-group">
+                <label for="birthday">Participant birthday</label>
+                <input class="form-control" type="text" name="birthday" placeholder="ex 1992/12/30">
+            </div>
+            <div class="tiling-form-input form-group">
+                <label for="age">Participant age (months)</label>
+                <input class="form-control" type="text" name="age" placeholder="ex 22.6">
+            </div>
+            <div class="tiling-form-input form-group">
+                <label for="session_num">Session num</label>
+                <input class="form-control" type="text" name="session_num" placeholder="ex 5">
+            </div>
+            <div class="tiling-form-input form-group">
+                <label for="session_date">Session date</label>
+                <input class="form-control" type="text" name="session_date" placeholder="ex 2012/12/30">
+            </div>
+            <div class="tiling-form-input form-group">
+                <label for="items_excluded">Items excluded</label>
+                <input class="form-control" type="text" name="items_excluded" placeholder="ex 0">
+            </div>
+            <div class="tiling-form-input form-group">
+                <label for="extra_categories">Extra categories</label>
+                <input class="form-control" type="text" name="extra_categories" placeholder="ex 0">
+            </div>
+            <div class="tiling-form-input form-group">
+                <label for="total_num_sessions">Total number sessions</label>
+                <input class="form-control" type="text" name="total_num_sessions" placeholder="ex 12">
+            </div>
+            <div class="tiling-form-input">
+                <label name="gender">Participant gender</label>
+                <select class="form-control" name="gender">
+                    <option value="{{ male_val }}">male</option>
+                    <option value="{{ female_val }}">female</option>
+                    <option value="{{ other_gender_val }}">other</option>
+                </select>
+            </div>
+            {% if selected_format.details.meta.has_hard_of_hearing %}
+            <div class="tiling-form-input">
+                <div><label for="hard_of_hearing">Hard of hearing</label></div>
+                <input name="hard_of_hearing" type="checkbox">
+            </div>
+            {% endif %}
+        </div>
+        <div>
+            <h3>Form</h3>
+            {% for category in selected_format.details.categories %}
+                <div class="form-category">
+                    <h5>{{ category.name }} ({{ category.language }})</h5>
+                    {% for word in category.words %}
+                        <div class="word-entry tiling-form-input">
+                            {{ word }}:
+                            <div class="word-entry-options form-group">
+                            {% for option in selected_format.details.options %}
+                                <label for="{{ word }}_report" class="checkbox word-entry-option">
+                                    <div><input type="radio" name="{{ word }}_report" value="{{ option.value }}"></div>
+                                    <div>{{ option.name }}</div>
+                                </label>
+                            {% endfor %}
                             </div>
-                        {% endfor %}
-                    </div>
-                {% endfor %}
-                <input class="btn btn-primary" type="submit" value="Add CDI">
-            </div>
-        </form>
-    </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <input class="btn btn-primary" type="submit" value="Add CDI">
+        </div>
+    </form>
 </div>
 {% endblock %}

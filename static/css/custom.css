@@ -17,16 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
 
-.word-entry
-{
-    margin-bottom: 20px;
-}
-
-.word-entry .highlighted
-{
-    background-color: #0000C0;
-}
-
 .form-category
 {
     margin-bottom: 50px;
@@ -130,12 +120,30 @@
 {
     display: inline-block;
     padding: 5px 10px 5px 10px;
-    min-width: 230px;
+    min-width: 252px;
+}
+
+.word-entry
+{
+    margin-bottom: 20px;
+    margin-right: 40px;
+}
+
+.word-entry .highlighted
+{
+    background-color: #0000C0;
 }
 
 .word-entry-options
 {
-    color: #808080;
+    color: #707070;
+}
+
+.word-entry-option {
+    min-width: 80px;
+    max-width: 180px;
+    margin-right: 10px;
+    text-align: center;
 }
 
 .padded-form-controls

@@ -31,95 +31,97 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         </p>
     </div>
 </div>
-<div class="row-fluid">
-    <div class="span5">
-        <h3>Filter Dataset</h3>
-        <form action="/base/delete_data/add_filter" method="POST">
-            <table class="table table-striped">
-                <tr>
-                    <th>Filter</th>
-                    <th>Delete</th>
-                </tr>
-                {% for filter in filters %}
-                <tr>
-                    <td>{{ filter }}</td>
-                    <td><a href="/base/delete_data/delete_filter/{{ loop.index0 }}">delete</a></td>
-                </tr>
-                {% endfor %}
-            </table>
-            <div class="form-category">
-                <div class="form-entry">
-                    <label>Field</label>
-                    <select name="field">
-                        <option value="child_id">child global id</option>
-                        <option value="study_id">child study id</option>
-                        <option value="study">study</option>
-                        <option value="gender">gender</option>
-                        <option value="birthday">birthday (YYYY/MM/DD)</option>
-                        <option value="session_date">session date (YYYY/MM/DD)</option>
-                        <option value="session_num">session num</option>
-                        <option value="words_spoken">words spoken</option>
-                        <option value="items_excluded">items excluded</option>
-                        <option value="age">age</option>
-                        <option value="total_num_sessions">total num sessions</option>
-                        <option value="percentile">percentile</option>
-                        <option value="extra_categories">extra categories</option>
-                        <option value="cdi_type">CDI type</option>
-                        <option value="specific_language">specific language</option>
-                        <option value="num_languages">num languages</option>
-                        <option value="hard_of_hearing">hard of hearing</option>
-                    </select>
-                </div>
-                <div class="form-entry">
-                    <label>Operator</label>
-                    <select name="operator">
-                        <option value="eq">==</option>
-                        <option value="lt">&#60;</option>
-                        <option value="gt">&#62;</option>
-                        <option value="neq">!=</option>
-                        <option value="lteq">&#60;=</option>
-                        <option value="gteq">&#62;=</option>
-                    </select>
-                </div>
-                <div class="form-entry">
-                    <label>Value to Compare</label>
-                    <input type="text" name="operand">
-                </div>
-                <input class="btn btn-primary" type="submit" value="Add Filter">
-            </div>
-        </form>
-    </div>
-    <div class="span2"></div>
-    <div class="span5">
-        <h3>Update Matching Entries</h3>
-        <form method="POST" id="delete-form" action="/base/delete_data/delete_cdi_results">
-            <div class="form-entry">
-                <label>Presentation format</label>
-                <select name="format">
-                    {% for format in formats %}
-                    <option value="{{ format.safe_name }}">{{ format.human_name }}</option>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-5">
+            <h3>Filter Dataset</h3>
+            <form action="/base/delete_data/add_filter" method="POST">
+                <table class="table table-striped">
+                    <tr>
+                        <th>Filter</th>
+                        <th>Delete</th>
+                    </tr>
+                    {% for filter in filters %}
+                    <tr>
+                        <td>{{ filter }}</td>
+                        <td><a href="/base/delete_data/delete_filter/{{ loop.index0 }}">delete</a></td>
+                    </tr>
                     {% endfor %}
-                </select>
-            </div>
-            <div class="form-entry">
-                <label>Confirm your password</label>
-                <input type="password" name="password">
-            </div>
-            <div class="form-entry">
-                <label class="radio"><input type="radio" name="operation" value="delete">Delete matching entries.</label>
-                {% if user.can_admin %}<label class="radio"><input type="radio" name="operation" value="hard-delete">Permanently delete matching entries (be careful! 👀🚨)</label>{% endif %}
-                <label class="radio"><input type="radio" name="operation" value="restore">Restore (un-delete) matching entries.</label>
-            </div>
-            <div id="download-button-holder">
-                <button class="btn btn-primary" id="delete-button">Update Matching Entries</button>
-            </div>
-            <div id="status-display">
-                <img src="/static/img/ajax-loader.gif"> Please wait...
-            </div>
-            <div id="coming-msg">
-                Carrying out database operations...
-            </div>
-        </form>
+                </table>
+                <div class="form-category">
+                    <div class="form-entry form-group">
+                        <label for="field">Field</label>
+                        <select class="form-control" name="field">
+                            <option value="child_id">child global id</option>
+                            <option value="study_id">child study id</option>
+                            <option value="study">study</option>
+                            <option value="gender">gender</option>
+                            <option value="birthday">birthday (YYYY/MM/DD)</option>
+                            <option value="session_date">session date (YYYY/MM/DD)</option>
+                            <option value="session_num">session num</option>
+                            <option value="words_spoken">words spoken</option>
+                            <option value="items_excluded">items excluded</option>
+                            <option value="age">age</option>
+                            <option value="total_num_sessions">total num sessions</option>
+                            <option value="percentile">percentile</option>
+                            <option value="extra_categories">extra categories</option>
+                            <option value="cdi_type">CDI type</option>
+                            <option value="specific_language">specific language</option>
+                            <option value="num_languages">num languages</option>
+                            <option value="hard_of_hearing">hard of hearing</option>
+                        </select>
+                    </div>
+                    <div class="form-entry form-group">
+                        <label for="operator">Operator</label>
+                        <select class="form-control" name="operator">
+                            <option value="eq">==</option>
+                            <option value="lt">&#60;</option>
+                            <option value="gt">&#62;</option>
+                            <option value="neq">!=</option>
+                            <option value="lteq">&#60;=</option>
+                            <option value="gteq">&#62;=</option>
+                        </select>
+                    </div>
+                    <div class="form-entry form-group">
+                        <label for="operand">Value to Compare</label>
+                        <input class="form-control" type="text" name="operand">
+                    </div>
+                    <input class="btn btn-primary" type="submit" value="Add Filter">
+                </div>
+            </form>
+        </div>
+        <div class="col-2"></div>
+        <div class="col-5">
+            <h3>Update Matching Entries</h3>
+            <form method="POST" id="delete-form" action="/base/delete_data/delete_cdi_results">
+                <div class="form-entry form-group">
+                    <label for="format">Presentation format</label>
+                    <select class="form-control" name="format">
+                        {% for format in formats %}
+                        <option value="{{ format.safe_name }}">{{ format.human_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-entry form-group">
+                    <label for="password" autocomplete="current-password">Confirm your password</label>
+                    <input class="form-control" autcomplete="current-password" type="password" name="password">
+                </div>
+                <div class="form-entry form-group">
+                    <label for="operation" class="radio form-check-lable"><input type="radio" name="operation" value="delete" class="form-check-input">Delete matching entries.</label>
+                    {% if user.can_admin %}<label class="radio form-check-lable"><input type="radio" name="operation" value="hard-delete" class="form-check-input">Permanently delete matching entries (be careful! 👀🚨)</label>{% endif %}
+                    <label class="radio form-check-lable"><input type="radio" name="operation" value="restore" class="form-check-input">Restore (un-delete) matching entries.</label>
+                </div>
+                <div id="download-button-holder">
+                    <button class="btn btn-primary" id="delete-button">Update Matching Entries</button>
+                </div>
+                <div id="status-display">
+                    <img src="/static/img/ajax-loader.gif"> Please wait...
+                </div>
+                <div id="coming-msg">
+                    Carrying out database operations...
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

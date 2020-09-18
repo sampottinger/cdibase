@@ -46,15 +46,15 @@
                         {% if user %}
 
                         {% if user.can_access_data %}
-                        <li class="nav-item {% if cur_page == "access_data" %}active{% endif %}"><a class="nav-link" href="/base/access_data">Access Data{% if cur_page == "access_data" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
+                        <li class="nav-item {% if cur_page == "access_data" %}active{% endif %}"><a class="nav-link" href="/base/access_data">Query{% if cur_page == "access_data" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
                         {% endif %}
 
                         {% if user.can_enter_data %}
-                        <li class="nav-item {% if cur_page == "enter_data" %}active{% endif %}"><a class="nav-link" href="/base/enter_data">Enter Data{% if cur_page == "enter_data" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
+                        <li class="nav-item {% if cur_page == "enter_data" %}active{% endif %}"><a class="nav-link" href="/base/enter_data">Input{% if cur_page == "enter_data" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
                         {% endif %}
 
                         {% if user.can_delete_data %}
-                        <li class="nav-item {% if cur_page == "delete_data" %}active{% endif %}"><a class="nav-link" href="/base/delete_data">Delete Data{% if cur_page == "delete_data" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
+                        <li class="nav-item {% if cur_page == "delete_data" %}active{% endif %}"><a class="nav-link" href="/base/delete_data">Delete{% if cur_page == "delete_data" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
                         {% endif %}
 
                         {% if user.can_import_data %}
@@ -62,7 +62,7 @@
                         {% endif %}
 
                         {% if user.can_enter_data %}
-                        <li class="nav-item {% if cur_page == "edit_data" %}active{% endif %}"><a class="nav-link" href="/base/edit_data">Update Participants{% if cur_page == "edit_data" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
+                        <li class="nav-item {% if cur_page == "edit_data" %}active{% endif %}"><a class="nav-link" href="/base/edit_data">Participants{% if cur_page == "edit_data" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
                         {% endif %}
 
                         {% if user.can_edit_parents %}
@@ -92,7 +92,7 @@
         </nav>
         <main>
             <div class="content">
-                {% if confirmation %}<p class="confirmation">[Confirm] {{ confirmation }}</p>{% endif %}
+                {% if confirmation %}<p class="confirmation">[Confirmation] {{ confirmation }}</p>{% endif %}
                 {% if error %}<p class="error">[Error] {{ error }}</p>{% endif %}
 
                 {% block contents %}
