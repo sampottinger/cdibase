@@ -39,7 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <div class="row">
         <div class="col-3 full-width-form">
             <div class="form-entry form-group">
-                <label for="lookup-method">Find participant by:</label>
+                <label for="method-dropdown">Find participant by:</label>
                 <select class="form-control" id="method-dropdown" name="lookup-method">
                     <option value="by_global_id">Child ID</option>
                     <option value="by_study_id">Study ID</option>
@@ -47,7 +47,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             </div>
             <div id="by-global-id-panel" class="global-id-form-panel">
                 <div class="form-entry">
-                    <label for="global-id">Child ID:</label>
+                    <label for="child-id-input">Child ID:</label>
                     <input name="global-id" class="lookup-end-input form-control" id="child-id-input" type="text" placeholder="Participant global database ID">
                 </div>
             </div>
@@ -132,11 +132,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                             </div>
                         </div>
                         <div class="form-entry-long form-group">
-                            <label for="birthday">Birthday (MM/DD/YYYY):</label>
+                            <label for="birthday-input">Birthday (MM/DD/YYYY):</label>
                             <input name="birthday" class="update-end-input form-control" id="birthday-input" type="text">
                         </div>
                         <div class="form-entry-long form-group">
-                            <label for="languages">Languages (comma separated):</label>
+                            <label for="languages-input">Languages (comma separated):</label>
                             <input name="languages" class="update-end-input form-control" id="languages-input" type="text">
                         </div>
                         <div class="form-entry-long">

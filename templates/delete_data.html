@@ -50,8 +50,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 </table>
                 <div class="form-category">
                     <div class="form-entry form-group">
-                        <label for="field">Field</label>
-                        <select class="form-control" name="field">
+                        <label for="field-input">Field</label>
+                        <select class="form-control" name="field" id="field-input">
                             <option value="child_id">child global id</option>
                             <option value="study_id">child study id</option>
                             <option value="study">study</option>
@@ -72,8 +72,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                         </select>
                     </div>
                     <div class="form-entry form-group">
-                        <label for="operator">Operator</label>
-                        <select class="form-control" name="operator">
+                        <label for="operator-input">Operator</label>
+                        <select class="form-control" name="operator" id="operator-input">
                             <option value="eq">==</option>
                             <option value="lt">&#60;</option>
                             <option value="gt">&#62;</option>
@@ -83,8 +83,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                         </select>
                     </div>
                     <div class="form-entry form-group">
-                        <label for="operand">Value to Compare</label>
-                        <input class="form-control" type="text" name="operand">
+                        <label for="operand-input">Value to Compare</label>
+                        <input class="form-control" type="text" name="operand" id="operand-input">
                     </div>
                     <input class="btn btn-primary" type="submit" value="Add Filter">
                 </div>
@@ -95,21 +95,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             <h3>Update Matching Entries</h3>
             <form method="POST" id="delete-form" action="/base/delete_data/delete_cdi_results">
                 <div class="form-entry form-group">
-                    <label for="format">Presentation format</label>
-                    <select class="form-control" name="format">
+                    <label for="format-input">Presentation format</label>
+                    <select class="form-control" name="format" id="format-input">
                         {% for format in formats %}
                         <option value="{{ format.safe_name }}">{{ format.human_name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="form-entry form-group">
-                    <label for="password" autocomplete="current-password">Confirm your password</label>
-                    <input class="form-control" autcomplete="current-password" type="password" name="password">
+                    <label for="password-input" autocomplete="current-password">Confirm your password</label>
+                    <input class="form-control" autcomplete="current-password" type="password" name="password" id="password-input">
                 </div>
                 <div class="form-entry form-group">
-                    <label for="operation" class="radio form-check-lable"><input type="radio" name="operation" value="delete" class="form-check-input">Delete matching entries.</label>
-                    {% if user.can_admin %}<label class="radio form-check-lable"><input type="radio" name="operation" value="hard-delete" class="form-check-input">Permanently delete matching entries (be careful! 👀🚨)</label>{% endif %}
-                    <label class="radio form-check-lable"><input type="radio" name="operation" value="restore" class="form-check-input">Restore (un-delete) matching entries.</label>
+                    <label for="operation-delete" class="radio form-check-lable"><input id="operation-delete" type="radio" name="operation" value="delete" class="form-check-input">Delete matching entries.</label>
+                    {% if user.can_admin %}<label class="radio form-check-lable" for="operation-delete-hard"><input id="operation-delete-hard" type="radio" name="operation" value="hard-delete" class="form-check-input">Permanently delete matching entries (be careful! 👀🚨)</label>{% endif %}
+                    <label for="operation-restore" class="radio form-check-lable"><input id="operation-restore" type="radio" name="operation" value="restore" class="form-check-input">Restore (un-delete) matching entries.</label>
                 </div>
                 <div id="download-button-holder">
                     <button class="btn btn-primary" id="delete-button">Update Matching Entries</button>
