@@ -50,8 +50,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 </table>
                 <div class="form-category">
                     <div class="form-grid form-entry">
-                        <label for="field">Field</label>
-                        <select class="form-control" id="field-select" name="field">
+                        <label for="field-input">Field</label>
+                        <select id="field-input" class="form-control" id="field-select" name="field">
                             <option value="child_id">child global id</option>
                             <option value="study_id">child study id</option>
                             <option value="study">study</option>
@@ -72,8 +72,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                         </select>
                     </div>
                     <div class="form-grid form-entry">
-                        <label for="operator">Operator</label>
-                        <select class="form-control" name="operator">
+                        <label for="operator-input">Operator</label>
+                        <select class="form-control" name="operator" id="operator-input">
                             <option value="eq">== (equal to or on the same day)</option>
                             <option value="lt">&#60; (less than or earlier)</option>
                             <option value="gt">&#62; (greater than or after)</option>
@@ -83,7 +83,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                         </select>
                     </div>
                     <div class="form-grid form-entry">
-                        <label for="operand">Value to Compare</label>
+                        <label for="operand-input">Value to Compare</label>
                         <input type="text" class="form-control" name="operand" id="operand-input">
                         <div class="hint">Use CSV without spaces to search for a list. Example: study1,study2 will find entries for study1 and study2.</div>
                     </div>
@@ -114,8 +114,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                     </select>
                 </div>
                 <div class="form-group form-entry">
-                    <label class="checkbox form-check-label" for="consolidated_csv">
-                        <input class="form-check-input" name="consolidated_csv" type="checkbox" checked>Single CSV
+                    <label class="checkbox form-check-label" for="consolidated-csv-input">
+                        <input class="form-check-input" id="consolidated-csv-input" name="consolidated_csv" type="checkbox" checked>Single CSV
                     </label>
                 </div>
                 <div class="form-group form-entry">
