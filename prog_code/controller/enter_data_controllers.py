@@ -391,6 +391,8 @@ def lookup_studies() -> controller_types.ValidFlaskReturnTypes:
         return ('Invalid lookup method', 400)
 
     global_id_realized = type_util.assert_not_none(global_id)
+    print('\n------')
+    print(global_id_realized)
 
     # Look up studies
     filters = [models.Filter('child_id', 'eq', global_id_realized)]
@@ -398,6 +400,9 @@ def lookup_studies() -> controller_types.ValidFlaskReturnTypes:
         filters,
         constants.SNAPSHOTS_DB_TABLE
     )
+
+    print(len(results))
+    print('------')
 
     # Check if results available
     if len(results) == 0:
