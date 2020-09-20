@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
     <!-- Base HTML file from which other templates are inherited.
 
@@ -31,6 +31,7 @@
         {% endblock %}
     </head>
     <body>
+        <div class="sr-only"><a href="#main-content-anchor">Skip to main content >></a></div>
         <nav>
             <div class="navbar navbar-expand-lg navbar-dark bg-dark">
                 <div class="navbar-header">
@@ -90,7 +91,7 @@
             </div>
 
         </nav>
-        <main>
+        <main id="main-content-anchor">
             <div class="content">
                 {% if confirmation %}<p class="confirmation">[Confirmation] {{ confirmation }}</p>{% endif %}
                 {% if error %}<p class="error">[Error] {{ error }}</p>{% endif %}
@@ -107,5 +108,8 @@
             {% block jsinclude %}
             {% endblock %}
         </main>
+        <footer>
+            (c) 2020 CdiBase. <a href="/tos">Terms of Service</a>. <a href="/toc">Table of Contents</a>.
+        </footer>
     </body>
 </html>

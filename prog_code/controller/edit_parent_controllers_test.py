@@ -195,7 +195,7 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
     50,
     TEST_EXTRA_CATEGORIES,
     0,
-    'english,spanish',
+    ['english','spanish'],
     TEST_NUM_LANGUAGES,
     'standard',
     TEST_HARD_OF_HEARING,

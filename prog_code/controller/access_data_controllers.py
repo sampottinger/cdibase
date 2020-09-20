@@ -46,7 +46,7 @@ OPERAND_NOT_SPECIFIED_MSG = 'Operand not specified. Please try again.'
 FILTER_CREATED_MSG = 'Filter created.'
 FILTER_DELETED_MSG = 'Filter deleted.'
 FILTER_ALREADY_DELETED_MSG = 'Filter already deleted.'
-UNKNOWN_PRESENTATION_FORMAT_MSG = 'Unknown presentation format specified.'
+UNKNOWN_PRESENTATION_FORMAT_MSG = 'Unknown presentation format specified. Please try another format.'
 
 CONTENT_DISPOISTION_ZIP = 'attachment; filename=cdi_results.zip'
 CONTENT_DISPOISTION_CSV = 'attachment; filename=cdi_results.csv'

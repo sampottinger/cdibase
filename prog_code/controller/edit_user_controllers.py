@@ -37,7 +37,7 @@ USER_NOT_FOUND_MSG = 'User \"%s\" could not be found.'
 USER_ALREADY_EXISTS_MSG = 'User \"%s\" already exists. User not updated.'
 ACCOUNT_UPDATED_MSG = 'Account updated for %s.'
 EDIT_USERS_URL = '/base/edit_users'
-EMAIL_NOT_PROVIDED_MSG = 'Email not provided. Please try again.'
+EMAIL_NOT_PROVIDED_MSG = 'Email not provided. Please provide an email address and try again.'
 ACCOUNT_CREATED_MSG = 'Account created for %s.'
 ADD_USERS_URL = '/base/edit_users/_add'
 

@@ -29,7 +29,7 @@ from . import controller_types
 
 from cdibase import app
 
-WRONG_CREDENTIALS_MSG = 'Whoops! Either your username or password was wrong.'
+WRONG_CREDENTIALS_MSG = 'Whoops! Either your username or password was wrong. Please check your credentials and try again.'
 CONFIRM_PASSWORD_MISMATCH_MSG = 'New password and confirmation of new ' \
     'password are not the same.'
 CURRENT_PASSWORD_INCORRECT_MSG = 'Current password incorrect.'

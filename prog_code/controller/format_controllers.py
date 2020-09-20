@@ -44,11 +44,11 @@ from . import controller_types
 from cdibase import app
 
 INVALID_FORMAT_MSG = 'Invalid format type.'
-NAME_NOT_SPECIFIED_MSG = 'Name not specified. Please try again.'
-UPLOAD_NOT_PROVIDED_MSG = 'Upload not provided. Please try again.'
+NAME_NOT_SPECIFIED_MSG = 'Name not specified. Please provide and try again.'
+UPLOAD_NOT_PROVIDED_MSG = 'Upload not provided. Please provide and try again.'
 ALREADY_EXISTS_MSG = '\"%s\" already exists.'
 FORMAT_ADDED_MSG = 'Format \"%s\" added.'
-FILE_UPLOAD_FAILED_MSG = 'File upload failed. Please try again.'
+FILE_UPLOAD_FAILED_MSG = 'File upload failed. Please provide and try again.'
 EDIT_FORMATS_URL = '/base/edit_formats'
 ADD_FORMATS_URL = '/base/edit_formats/%s/_add'
 NOT_FOUND_ERROR_MSG = '\"%s\" not found. Possibly already deleted.'

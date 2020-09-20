@@ -43,74 +43,77 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <div>
     <form method="POST">
         <div class="form-section">
-            <div class="instructions">
-                <div class="header">Child Information</div>
-                <div class="body">Please verify the following information about your child.</div>
-            </div>
-            <div class="tiling-form-input form-group">
-                <div>Child Name</div>
-                <div class="fake-input" id="child_name_input">{{ child_name }}</div>
-            </div>
-            {% if study == None or study == '' %}
-            <div class="tiling-form-input form-group">
-                <label for="study-id">Study</label>
-                <input aria-required="true" id="study-input" class="form-control" type="text" name="study" placeholder="ex Traj-Wave2">
-            </div>
-            {% endif %}
-            {% if study_id == None or study_id == '' %}
-            <div class="tiling-form-input form-group">
-                <label for="study-id-input">Participant study ID</label>
-                <input aria-required="true" id="study-id-input" class="form-control" type="text" name="study_id" placeholder="ex TR27-5">
-            </div>
-            {% endif %}
-            {% if database_id == None or database_id == '' %}
-            <div class="tiling-form-input form-group">
-                <label for="global-id-input" id="global-id-label">Participant global ID</label>
-                <input aria-required="true" type="text" id="global-id-input" class="form-control" name="database_id" placeholder="ex 4810">
-                <div>Leave blank unless otherwise instructed.</div>
-            </div>
-            {% endif %}
-            {% if birthday == None or birthday == '' %}
-            <div class="tiling-form-input form-group">
-                <label for="birthday-input">Participant birthday (MM/DD/YYYY)</label>
-                <input aria-required="true" type="text" id="birthday-input" class="form-control" name="birthday" placeholder="ex 1992/12/30">
-            </div>
-            {% endif %}
+            <fieldset>
+                <legend>
+                    <div class="instructions">
+                        <div class="header">Child Information</div>
+                        <div class="body">Please verify the following information about your child.</div>
+                    </div>
+                </legend>
+                <div class="tiling-form-input form-group">
+                    <div>Child Name</div>
+                    <div class="fake-input" id="child_name_input">{{ child_name }}</div>
+                </div>
+                {% if study == None or study == '' %}
+                <div class="tiling-form-input form-group">
+                    <label for="study-id">Study</label>
+                    <input aria-required="true" id="study-input" class="form-control" type="text" name="study" placeholder="ex Traj-Wave2">
+                </div>
+                {% endif %}
+                {% if study_id == None or study_id == '' %}
+                <div class="tiling-form-input form-group">
+                    <label for="study-id-input">Participant study ID</label>
+                    <input aria-required="true" id="study-id-input" class="form-control" type="text" name="study_id" placeholder="ex TR27-5">
+                </div>
+                {% endif %}
+                {% if database_id == None or database_id == '' %}
+                <div class="tiling-form-input form-group">
+                    <label for="global-id-input" id="global-id-label">Participant global ID</label>
+                    <input aria-required="true" type="text" id="global-id-input" class="form-control" name="database_id" placeholder="ex 4810">
+                    <div>Leave blank unless otherwise instructed.</div>
+                </div>
+                {% endif %}
+                {% if birthday == None or birthday == '' %}
+                <div class="tiling-form-input form-group">
+                    <label for="birthday-input">Participant birthday (MM/DD/YYYY)</label>
+                    <input aria-required="true" type="text" id="birthday-input" class="form-control" name="birthday" placeholder="ex 1992/12/30">
+                </div>
+                {% endif %}
 
-            {% if (gender == None or gender == '') or ask_gender %}
-            <div class="tiling-form-input form-group">
-                <label for="gender-input">Participant gender</label>
-                <select aria-required="true" class="form-control" id="gender-input" name="gender">
-                    <option value="{{ male_value }}" {% if gender == male_value %}checked{% endif %}>male</option>
-                    <option value="{{ female_value }}" {% if gender == female_value %}checked{% endif %}>female</option>
-                    <option value="{{ other_gender_value }}" {% if gender == other_gender_value %}checked{% endif %}>other</option>
-                </select>
-            </div>
-            {% endif %}
+                {% if (gender == None or gender == '') or ask_gender %}
+                <div class="tiling-form-input form-group">
+                    <label for="gender-input">Participant gender</label>
+                    <select aria-required="true" class="form-control" id="gender-input" name="gender">
+                        <option value="{{ male_value }}" {% if gender == male_value %}checked{% endif %}>male</option>
+                        <option value="{{ female_value }}" {% if gender == female_value %}checked{% endif %}>female</option>
+                        <option value="{{ other_gender_value }}" {% if gender == other_gender_value %}checked{% endif %}>other</option>
+                    </select>
+                </div>
+                {% endif %}
 
-            {% if (languages == None or languages == '') or ask_languages %}
-            <div class="tiling-form-input form-group">
-                <label for="languages-input">Languages spoken (separated by commas)</label>
-                <input value="{{ languages }}" aria-required="true" id="languages-input" class="form-control" type="text" name="languages" placeholder="ex english,spanish">
-            </div>
-            {% endif %}
+                {% if (languages == None or languages == '') or ask_languages %}
+                <div class="tiling-form-input form-group">
+                    <label for="languages-input">Languages spoken (separated by commas)</label>
+                    <input value="{{ languages }}" aria-required="true" id="languages-input" class="form-control" type="text" name="languages" placeholder="ex english,spanish">
+                </div>
+                {% endif %}
 
-            {% if total_num_sessions == None or total_num_sessions == '' %}
-            <div class="tiling-form-input form-group">
-                <label for="total-num-sessions-input">Total number of expected sessions</label>
-                <input aria-required="true" id="total-num-sessions-input" class="form-control" type="text" name="total_num_sessions" placeholder="ex 12">
-            </div>
-            {% endif %}
+                {% if total_num_sessions == None or total_num_sessions == '' %}
+                <div class="tiling-form-input form-group">
+                    <label for="total-num-sessions-input">Total number of expected sessions</label>
+                    <input aria-required="true" id="total-num-sessions-input" class="form-control" type="text" name="total_num_sessions" placeholder="ex 12">
+                </div>
+                {% endif %}
 
-            {% if selected_format.details.meta.has_hard_of_hearing %}
-            <div class="tiling-form-input form-group">
-                <label for="hard-of-hearing-input" class="checkbox">
-                    <input aria-label="child is hard of hearing" id="hard-of-hearing-input" name="hard_of_hearing" type="checkbox" {% if hard_of_hearing %}checked{% endif %}>
-                    Hard of hearing
-                </label>
-            </div>
-            {% endif %}
-
+                {% if selected_format.details.meta.has_hard_of_hearing %}
+                <div class="tiling-form-input form-group">
+                    <label for="hard-of-hearing-input" class="checkbox">
+                        <input aria-label="child is hard of hearing" id="hard-of-hearing-input" name="hard_of_hearing" type="checkbox" {% if hard_of_hearing %}checked{% endif %}>
+                        Hard of hearing
+                    </label>
+                </div>
+                {% endif %}
+            </fieldset>
         </div>
         <div class="form-section">
             <div class="instructions">
@@ -119,25 +122,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             </div>
             {% for category in selected_format.details.categories %}
                 <div class="form-category parent-form-category" id='category-{{ loop.index }}'>
-                    <h4>{{ category.name }}</h4>
-                    <table class="table table-striped">
-                        <tr>
-                            <th>Word</th>
-                            <th>Word Said in:</th>
-                        </tr>
-                        {% for word in category.words %}
-                        <tr aria-required="true">
-                            <td>{{ word }}</td>
-                            <td>
-                            {% for option in selected_format.details.options %}
-                                <label aria-label="{{ word }} {{ option.name }}" for="{{ word }}_report-input" class="checkbox inline-check">
-                                    <input type="radio" name="{{ word }}_report" id="{{ word }}_report-input" value="{{ option.value }}" {% if option.value == word_entries.get(word.replace('*', '').lower(), None) or word_entries.get(word.replace('*', '').lower(), None) in option.get("prefill_value", []) or ((word_entries.get(word.replace('*', '').lower(), None) not in option_values) and loop.last) %}checked{% endif %}> {{ option.name }}
-                                </label>
+                    <fieldset>
+                        <legend><h4>{{ category.name }}</h4></legend>
+                        <table class="table table-striped">
+                            <tr>
+                                <th>Word</th>
+                                <th>Word Said in:</th>
+                            </tr>
+                            {% for word in category.words %}
+                            <tr aria-required="true">
+                                <td>{{ word }}</td>
+                                <td>
+                                {% for option in selected_format.details.options %}
+                                    <label aria-label="{{ word }} {{ option.name }}" for="{{ word }}_report-input" class="checkbox inline-check">
+                                        <input type="radio" name="{{ word }}_report" id="{{ word }}_report-input" value="{{ option.value }}" {% if option.value == word_entries.get(word.replace('*', '').lower(), None) or word_entries.get(word.replace('*', '').lower(), None) in option.get("prefill_value", []) or ((word_entries.get(word.replace('*', '').lower(), None) not in option_values) and loop.last) %}checked{% endif %}> {{ option.name }}
+                                    </label>
+                                {% endfor %}
+                                </td>
+                            </tr>
                             {% endfor %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </table>
+                        </table>
+                    </fieldset>
                 </div>
             {% endfor %}
             <div id="pagination-controls">

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author Sam Pottinger
 @license GNU GPL v3
 """
+import collections.abc
 import os
 import re
 import typing
@@ -209,8 +210,10 @@ class AttributeResolutionResolver:
 
         languages_valid = self.is_valid_value(parent_form.languages)
         if not languages_valid and self.__target_user != None:
-            parent_form.languages = self.__target_user.languages
-            parent_form.num_languages = self.__target_user.num_languages
+            candidate = self.__target_user.languages
+            if isinstance(candidate, collections.abc.Iterable):
+                parent_form.languages = ','.join(candidate)
+                parent_form.num_languages = self.__target_user.num_languages
 
         parent_form.hard_of_hearing = self.fill_field_int(
             parent_form.hard_of_hearing,

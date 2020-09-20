@@ -41,9 +41,9 @@ from cdibase import app
 
 NO_FILTER_MESSAGE = 'No filters selected! Please add at least one filter.'
 NO_MATCHING_DATA_MSG = 'No matching data found.'
-FIELD_NOT_SPECIFIED_MSG = 'Field not specified. Please try again.'
-OPERATOR_NOT_SPECIFIED_MSG = 'Operator not specified. Please try again.'
-OPERAND_NOT_SPECIFIED_MSG = 'Operand not specified. Please try again.'
+FIELD_NOT_SPECIFIED_MSG = 'Field not specified. Please indicate the field of interest and try again.'
+OPERATOR_NOT_SPECIFIED_MSG = 'Operator not specified. Please include the operator and try again.'
+OPERAND_NOT_SPECIFIED_MSG = 'Operand not specified. Please include the value to compare against and try again.'
 FILTER_CREATED_MSG = 'Filter created.'
 FILTER_DELETED_MSG = 'Filter deleted.'
 FILTER_ALREADY_DELETED_MSG = 'Filter already deleted.'

@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </div>
 <div class="container-fluid">
     <div class="row">
-        <div class="col-5">
+        <div class="col-md-5">
             <h3>Filter Dataset</h3>
             <form action="/base/access_data/add_filter" method="POST">
                 <table class="table table-striped">
@@ -101,8 +101,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 </div>
             </form>
         </div>
-        <div class="col-2"></div>
-        <div class="col-5">
+        <div class="col-md-2"></div>
+        <div class="col-md-5">
             <h3>Download Results</h3>
             <form method="POST" id="cdi-form" action="/base/access_data/download_cdi_results">
                 <div class="form-group form-entry">
@@ -126,7 +126,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                     <button class="btn btn-primary" id="download-button">Download as CSV</button>
                 </div>
                 <div id="status-display">
-                    <img src="/static/img/ajax-loader.gif"> Please wait... - <a href="#" id="abort-link">abort</a>
+                    <img alt="spinning loading image" src="/static/img/ajax-loader.gif"> Please wait... - <a href="#" id="abort-link">abort</a>
                 </div>
                 <div id="coming-msg">
                     Your download will start momentarily.

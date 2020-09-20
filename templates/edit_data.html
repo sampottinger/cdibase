@@ -37,7 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </div>
 <div class="container-fluid">
     <div class="row">
-        <div class="col-3 full-width-form">
+        <div class="col-md-3 full-width-form">
             <div class="form-entry form-group">
                 <label for="method-dropdown">Find participant by:</label>
                 <select class="form-control" id="method-dropdown" name="lookup-method">
@@ -65,14 +65,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 <a href="#" id="find-participant-button" class="btn btn-primary">Find Participant</a>
             </div>
         </div>
-        <div class="col-1 div-bar"></div>
-        <div class="col-8">
+        <div class="col-md-1 div-bar"></div>
+        <div class="col-md-8">
 
             <!-- User flash messages -->
             <div id="inner-lookup-instructions-panel">Please select a participant using the form on the left.</div>
             <p id="expected-lookup-error" class="inner-lookup-error-panel">[ Error ] Could not find participant. Please check the ID entered to the left and try again.</p>
             <p id="unexpected-lookup-error" class="inner-lookup-error-panel">[ Error ] Unexpected error. Please check the ID entered to the left and try again.</p>
-            <div id="loading-lookup-panel"><img src="/static/img/ajax-loader.gif"> Please wait...</div>
+            <div id="loading-lookup-panel"><img alt="spinning loading image" src="/static/img/ajax-loader.gif"> Please wait...</div>
 
             <!-- Pane for editing the metadata -->
             <div id="edit-pane">
@@ -141,7 +141,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                         </div>
                         <div class="form-entry-long">
                             <div><a href="#" id="update-participant-button" class="btn btn-primary">Update Participant Info</a></div>
-                            <div id="loading-update-panel"><img src="/static/img/ajax-loader.gif"> Please wait...</div>
+                            <div id="loading-update-panel"><img alt="spinning loading image" src="/static/img/ajax-loader.gif"> Please wait...</div>
                             <p id="update-success-msg"><i class="icon-thumbs-up icon-white"></i> Participant information updated.</p>
                             <p id="update-fail-msg"><i class="icon-ban-circle icon-white"></i> Participant information update failed. <span id="update-fail-msg-details"></span></p>
                         </div>
