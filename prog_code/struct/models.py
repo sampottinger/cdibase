@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @license: GNU GPL v2
 """
 import typing
+import datetime
 
 
 class CDIFormatMetadata:
@@ -569,7 +570,8 @@ class ConsentFormSettings:
     """Record of consent form settings for a study."""
 
     def __init__(self, study: str, requirement_type: int, form_content: str,
-            other_options: typing.List[str]):
+            other_options: typing.List[str],
+            updated: typing.Optional[datetime.datetime]):
         """Create a new consent form settings model.
 
         @param study: The name of the study for which these settings apply.
@@ -579,18 +581,22 @@ class ConsentFormSettings:
             to agree.
         @param other_options: List of other options to which participants
             can agree.
+        @param updated: Datetime indicating when this record was saved or
+            None if never saved.
         """
         self.study = study
         self.requirement_type = requirement_type
         self.form_content = form_content
         self.other_options = other_options
+        self.epoch_updated = epoch_updated
+        self.updated = updated
 
 
 class ConsentFormFiling:
     """Record of a completed consent form."""
 
     def __init__(self, study: str, name: str, child_id: int,
-            date_completed: str, other_options: typing.List[str]):
+            completed: datetime.datetime, other_options: typing.List[str]):
         """Create a new record of a completed consent form.
 
         Create a new record of a participant (likely parent) having completed a
@@ -599,5 +605,5 @@ class ConsentFormFiling:
         self.study = study
         self.name = name
         self.child_id = child_id
-        self.date_completed = date_completed
+        self.completed = completed
         self.other_options = other_options

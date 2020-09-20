@@ -1150,3 +1150,48 @@ def report_usage(email_address: typing.Optional[str],
                 datetime.datetime.now().isoformat()
             )
         )
+
+
+def get_consent_settings(study: str) -> models.ConsentFormSettings:
+    """Get the consent settings for a study.
+
+    Get the consent settings for a study, returning a default if one not
+    previously persisted.
+
+    @param study: The name of the study.
+    @returns: The study consent settings or an unsaved record representing the
+        default.
+    """
+    with get_cursor() as cursor:
+        cursor.execute(
+            '''
+            SELECT
+                study,
+                requirement_type,
+                form_content,
+                other_options,
+                epoch_updated
+            FROM
+                consent_settings
+            '''
+        )
+
+        prior_settings = cursor.fetchone()
+        if prior_settings == None:
+            return models.ConsentFormSettings(
+                study,
+                constants.CONSENT_FORM_NONE,
+                '',
+                [],
+                None
+            )
+        else:
+            epoch_updated = int(prior_settings[4])
+            updated = datetime.datetime.utcfromtimestamp(epoch_updated)
+            return models.ConsentFormSettings(
+                prior_settings[0],
+                int(prior_settings[1]),
+                prior_settings[2],
+                prior_settings[3].split(','),
+                updated
+            )

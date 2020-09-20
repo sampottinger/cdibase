@@ -67,19 +67,19 @@ CREATE TABLE snapshots
     deleted INTEGER
 );
 
-CREATE TABLE "users"
+CREATE TABLE users
 (
-    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    "email" TEXT,
-    "password_hash" TEXT,
-    "can_enter_data" INTEGER,
-    "can_import_data" INTEGER,
-    "can_edit_parents" INTEGER,
-    "can_access_data" INTEGER,
-    "can_change_formats" INTEGER,
-    "can_use_api_key" INTEGER,
-    "can_delete_data" INTEGER,
-    "can_admin" INTEGER
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    email TEXT,
+    password_hash TEXT,
+    can_enter_data INTEGER,
+    can_import_data INTEGER,
+    can_edit_parents INTEGER,
+    can_access_data INTEGER,
+    can_change_formats INTEGER,
+    can_use_api_key INTEGER,
+    can_delete_data INTEGER,
+    can_admin INTEGER
 );
 
 CREATE INDEX `snapshot_id_index` ON `snapshot_content` (`snapshot_id` ASC);
@@ -88,3 +88,13 @@ CREATE TABLE reservation
 (
     timestamp TEXT
 );
+
+CREATE TABLE consent_settings (
+    study TEXT,
+    requirement_type INTEGER,
+    form_content TEXT,
+    other_options TEXT,
+    epoch_updated INTEGER
+);
+
+CREATE INDEX `consent_settings_study_index` ON `consent_settings` (`study` ASC);
