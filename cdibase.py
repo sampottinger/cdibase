@@ -67,6 +67,20 @@ def main():
         )
 
 
+@app.route("/base/toc")
+def table_of_contents():
+    """Controller for the table of gontents page.
+
+    @return: Rendered version of the CdiBase homepage.
+    @rtype: flask.Response
+    """
+    return flask.render_template(
+        "table_of_contents.html",
+        cur_page="toc",
+        **session_util.get_standard_template_values()
+    )
+
+
 def disable_email():
     mail_util.DEBUG_PRINT_EMAIL = False
     mail_util.disable_mail()

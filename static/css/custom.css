@@ -22,6 +22,14 @@
     margin-bottom: 50px;
 }
 
+.footer {
+  border-top: 1px solid #C0C0C0;
+  text-align: center;
+  font-size: 11px;
+  padding: 5px;
+  margin-top: 100px;
+}
+
 .parent-form-category
 {
     display: none;
