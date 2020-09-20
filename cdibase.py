@@ -71,12 +71,26 @@ def main():
 def table_of_contents():
     """Controller for the table of gontents page.
 
-    @return: Rendered version of the CdiBase homepage.
+    @return: Rendered version of the table of contents.
     @rtype: flask.Response
     """
     return flask.render_template(
         "table_of_contents.html",
         cur_page="toc",
+        **session_util.get_standard_template_values()
+    )
+
+
+@app.route("/base/tos")
+def terms_of_service():
+    """Controller for the terms of service page page.
+
+    @return: Rendered version of the terms of service.
+    @rtype: flask.Response
+    """
+    return flask.render_template(
+        "terms_of_service.html",
+        cur_page="tos",
         **session_util.get_standard_template_values()
     )
 
