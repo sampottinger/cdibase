@@ -563,3 +563,41 @@ class APIKey:
         """
         self.user_id = user_id
         self.key = key
+
+
+class ConsentFormSettings:
+    """Record of consent form settings for a study."""
+
+    def __init__(self, study: str, requirement_type: int, form_content: str,
+            other_options: typing.List[str]):
+        """Create a new consent form settings model.
+
+        @param study: The name of the study for which these settings apply.
+        @param requirement_type: Constant indicating how often (if ever) the
+            consent form is required.
+        @param form_content: The HTML content to display before asking a parent
+            to agree.
+        @param other_options: List of other options to which participants
+            can agree.
+        """
+        self.study = study
+        self.requirement_type = requirement_type
+        self.form_content = form_content
+        self.other_options = other_options
+
+
+class ConsentFormFiling:
+    """Record of a completed consent form."""
+
+    def __init__(self, study: str, name: str, child_id: int,
+            date_completed: str, other_options: typing.List[str]):
+        """Create a new record of a completed consent form.
+
+        Create a new record of a participant (likely parent) having completed a
+        consent form.
+        """
+        self.study = study
+        self.name = name
+        self.child_id = child_id
+        self.date_completed = date_completed
+        self.other_options = other_options
