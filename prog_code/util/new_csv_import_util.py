@@ -1216,22 +1216,27 @@ class UploadParserAutomaton:
 
 class Counter:
 
-    def __init__(self, start_num):
+    def __init__(self, start_num: int):
         self.__i = start_num
 
-    def return_and_increment(self):
+    def return_and_increment(self) -> int:
         old_val = self.__i
         self.__i += 1
         return old_val
 
 
-def process_csv(input_rows_iterator):
+def process_csv(input_str: typing.Union[str, bytes]) -> CSVResults:
     columns = []
+
+    if isinstance(input_str, bytes):
+        input_rows_iterator = input_str.decode('utf-8').split('\n')
+    else:
+        input_rows_iterator = input_str.split('\n')
 
     input_rows = list(csv.reader(input_rows_iterator))
 
     for col_num in range(0, len(input_rows[0])):
-        column = map(lambda row: row[col_num], input_rows)
+        column = list(map(lambda row: row[col_num], input_rows))
         columns.append(column)
 
     automaton = UploadParserAutomaton(recalc_util.CachedCDIAdapter())
@@ -1246,12 +1251,12 @@ def process_csv(input_rows_iterator):
     )
 
 
-def extend_list(prev, cur):
+def extend_list(prev, cur) -> typing.List[T]:
     cur = cur if is_iterable(cur) else [cur]
     return prev + cur
 
 
-def is_iterable(target):
+def is_iterable(target) -> bool:
     try:
         iter(target)
         return True

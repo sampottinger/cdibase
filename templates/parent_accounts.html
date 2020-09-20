@@ -23,11 +23,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<div class="hero-unit">
-    <h3>Ask parents to complete CDIs online.</h3>
-    <p>
-        CdiBase sends emails to parents, asking them to complete CDIs for their child or children online.
-    </p>
+<div class="jumbotron">
+    <div class="container">
+        <h3>Ask parents to complete CDIs online.</h3>
+        <p>
+            CdiBase sends emails to parents, asking them to complete CDIs for their child or children online.
+        </p>
+    </div>
 </div>
 <form method="POST">
     <h3>Send CDI Forms by Email</h3>
@@ -35,68 +37,67 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         * = required, ** = either study and study ID or a global ID is required. Other fields will be specified by the parent or will be filled by the database if left blank.
     </div>
     <div>
-        <div class="tiling-form-input">
-            <label>Child Name *</label>
-            <input id="child-name-input" type="text" name="child_name" placeholder="ex John Doe" value="{{ last_entry_info.child_name }}">
+        <div class="tiling-form-input form-group">
+            <label for="child-name-input">Child Name *</label>
+            <input aria-required="true" class="form-control" id="child-name-input" type="text" name="child_name" placeholder="ex John Doe" value="{{ last_entry_info.child_name }}">
         </div>
-        <div class="tiling-form-input">
-            <label>Parent E-Mail *</label>
-            <input type="text" name="parent_email" placeholder="ex samp@gleap.org" value="{{ last_entry_info.parent_email }}">
+        <div class="tiling-form-input form-group">
+            <label for="parent-email-input">Parent E-Mail *</label>
+            <input aria-required="true" class="form-control" id="parent-email-input" type="text" name="parent_email" placeholder="ex samp@gleap.org" value="{{ last_entry_info.parent_email }}">
         </div>
-        <div class="tiling-form-input">
-            <label>CDI type *</label>
-            <select name="cdi_type">
+        <div class="tiling-form-input long form-group">
+            <label for="cdi-type-input">CDI type *</label>
+            <select aria-required="true" class="form-control" id="cdi-type-input" name="cdi_type">
                 <option value=""></option>
             {% for format in cdi_formats %}
                 <option value="{{ format.safe_name }}" {% if loop.last %}selected{% endif %}>{{ format.human_name }}</option>
             {% endfor %}
             </select>
         </div>
-        <div class="tiling-form-input">
-            <label>Study **</label>
-            <input id="study-input" type="text" name="study" placeholder="ex Traj-Wave2" value="{{ last_entry_info.study }}">
+        <div class="tiling-form-input form-group">
+            <label for="study-input">Study **</label>
+            <input aria-required="true" class="form-control" id="study-input" type="text" name="study" placeholder="ex Traj-Wave2" value="{{ last_entry_info.study }}">
         </div>
-        <div class="tiling-form-input">
-            <label>Participant study ID **</label>
-            <input id="study-id-input" type="text" name="study_id" placeholder="ex TR27-5" value="{{ last_entry_info.study_id }}">
+        <div class="tiling-form-input form-group">
+            <label for="study-id-input">Participant study ID **</label>
+            <input aria-required="true" class="form-control" id="study-id-input" type="text" name="study_id" placeholder="ex TR27-5" value="{{ last_entry_info.study_id }}">
         </div>
-        <div class="tiling-form-input">
-            <label id="global-id-label">Participant global ID **</label>
-            <input type="text" id="global-id-input" name="global_id" placeholder="ex 4810" value="{{ last_entry_info.global_id }}">
+        <div class="tiling-form-input form-group">
+            <label for="global-id-input" id="global-id-label">Participant global ID **</label>
+            <input aria-required="true" class="form-control" type="text" id="global-id-input" name="global_id" placeholder="ex 4810" value="{{ last_entry_info.global_id }}">
         </div>
-        <div class="tiling-form-input">
-            <label>Participant birthday (MM/DD/YYYY)</label>
-            <input type="text" name="birthday" placeholder="ex 12/30/1992" value="{{ last_entry_info.birthday }}">
+        <div class="tiling-form-input form-group">
+            <label for="birthday-input">Participant birthday (MM/DD/YYYY)</label>
+            <input class="form-control" id="birthday-input" type="text" name="birthday" placeholder="ex 12/30/1992" value="{{ last_entry_info.birthday }}">
         </div>
-        <div class="tiling-form-input">
-            <label>Participant gender</label>
-            <select name="gender">
+        <div class="tiling-form-input form-group">
+            <label for="gender-input">Participant gender *</label>
+            <select aria-required="true" class="form-control" id="gender-input" name="gender">
                 <option value=""></option>
                 <option value="{{ gender_male_constant }}">male</option {% if last_entry_info.gender == gender_male_constant %}selected{% endif %}>
                 <option value="{{ gender_female_constant }}" {% if last_entry_info.gender == gender_female_constant %}selected{% endif %}>female</option>
                 <option value="{{ gender_other_constant }}" {% if last_entry_info.gender == gender_other_constant %}selected{% endif %}>other</option>
             </select>
         </div>
-        <div class="tiling-form-input">
-            <label>Items excluded</label>
-            <input type="text" name="items_excluded" placeholder="ex 0" value="{% if last_entry_info.items_excluded != None %}{{ last_entry_info.items_excluded }}{% else %}0{% endif %}">
+        <div class="tiling-form-input form-group">
+            <label for="items-excluded-input">Items excluded</label>
+            <input class="form-control" id="items-excluded-input" type="text" name="items_excluded" placeholder="ex 0" value="{% if last_entry_info.items_excluded != None %}{{ last_entry_info.items_excluded }}{% else %}0{% endif %}">
         </div>
-        <div class="tiling-form-input">
-            <label>Extra categories</label>
-            <input type="text" name="extra_categories" placeholder="ex 0" value="{% if last_entry_info.extra_categories != None %}{{ last_entry_info.extra_categories }}{% else %}0{% endif %}">
+        <div class="tiling-form-input form-group">
+            <label for="extra-categories-input">Extra categories</label>
+            <input class="form-control" id="extra-categories-input" type="text" name="extra_categories" placeholder="ex 0" value="{% if last_entry_info.extra_categories != None %}{{ last_entry_info.extra_categories }}{% else %}0{% endif %}">
         </div>
-        <div class="tiling-form-input">
-            <label>Total number of expected sessions</label>
-            <input type="text" name="total_num_sessions" placeholder="ex 0" value="{% if last_entry_info.total_num_sessions != None %}{{ last_entry_info.total_num_sessions }}{% else %}0{% endif %}">
+        <div class="tiling-form-input form-group">
+            <label for="total-num-session-input">Total number of expected sessions</label>
+            <input class="form-control" id="total-num-session-input" type="text" name="total_num_sessions" placeholder="ex 0" value="{% if last_entry_info.total_num_sessions != None %}{{ last_entry_info.total_num_sessions }}{% else %}0{% endif %}">
         </div>
-        <div class="tiling-form-input">
-            <label>Languages (comma sep. no spaces)</label>
-            <input type="text" name="languages" placeholder="ex english,spanish" value="{{ last_entry_info.languages }}">
+        <div class="tiling-form-input long form-group">
+            <label for="languages-input">Languages (comma sep. no spaces) *</label>
+            <input aria-required="true" class="form-control" id="languages-input" type="text" name="languages" placeholder="ex english,spanish" value="{{ last_entry_info.languages }}">
         </div>
-        <div class="tiling-form-input">
-            <label>Hard of hearing</label>
+        <div class="tiling-form-input form-group">
             <label class="checkbox">
-                <input name="hard_of_hearing" type="checkbox" {% if last_entry_info.hard_of_hearing %}checked{% endif %}>
+                <input id="hard-of-hearing-input" name="hard_of_hearing" type="checkbox" {% if last_entry_info.hard_of_hearing %}checked{% endif %}>
                 Hard of hearing
             </label>
         </div>

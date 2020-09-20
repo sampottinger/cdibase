@@ -108,7 +108,7 @@ class AttributeResolutionResolver:
         self.__target_user = results[0]
 
     def fill_field(self, current_value: typing.Union[str, int, None],
-            field_name: str) -> typing.Union[int, str]:
+            field_name: str) -> typing.Union[int, str, None]:
         """Fill a parent form value from the reference child information.
 
         @param current_value: The current form field value.
@@ -121,7 +121,7 @@ class AttributeResolutionResolver:
         """
         if not self.is_valid_value(current_value):
             if self.__target_user == None:
-                raise RuntimeError('Cannot fill field.')
+                return None
             else:
                 return getattr(self.__target_user, field_name)
         else:

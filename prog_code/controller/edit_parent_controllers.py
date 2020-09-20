@@ -243,6 +243,10 @@ def send_cdi_form() -> controller_types.ValidFlaskReturnTypes:
             flask.session[constants.ERROR_ATTR] = GENDER_INVALID_MSG
             return flask.redirect(PARENT_ACCOUNT_CONTROLS_URL)
 
+        # Ensure global ID
+        if new_form.database_id == None:
+            new_form.database_id = db_util.reserve_child_id()
+
         # Save the filled parent form to the database and send a link for
         # filling out that form to the specified parent email address.
         db_util.insert_parent_form(new_form)
@@ -626,6 +630,9 @@ def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTyp
         if saved_known_words == {}:
             saved_known_words = None
 
+        def convert_legacy_true(x):
+            return constants.EXPLICIT_TRUE if x == constants.LEGACY_TRUE else x
+
         word_entries = {}
         if saved_known_words:
             word_entries = saved_known_words
@@ -635,7 +642,7 @@ def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTyp
             latest_snapshot = results[0]
             contents = db_util.load_snapshot_contents(latest_snapshot)
             known_words_tuples = map(
-                lambda x: (x.word, x.value),
+                lambda x: (x.word, convert_legacy_true(x.value)),
                 contents
             )
             word_entries = dict(known_words_tuples)
@@ -663,12 +670,14 @@ def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTyp
             extra_categories=parent_form.extra_categories,
             languages=parent_form.languages,
             word_entries=word_entries,
-            known_val=constants.EXPLICIT_TRUE,
+            known_vals=[constants.EXPLICIT_TRUE, constants.LEGACY_TRUE],
             male_value=constants.MALE,
             female_value=constants.FEMALE,
             other_gender_value=constants.OTHER_GENDER,
             option_values=option_values,
             num_categories = len(selected_format.details['categories']),
             results=results,
+            ask_gender=selected_format.details['meta'].get('ask_gender', False),
+            ask_languages=selected_format.details['meta'].get('ask_languages', False),
             **session_util.get_standard_template_values()
         )

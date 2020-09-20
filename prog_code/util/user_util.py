@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @license: GNU GPL v3
 """
 import random
-import string 
+import string
 import typing
 
 import werkzeug.security
@@ -140,7 +140,7 @@ def check_user_password(email: str, password: str) -> bool:
     @rtype: bool
     """
     email = email.lower()
-    user = force_get_user(email)
+    user = get_user(email)
     if not user:
         return False
     pass_hash = str(user.password_hash)

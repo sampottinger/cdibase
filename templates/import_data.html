@@ -23,32 +23,34 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<div class="hero-unit">
-    <h3>Import CSV data.</h3>
-    <p>
-        CdiBase allows users to import larger sets of CDI results using CSV files conforming to a prescribed format.
-    </p>
+<div class="jumbotron">
+    <div class="container">
+        <h3>Import CSV data.</h3>
+        <p>
+            CdiBase allows users to import larger sets of CDI results using CSV files conforming to a prescribed format.
+        </p>
+    </div>
 </div>
 <div class="center-panel">
     <form method="POST" id="import-form" action="/base/import_data" enctype="multipart/form-data">
-        <div class="form-entry">
-            <label>CDI Type</label>
-            <select name="cdi-type">
+        <div class="form-entry form-group">
+            <label for="cdi-type-input">CDI Type</label>
+            <select class="form-control" id="cdi-type-input" name="cdi-type">
                 {% for format in formats %}
                 <option value="{{ format.safe_name }}" {% if format.safe_name == default_format %}selected{% endif %}>{{ format.human_name }}</option>
                 {% endfor %}
             </select>
         </div>
-        <div class="form-entry">
-            <label>File Format</label>
-            <select name="file-format">
+        <div class="form-entry form-group">
+            <label for="file-format-input">File Format</label>
+            <select class="form-control" name="file-format" id="file-format-input">
                 <option value="new">Export Format (0, 1, etc)</option>
                 <option value="legacy">Legacy Format (y and n)</option>
             </select>
         </div>
-        <div class="form-entry">
-            <label>CSV File</label>
-            <input type="file" name="file"> 
+        <div class="form-entry form-group">
+            <label for="file-input">CSV File</label>
+            <input class="form-control" type="file" name="file" id="file-input">
         </div>
         <div id="import-button-holder">
             <button class="btn btn-primary" id="import-button">Upload CSV</button>

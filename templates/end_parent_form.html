@@ -18,26 +18,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<div class="hero-unit">
-    <h3>Contribute to the CU Language Project</h3>
+<div class="jumbotron">
+    <div class="container">
+        <h3>Contribute to the CU Language Project</h3>
 
-    <p>
-    Children understand many more words than they say! We are particularly interested in the words that your child has SAID by his/herself, without prompting. This means we are not interested in words a child can simply pronounce when instructed to, but rather words the child uses on their own to refer to things or ideas.
-    </p>
+        <p>
+        Children understand many more words than they say! We are particularly interested in the words that your child has SAID by his/herself, without prompting. This means we are not interested in words a child can simply pronounce when instructed to, but rather words the child uses on their own to refer to things or ideas.
+        </p>
 
-    <p>
-    {{ selected_format.details.inclusion_text }} If your child uses a different pronunciation of a word consistently (for example, "raffe" instead of "giraffe" or "sketti" for "spaghetti"), we do consider that to be <b>said</b>, as long as the pronunciation approximates the standard English pronunciation.
-    </p>
+        <p>
+        {{ selected_format.details.inclusion_text }} If your child uses a different pronunciation of a word consistently (for example, "raffe" instead of "giraffe" or "sketti" for "spaghetti"), we do consider that to be <b>said</b>, as long as the pronunciation approximates the standard English pronunciation.
+        </p>
 
-    <p>Remember that this is a "catalogue" or “sample” of common words that are used by many different children. This list is used for children up to 30-months-old. Don’t worry if your child knows only a few of these right now or uses words not included in this list.
-    </p>
+        <p>Remember that this is a "catalogue" or “sample” of common words that are used by many different children. This list is used for children up to 30-months-old. Don’t worry if your child knows only a few of these right now or uses words not included in this list.
+        </p>
 
-    <p>
-    You are always welcome to email us with any questions you have at language.project@colorado.edu or call us at (303)-735-0952.
-    </p>
+        <p>
+        You are always welcome to email or call us.
+        </p>
 
-    <p>Thank you for your time!</p>
-
+        <p>Thank you for your time!</p>
+    </div>
 </div>
 <div>
     <form method="POST">
@@ -46,65 +47,70 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 <div class="header">Child Information</div>
                 <div class="body">Please verify the following information about your child.</div>
             </div>
-            <div class="tiling-form-input">
+            <div class="tiling-form-input form-group">
                 <div>Child Name</div>
                 <div class="fake-input" id="child_name_input">{{ child_name }}</div>
             </div>
             {% if study == None or study == '' %}
-            <div class="tiling-form-input">
-                <label>Study</label>
-                <input id="study-input" type="text" name="study" placeholder="ex Traj-Wave2">
+            <div class="tiling-form-input form-group">
+                <label for="study-id">Study</label>
+                <input aria-required="true" id="study-input" class="form-control" type="text" name="study" placeholder="ex Traj-Wave2">
             </div>
             {% endif %}
             {% if study_id == None or study_id == '' %}
-            <div class="tiling-form-input">
-                <label>Participant study ID</label>
-                <input id="study-id-input" type="text" name="study_id" placeholder="ex TR27-5">
+            <div class="tiling-form-input form-group">
+                <label for="study-id-input">Participant study ID</label>
+                <input aria-required="true" id="study-id-input" class="form-control" type="text" name="study_id" placeholder="ex TR27-5">
             </div>
             {% endif %}
             {% if database_id == None or database_id == '' %}
-            <div class="tiling-form-input">
-                <label id="global-id-label">Participant global ID</label>
-                <input type="text" id="global-id-input" name="database_id" placeholder="ex 4810">
+            <div class="tiling-form-input form-group">
+                <label for="global-id-input" id="global-id-label">Participant global ID</label>
+                <input aria-required="true" type="text" id="global-id-input" class="form-control" name="database_id" placeholder="ex 4810">
+                <div>Leave blank unless otherwise instructed.</div>
             </div>
             {% endif %}
             {% if birthday == None or birthday == '' %}
-            <div class="tiling-form-input">
-                <label>Participant birthday (YYYY/MM/DD)</label>
-                <input type="text" name="birthday" placeholder="ex 1992/12/30">
+            <div class="tiling-form-input form-group">
+                <label for="birthday-input">Participant birthday (MM/DD/YYYY)</label>
+                <input aria-required="true" type="text" id="birthday-input" class="form-control" name="birthday" placeholder="ex 1992/12/30">
             </div>
             {% endif %}
-            {% if gender == None or gender == '' %}
-            <div class="tiling-form-input">
-                <label>Participant gender</label>
-                <select name="gender">
-                    <option value="{{ male_value }}">male</option>
-                    <option value="{{ female_value }}">female</option>
-                    <option value="{{ other_gender_value }}">other</option>
+
+            {% if (gender == None or gender == '') or ask_gender %}
+            <div class="tiling-form-input form-group">
+                <label for="gender-input">Participant gender</label>
+                <select aria-required="true" class="form-control" id="gender-input" name="gender">
+                    <option value="{{ male_value }}" {% if gender == male_value %}checked{% endif %}>male</option>
+                    <option value="{{ female_value }}" {% if gender == female_value %}checked{% endif %}>female</option>
+                    <option value="{{ other_gender_value }}" {% if gender == other_gender_value %}checked{% endif %}>other</option>
                 </select>
             </div>
             {% endif %}
-            {% if languages == None or languages == '' %}
-            <div class="tiling-form-input">
-                <label>Languages spoken (separated by commas)</label>
-                <input type="text" name="languages" placeholder="ex english,spanish">
+
+            {% if (languages == None or languages == '') or ask_languages %}
+            <div class="tiling-form-input form-group">
+                <label for="languages-input">Languages spoken (separated by commas)</label>
+                <input value="{{ languages }}" aria-required="true" id="languages-input" class="form-control" type="text" name="languages" placeholder="ex english,spanish">
             </div>
             {% endif %}
+
             {% if total_num_sessions == None or total_num_sessions == '' %}
-            <div class="tiling-form-input">
-                <label>Total number of expected sessions</label>
-                <input type="text" name="total_num_sessions" placeholder="ex 12">
+            <div class="tiling-form-input form-group">
+                <label for="total-num-sessions-input">Total number of expected sessions</label>
+                <input aria-required="true" id="total-num-sessions-input" class="form-control" type="text" name="total_num_sessions" placeholder="ex 12">
             </div>
             {% endif %}
+
             {% if selected_format.details.meta.has_hard_of_hearing %}
-            <div class="tiling-form-input">
-                <label>Hard of hearing</label>
-                <label class="checkbox">
-                    <input name="hard_of_hearing" type="checkbox" {% if hard_of_hearing %}checked{% endif %}>
+            <div class="tiling-form-input form-group">
+                <label for="hard-of-hearing-input" class="checkbox">
+                    <input aria-label="child is hard of hearing" id="hard-of-hearing-input" name="hard_of_hearing" type="checkbox" {% if hard_of_hearing %}checked{% endif %}>
                     Hard of hearing
                 </label>
             </div>
             {% endif %}
+
         </div>
         <div class="form-section">
             <div class="instructions">
@@ -120,12 +126,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                             <th>Word Said in:</th>
                         </tr>
                         {% for word in category.words %}
-                        <tr>
+                        <tr aria-required="true">
                             <td>{{ word }}</td>
                             <td>
                             {% for option in selected_format.details.options %}
-                                <label class="checkbox inline-check">
-                                    <input type="radio" name="{{ word }}_report" value="{{ option.value }}" {% if option.value == word_entries.get(word.replace('*', '').lower(), None) or word_entries.get(word.replace('*', '').lower(), None) in option.get("prefill_value", []) or ((word_entries.get(word.replace('*', '').lower(), None) not in option_values) and loop.last) %}checked{% endif %}> {{ option.name }}
+                                <label aria-label="{{ word }} {{ option.name }}" for="{{ word }}_report-input" class="checkbox inline-check">
+                                    <input type="radio" name="{{ word }}_report" id="{{ word }}_report-input" value="{{ option.value }}" {% if option.value == word_entries.get(word.replace('*', '').lower(), None) or word_entries.get(word.replace('*', '').lower(), None) in option.get("prefill_value", []) or ((word_entries.get(word.replace('*', '').lower(), None) not in option_values) and loop.last) %}checked{% endif %}> {{ option.name }}
                                 </label>
                             {% endfor %}
                             </td>
@@ -135,11 +141,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 </div>
             {% endfor %}
             <div id="pagination-controls">
-                <a href="#" id="previous-link">previous section</a>
+                <a href="#" id="previous-link" class="btn btn-secondary">previous section</a>
                 <span id="cur-page-display"></span> of <span id="total-pages">{{ num_categories }}</span>
-                <a href="#" id="next-link">next section</a>
+                <a href="#" id="next-link" class="btn btn-primary">next section</a>
+                <input id="parent-submit-button" class="btn btn-success" type="submit" value="Finish">
             </div>
-            <input id="parent-submit-button" class="btn btn-primary" type="submit" value="Send Completed Form to CU Language Project">
         </div>
     </form>
 </div>

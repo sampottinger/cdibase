@@ -503,6 +503,18 @@ class UploadParserAutomaton:
                     'val': converted_val
                 })
 
+    def __is_true(self, target: int) -> bool:
+        """Determine if true.
+
+        Determine if an integer value parsed / converted should be considered
+        "true".
+
+        @param target: The value to test.
+        @returns: True if interpret as true. False otherwise.
+        """
+        return target in [constants.EXPLICIT_TRUE, constants.LEGACY_TRUE]
+
+
     def finish(self) -> None:
         """Complete parsing the input CSV."""
         if self.__state == STATE_FOUND_ERROR:
@@ -511,7 +523,7 @@ class UploadParserAutomaton:
         for child_index in self.get_list_needing_precentile():
             target_prototype = self.__prototypes[child_index]
             known_words = list(filter(
-                lambda x: x['val'] == constants.EXPLICIT_TRUE,
+                lambda x: self.__is_true(x['val']),
                 target_prototype['words']
             ))
             all_words = list(filter(

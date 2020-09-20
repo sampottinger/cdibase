@@ -2,17 +2,17 @@
  * Client-side styling for rich interface used to display overview of database.
  *
  * Copyright (C) 2014 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **/
@@ -36,21 +36,22 @@
 }
 
 .controls-section {
-    color: #A0A0A0;
+    color: #707070;
     font-size: 14px;
+    text-align: center;
 }
 
 .controls-section a {
     text-decoration: underline;
-    color: #A0A0A0;
+    color: #707070;
 }
 
 .controls-section a:hover {
-    color: #505050;
+    color: #303030;
 }
 
 .controls-section select {
-    color: #A0A0A0;
+    color: #707070;
     height: 25px;
     font-size: 13px;
     width: 100px;
@@ -61,10 +62,6 @@
     padding: 5px 0;
     border-top: 1px solid #E0E0E0;
     border-bottom: 1px solid #E0E0E0;
-}
-
-.ctrl-subsection {
-    height: 25px;
 }
 
 .embedded-form {
@@ -99,10 +96,6 @@
 
 .item-sep {
     stroke: #505050;
-}
-
-.span-top-offset {
-    padding-top: 5px;
 }
 
 .set-chord {

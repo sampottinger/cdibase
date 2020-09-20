@@ -21,11 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 <form method="POST">
     <div class="small-center-content form-entry">
-        <h3>Login</h3>
-        <label>Email</label>
-        <input type="text" name="email">
-        <label>Password</label>
-        <input type="password" name="password">
+        <div class="form-group">
+            <label for="email-input">Email</label>
+            <input class="form-control" type="text" id="email-input" name="email" autocomplete="email">
+        </div>
+        <div class="form-group">
+            <label for="password-input">Password</label>
+            <input class="form-control" type="password" id="password-input" name="password" autocomplete="current-password">
+        </div>
         <div>
             <input class="btn btn-primary" value="Login" type="submit"> or <a href="/base/account/forgot_password">forgot password?</a>
         </div>

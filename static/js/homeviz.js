@@ -168,6 +168,8 @@ function updateViz() {
     let leftList = d3.select('#left-list').selectAll('.left-entry')
         .data(studiesList, (x) => x.key);
 
+    leftList.exit().remove();
+
     let newItems = leftList.enter().append('g').classed('left-entry', true);
     newItems.append('rect').classed('item-rect', true);
     newItems.append('rect').classed('highlight-bar', true);
@@ -216,8 +218,6 @@ function updateViz() {
         .attr('y', -15)
         .attr('width', LABEL_WIDTH)
         .attr('height', 17);
-
-    leftList.exit().remove();
 
     // Create right scales
     let rightPlacementScale = d3.scaleLinear()
@@ -607,10 +607,10 @@ $('#change-studies-link').click(() => {
  * Register callback for when the user finishes selecting the studies that
  * should be included in the frequency distribution calcuation.
  */
-$('#finish-change-studies-link').click(() => {
+$('#finish-change-studies-link').click(function() {
     let checks = d3.select('#study-selection-list').selectAll('.study-check');
 
-    checks.each((studyName) => {
+    checks.each(function(studyName) {
         let checked = d3.select(this).select('.study-input-check')
             .property('checked');
 
@@ -632,7 +632,7 @@ $('#finish-change-studies-link').click(() => {
  * group all of the studies with some number of CDIs together into the same
  * bucket to display the "long tail" of the distribution more effectively.
  */
-$('#add-bucket-link').click(() => {
+$('#add-bucket-link').click(function() {
     histogramBuckets.push({
         countByStudy: new Map(),
         count: 0,
@@ -648,7 +648,7 @@ $('#add-bucket-link').click(() => {
 /**
  * Register callback for when the user wants to change the histogram buckets.
  */
-$('#change-histograms-link').click(() => {
+$('#change-histograms-link').click(function() {
     $('#main-body').slideUp();
     $('#bucket-selector').slideDown();
     return false;
@@ -658,7 +658,7 @@ $('#change-histograms-link').click(() => {
 /**
  * Register callback for when the user finishes changing the historgram buckets.
  */
-$('#finish-buckets-link').click(() => {
+$('#finish-buckets-link').click(function() {
     let items = d3.select('#bucket-list-bod').selectAll('.bucket-list-item');
     items.each(function(i) {
         let minInput = d3.select(this).select('.min-input');

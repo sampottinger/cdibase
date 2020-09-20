@@ -22,80 +22,90 @@
     <head>
         <title>CdiBase</title>
         <!-- Bootstrap -->
-        <link href="/static/css/bootstrap.min.css" rel="stylesheet" media="screen">
-        <link href="/static/css/custom.css" rel="stylesheet" media="screen">
+        <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/static/css/bootstrap-reboot.min.css" rel="stylesheet">
+        <link href="/static/css/bootstrap-grid.min.css" rel="stylesheet">
+        <!-- Custom -->
+        <link href="/static/css/custom.css" rel="stylesheet">
         {% block head %}
         {% endblock %}
     </head>
     <body>
-        <div class="navbar">
-            <div class="navbar-inner">
-                <div class="container">
-                    <ul class="nav">
+        <nav>
+            <div class="navbar navbar-expand-lg navbar-dark bg-dark">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="/base">CdiBase</a>
+                </div>
 
-                        <li {% if cur_page == "home" %}class="active"{% endif %}><a class="brand" href="/base">CdiBase</a></li>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="collapsibleNavbar">
+                    <ul class="navbar-nav">
                         {% if user %}
 
                         {% if user.can_access_data %}
-                        <li {% if cur_page == "access_data" %}class="active"{% endif %}><a href="/base/access_data">Access Data</a></li>
+                        <li class="nav-item {% if cur_page == "access_data" %}active{% endif %}"><a class="nav-link" href="/base/access_data">Query{% if cur_page == "access_data" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
                         {% endif %}
 
                         {% if user.can_enter_data %}
-                        <li {% if cur_page == "enter_data" %}class="active"{% endif %}><a href="/base/enter_data">Enter Data</a></li>
+                        <li class="nav-item {% if cur_page == "enter_data" %}active{% endif %}"><a class="nav-link" href="/base/enter_data">Input{% if cur_page == "enter_data" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
                         {% endif %}
 
                         {% if user.can_delete_data %}
-                        <li {% if cur_page == "delete_data" %}class="active"{% endif %}><a href="/base/delete_data">Delete Data</a></li>
+                        <li class="nav-item {% if cur_page == "delete_data" %}active{% endif %}"><a class="nav-link" href="/base/delete_data">Delete{% if cur_page == "delete_data" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
                         {% endif %}
 
                         {% if user.can_import_data %}
-                        <li {% if cur_page == "import_data" %}class="active"{% endif %}><a href="/base/import_data">Import</a></li>
+                        <li class="nav-item {% if cur_page == "import_data" %}active{% endif %}"><a class="nav-link" href="/base/import_data">Import{% if cur_page == "import_data" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
                         {% endif %}
 
                         {% if user.can_enter_data %}
-                        <li {% if cur_page == "edit_data" %}class="active"{% endif %}><a href="/base/edit_data">Update Participants</a></li>
+                        <li class="nav-item {% if cur_page == "edit_data" %}active{% endif %}"><a class="nav-link" href="/base/edit_data">Participants{% if cur_page == "edit_data" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
                         {% endif %}
 
                         {% if user.can_edit_parents %}
-                        <li {% if cur_page == "edit_parents" %}class="active"{% endif %}><a href="/base/parent_accounts">Parents</a></li>
+                        <li class="nav-item {% if cur_page == "edit_parents" %}active{% endif %}"><a class="nav-link" href="/base/parent_accounts">Email Form{% if cur_page == "edit_parents" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
                         {% endif %}
 
                         {% if user.can_change_formats %}
-                        <li {% if cur_page == "edit_formats" %}class="active"{% endif %}><a href="/base/edit_formats">Formats</a></li>
+                        <li class="nav-item {% if cur_page == "edit_formats" %}active{% endif %}"><a class="nav-link" href="/base/edit_formats">Formats{% if cur_page == "edit_formats" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
                         {% endif %}
 
                         {% if user.can_admin %}
-                        <li {% if cur_page == "edit_users" %}class="active"{% endif %}><a href="/base/edit_users">Users</a></li>
+                        <li class="nav-item {% if cur_page == "edit_users" %}active{% endif %}"><a class="nav-link" href="/base/edit_users">Users{% if cur_page == "edit_users" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
                         {% endif %}
 
                         {% if user.can_use_api_key %}
-                        <li {% if cur_page == "conifg_api_key" %}class="active"{% endif %}><a href="/base/config_api_key">API</a></li>
+                        <li class="nav-item {% if cur_page == "conifg_api_key" %}active{% endif %}"><a class="nav-link" href="/base/config_api_key">API{% if cur_page == "conifg_api_key" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
                         {% endif %}
+
+                        <li class="nav-item {% if cur_page == "account" %}active{% endif %}"><a class="nav-link" href="/base/account">Your Account{% if cur_page == "account" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
+                        <li class="nav-item {% if cur_page == "logout" %}active{% endif %}"><a class="nav-link" href="/base/account/logout">Logout{% if cur_page == "logout" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
 
                         {% endif %}
                     </ul>
-                    <div class="pull-right align-right">
-                        {% if email %}
-                        {{ email }}<br>
-                        <a href="/base/account">Your Account</a> - <a href="/base/account/logout">Logout</a>
-                        {% endif %}
-                    </div>
                 </div>
             </div>
-        </div>
-        <div class="content">
-            {% if confirmation %}<p class="confirmation"><i class="icon-thumbs-up icon-white"></i> {{ confirmation }}</p>{% endif %}
-            {% if error %}<p class="error"><i class="icon-ban-circle icon-white"></i> {{ error }}</p>{% endif %}
 
-            {% block contents %}
+        </nav>
+        <main>
+            <div class="content">
+                {% if confirmation %}<p class="confirmation">[Confirmation] {{ confirmation }}</p>{% endif %}
+                {% if error %}<p class="error">[Error] {{ error }}</p>{% endif %}
+
+                {% block contents %}
+                {% endblock %}
+            </div>
+            <script type="text/javascript" src="/static/js/jquery-3.5.1.min.js"></script>
+            <script type="text/javascript" src="/static/js/bootstrap.bundle.min.js"></script>
+            <script type="text/javascript" src="/static/js/toasts.js"></script>
+            {% if scroll %}
+            <script type="text/javascript">$(window).scrollTop($(document).height());</script>
+            {% endif %}
+            {% block jsinclude %}
             {% endblock %}
-        </div>
-        <script type="text/javascript" src="/static/js/jquery-3.5.1.min.js"></script>
-        <script type="text/javascript" src="/static/js/toasts.js"></script>
-        {% if scroll %}
-        <script type="text/javascript">$(window).scrollTop($(document).height());</script>
-        {% endif %}
-        {% block jsinclude %}
-        {% endblock %}
+        </main>
     </body>
 </html>

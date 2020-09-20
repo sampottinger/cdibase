@@ -27,112 +27,126 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<div class="hero-unit">
-    <h3>Update participant information.</h3>
-    <p>
-        Update demographic and other background information for a participant across all of the lab's studies.
-    </p>
-</div>
-<div class="row-fluid">
-    <div class="span3 full-width-form">
-        <div class="form-entry">
-            <label>Find participant by:</label>
-            <select id="method-dropdown">
-                <option value="by_global_id">Child ID</option>
-                <option value="by_study_id">Study ID</option>
-            </select>
-        </div>
-        <div id="by-global-id-panel" class="global-id-form-panel">
-            <div class="form-entry">
-                <label>Child ID:</label>
-                <input class="lookup-end-input" id="child-id-input" type="text" placeholder="Participant global database ID">
-            </div>
-        </div>
-        <div id="by-study-id-panel" class="study-id-form-panel">
-            <div class="form-entry">
-                <label>Study:</label>
-                <input class="lookup-end-input" id="study-input" type="text" placeholder="Name of study">
-            </div>
-            <div class="form-entry">
-                <label>Study ID:</label>
-                <input class="lookup-end-input" id="study-id-input" type="text" placeholder="ID of participant within study">
-            </div>
-        </div>
-        <div class="align-right">
-            <a href="#" id="find-participant-button" class="btn btn-primary">Find Participant</a>
-        </div>
+<div class="jumbotron">
+    <div class="container">
+        <h3>Update participant information.</h3>
+        <p>
+            Update demographic and other background information for a participant across all of the lab's studies.
+        </p>
     </div>
-    <div class="span1 div-bar"></div>
-    <div class="span8">
-        
-        <!-- User flash messages -->
-        <div id="inner-lookup-instructions-panel">Please select a participant using the form on the left.</div>
-        <p id="expected-lookup-error" class="inner-lookup-error-panel"><i class="icon-ban-circle icon-white"></i> Could not find participant. Please check the ID entered to the left and try again.</p>
-        <p id="unexpected-lookup-error" class="inner-lookup-error-panel"><i class="icon-ban-circle icon-white"></i> Unexpected error. Please check the ID entered to the left and try again.</p>
-        <div id="loading-lookup-panel"><img src="/static/img/ajax-loader.gif"> Please wait...</div>
-        
-        <!-- Pane for editing the metadata -->
-        <div id="edit-pane">
-            <div class="row-fluid">
-                <div class="span5">
-                    <div class="form-category">
-                        <label>Child global ID:</label>
-                        <div id="global-id-display" class="input-standin"></div>
-                    </div>
-                    <div class="form-category">
-                        <label>CDIs to update:</label>
-                        <table id="study-table">
-                            <thead>
-                                <tr>
-                                    <th id="cdi-selector-header"></th>
-                                    <th>Date</th>
-                                    <th>Study</th>
-                                    <th>Study ID</th>
-                                </tr>
-                            </thead>
-                            <tbody id="study-body">
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="form-entry">Default values on right from most recent CDI</div>
+</div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-3 full-width-form">
+            <div class="form-entry form-group">
+                <label for="method-dropdown">Find participant by:</label>
+                <select class="form-control" id="method-dropdown" name="lookup-method">
+                    <option value="by_global_id">Child ID</option>
+                    <option value="by_study_id">Study ID</option>
+                </select>
+            </div>
+            <div id="by-global-id-panel" class="global-id-form-panel">
+                <div class="form-entry">
+                    <label for="child-id-input">Child ID:</label>
+                    <input name="global-id" class="lookup-end-input form-control" id="child-id-input" type="text" placeholder="Participant global database ID">
                 </div>
-                <div class="span7">
-                    <div class="form-entry-long">
-                        <label>Gender:</label>
-                        <label class="radio inline">
-                            <input class="gender-radio" value="{{female_val}}" name="gender" type="radio"> Female
-                        </label>
-                        <label class="radio inline">
-                            <input class="gender-radio" value="{{male_val}}" name="gender" type="radio"> Male
-                        </label>
-                        <label class="radio inline">
-                            <input class="gender-radio" value="{{other_gender_val}}" name="gender" type="radio"> Other
-                        </label>
+            </div>
+            <div id="by-study-id-panel" class="study-id-form-panel">
+                <div class="form-entry">
+                    <label>Study:</label>
+                    <input class="lookup-end-input" id="study-input" type="text" placeholder="Name of study">
+                </div>
+                <div class="form-entry">
+                    <label>Study ID:</label>
+                    <input class="lookup-end-input" id="study-id-input" type="text" placeholder="ID of participant within study">
+                </div>
+            </div>
+            <div class="align-right">
+                <a href="#" id="find-participant-button" class="btn btn-primary">Find Participant</a>
+            </div>
+        </div>
+        <div class="col-1 div-bar"></div>
+        <div class="col-8">
+
+            <!-- User flash messages -->
+            <div id="inner-lookup-instructions-panel">Please select a participant using the form on the left.</div>
+            <p id="expected-lookup-error" class="inner-lookup-error-panel">[ Error ] Could not find participant. Please check the ID entered to the left and try again.</p>
+            <p id="unexpected-lookup-error" class="inner-lookup-error-panel">[ Error ] Unexpected error. Please check the ID entered to the left and try again.</p>
+            <div id="loading-lookup-panel"><img src="/static/img/ajax-loader.gif"> Please wait...</div>
+
+            <!-- Pane for editing the metadata -->
+            <div id="edit-pane">
+                <div class="row-fluid">
+                    <div class="span5">
+                        <div class="form-category">
+                            <label>Child global ID:</label>
+                            <div id="global-id-display" class="input-standin"></div>
+                        </div>
+                        <div class="form-category">
+                            <label>CDIs to update:</label>
+                            <table id="study-table">
+                                <thead>
+                                    <tr>
+                                        <th id="cdi-selector-header"></th>
+                                        <th>Date</th>
+                                        <th>Study</th>
+                                        <th>Study ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="study-body">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="form-entry">Default values on right from most recent CDI</div>
                     </div>
-                    <div class="form-entry-long">
-                        <label>Hard of Hearing:</label>
-                        <label class="radio inline">
-                            <input name="hard-of-hearing" class="hard-of-hearing-radio" value="{{true_val}}" type="radio"> Yes
-                        </label>
-                        <label class="radio inline">
-                            <input name="hard-of-hearing" class="hard-of-hearing-radio" value="{{false_val}}" type="radio"> No
-                        </label>
+                    <div class="span7">
+                        <div class="form-entry-long">
+                            <label>Gender:</label>
+                            <div>
+                                <label class="radio inline">
+                                    <input class="gender-radio" value="{{female_val}}" name="gender" type="radio"> Female
+                                </label>
+                            </div>
+                            <div>
+                                <label class="radio inline">
+                                    <input class="gender-radio" value="{{male_val}}" name="gender" type="radio"> Male
+                                </label>
+                            </div>
+                            <div>
+                                <label class="radio inline">
+                                    <input class="gender-radio" value="{{other_gender_val}}" name="gender" type="radio"> Other
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-entry-long">
+                            <label>Hard of Hearing:</label>
+                            <div>
+                                <label class="radio inline">
+                                    <input name="hard-of-hearing" class="hard-of-hearing-radio" value="{{true_val}}" type="radio"> Yes
+                                </label>
+                            </div>
+                            <div>
+                                <label class="radio inline">
+                                    <input name="hard-of-hearing" class="hard-of-hearing-radio" value="{{false_val}}" type="radio"> No
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-entry-long form-group">
+                            <label for="birthday-input">Birthday (MM/DD/YYYY):</label>
+                            <input name="birthday" class="update-end-input form-control" id="birthday-input" type="text">
+                        </div>
+                        <div class="form-entry-long form-group">
+                            <label for="languages-input">Languages (comma separated):</label>
+                            <input name="languages" class="update-end-input form-control" id="languages-input" type="text">
+                        </div>
+                        <div class="form-entry-long">
+                            <div><a href="#" id="update-participant-button" class="btn btn-primary">Update Participant Info</a></div>
+                            <div id="loading-update-panel"><img src="/static/img/ajax-loader.gif"> Please wait...</div>
+                            <p id="update-success-msg"><i class="icon-thumbs-up icon-white"></i> Participant information updated.</p>
+                            <p id="update-fail-msg"><i class="icon-ban-circle icon-white"></i> Participant information update failed. <span id="update-fail-msg-details"></span></p>
+                        </div>
+                        <p id="update-notice">Note that that the application will automatically recalculate a participant's previous CDI percentiles upon updating their information.</p>
                     </div>
-                    <div class="form-entry-long">
-                        <label>Birthday (MM/DD/YYYY):</label>
-                        <input class="update-end-input" id="birthday-input" type="text">
-                    </div>
-                    <div class="form-entry-long">
-                        <label>Languages (comma separated):</label>
-                        <input class="update-end-input" id="languages-input" type="text">
-                    </div>
-                    <div class="form-entry-long">
-                        <div><a href="#" id="update-participant-button" class="btn btn-primary">Update Participant Info</a></div>
-                        <div id="loading-update-panel"><img src="/static/img/ajax-loader.gif"> Please wait...</div>
-                        <p id="update-success-msg"><i class="icon-thumbs-up icon-white"></i> Participant information updated.</p>
-                        <p id="update-fail-msg"><i class="icon-ban-circle icon-white"></i> Participant information update failed. <span id="update-fail-msg-details"></span></p>
-                    </div>
-                    <p id="update-notice">Note that that the application will automatically recalculate a participant's previous CDI percentiles upon updating his / her information.</p>
                 </div>
             </div>
         </div>
