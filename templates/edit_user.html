@@ -26,44 +26,60 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 {% endif %}
 
 <form method="POST">
-    <div class="form-entry">
+    <div class="form-entry form-group">
         <label>Email</label>
-        <input type="text" name="new_email" placeholder="ex samp@gleap.org" value="{% if target_user %}{{ target_user.email }}{% endif %}">
+        <input class="form-control" type="text" name="new_email" placeholder="ex samp@gleap.org" value="{% if target_user %}{{ target_user.email }}{% endif %}">
     </div>
-    <div class="form-entry">
+    <div class="form-entry form-group">
         <label>Permissions</label>
-        <label class="checkbox">
-            <input name="can_enter_data" type="checkbox" {% if target_user and target_user.can_enter_data%}checked{% endif %}>
-            Can enter data
-        </label>
-        <label class="checkbox">
-            <input name="can_delete_data" type="checkbox" {% if target_user and target_user.can_delete_data%}checked{% endif %}>
-            Can delete data
-        </label>
-        <label class="checkbox">
-            <input name="can_import_data" type="checkbox" {% if target_user and target_user.can_import_data%}checked{% endif %}>
-            Can import data
-        </label>
-        <label class="checkbox">
-            <input name="can_edit_parents" type="checkbox" {% if target_user and target_user.can_edit_parents%}checked{% endif %}>
-            Can edit parents
-        </label>
-        <label class="checkbox">
-            <input name="can_access_data" type="checkbox" {% if target_user and target_user.can_access_data%}checked{% endif %}>
-            Can access data
-        </label>
-        <label class="checkbox">
-            <input name="can_change_formats" type="checkbox" {% if target_user and target_user.can_change_formats%}checked{% endif %}>
-            Can change formats
-        </label>
-        <label class="checkbox">
-            <input name="can_use_api_key" type="checkbox" {% if target_user and target_user.can_use_api_key%}checked{% endif %}>
-            Can use API key
-        </label>
-        <label class="checkbox">
-            <input name="can_admin" type="checkbox" {% if target_user and target_user.can_admin%}checked{% endif %}>
-            Can administer user accounts
-        </label>
+        <div>
+            <label for="can-enter-data-input" class="checkbox">
+                <input id="can-enter-data-input" name="can_enter_data" type="checkbox" {% if target_user and target_user.can_enter_data%}checked{% endif %}>
+                Can enter data
+            </label>
+        </div>
+        <div>
+            <label for="can-delete-data-input" class="checkbox">
+                <input id="can-delete-data-input" name="can_delete_data" type="checkbox" {% if target_user and target_user.can_delete_data%}checked{% endif %}>
+                Can delete data
+            </label>
+        </div>
+        <div>
+            <label for="can-import-data-input" class="checkbox">
+                <input id="can-import-data-input" name="can_import_data" type="checkbox" {% if target_user and target_user.can_import_data%}checked{% endif %}>
+                Can import data
+            </label>
+        </div>
+        <div>
+            <label for="can-edit-parents-input" class="checkbox">
+                <input id="can-edit-parents-input" name="can_edit_parents" type="checkbox" {% if target_user and target_user.can_edit_parents%}checked{% endif %}>
+                Can send forms
+            </label>
+        </div>
+        <div>
+            <label for="can-access-data-input" class="checkbox">
+                <input id="can-access-data-input" name="can_access_data" type="checkbox" {% if target_user and target_user.can_access_data%}checked{% endif %}>
+                Can access data
+            </label>
+        </div>
+        <div>
+            <label for="can-change-formats-input" class="checkbox">
+                <input id="can-change-formats-input" name="can_change_formats" type="checkbox" {% if target_user and target_user.can_change_formats%}checked{% endif %}>
+                Can change formats and consent forms
+            </label>
+        </div>
+        <div>
+            <label for="can-use-api-key-input" class="checkbox">
+                <input id="can-use-api-key-input" name="can_use_api_key" type="checkbox" {% if target_user and target_user.can_use_api_key%}checked{% endif %}>
+                Can use API key
+            </label>
+        </div>
+        <div>
+            <label for="can-admin-input" class="checkbox">
+                <input id="can-admin-input" name="can_admin" type="checkbox" {% if target_user and target_user.can_admin%}checked{% endif %}>
+                Can administer user accounts
+            </label>
+        </div>
     </div>
     <input class="btn btn-primary" value="{{ action_label }}" type="submit"> or <a href="http://127.0.0.1:5000/base/edit_users">cancel</a>.
 </form>

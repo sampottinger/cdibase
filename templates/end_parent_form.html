@@ -105,7 +105,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             {% if selected_format.details.meta.has_hard_of_hearing %}
             <div class="tiling-form-input form-group">
                 <label for="hard-of-hearing-input" class="checkbox">
-                    <input id="hard-of-hearing-input" name="hard_of_hearing" type="checkbox" {% if hard_of_hearing %}checked{% endif %}>
+                    <input aria-label="child is hard of hearing" id="hard-of-hearing-input" name="hard_of_hearing" type="checkbox" {% if hard_of_hearing %}checked{% endif %}>
                     Hard of hearing
                 </label>
             </div>

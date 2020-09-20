@@ -689,13 +689,11 @@ def create_new_api_key(user_id: int, api_key: str) -> models.APIKey:
     @type api_key: str
     @returns: Newly created API key record.
     """
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute(
-        'INSERT INTO api_keys VALUES (?, ?)',
-        (user_id, api_key)
-    )
-    connection.close()
+    with get_cursor() as cursor:
+        cursor.execute(
+            'INSERT INTO api_keys VALUES (?, ?)',
+            (user_id, api_key)
+        )
 
     return models.APIKey(user_id, api_key)
 
