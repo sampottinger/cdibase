@@ -856,7 +856,7 @@ def reserve_child_id(cursor: typing.Optional[sqlite3.Cursor] = None) -> str:
     @returns: New child id.
     """
     with get_realized_cursor(cursor) as cursor_realized:
-        cmd = 'INSERT INTO reservations VALUES (?)'
+        cmd = 'INSERT INTO reservation VALUES (?)'
         cursor_realized.execute(
             cmd,
             (int(time.time()),)
@@ -1042,6 +1042,7 @@ def insert_parent_form(form_metadata: models.ParentForm) -> None:
     @param form_metadata: Information about the parent form to persist.
     @type form_metadata: models.ParentForm
     """
+
     with get_cursor() as cursor:
         cmd = 'INSERT INTO parent_forms VALUES (%s)' % (', '.join('?' * 15))
         cursor.execute(

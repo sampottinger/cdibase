@@ -243,6 +243,10 @@ def send_cdi_form() -> controller_types.ValidFlaskReturnTypes:
             flask.session[constants.ERROR_ATTR] = GENDER_INVALID_MSG
             return flask.redirect(PARENT_ACCOUNT_CONTROLS_URL)
 
+        # Ensure global ID
+        if new_form.database_id == None:
+            new_form.database_id = db_util.reserve_child_id()
+
         # Save the filled parent form to the database and send a link for
         # filling out that form to the specified parent email address.
         db_util.insert_parent_form(new_form)
@@ -673,5 +677,7 @@ def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTyp
             option_values=option_values,
             num_categories = len(selected_format.details['categories']),
             results=results,
+            ask_gender=selected_format.details['meta'].get('ask_gender', False),
+            ask_languages=selected_format.details['meta'].get('ask_languages', False),
             **session_util.get_standard_template_values()
         )

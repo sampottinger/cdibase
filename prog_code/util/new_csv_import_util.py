@@ -1225,10 +1225,13 @@ class Counter:
         return old_val
 
 
-def process_csv(input_str: str) -> CSVResults:
+def process_csv(input_str: typing.Union[str, bytes]) -> CSVResults:
     columns = []
 
-    input_rows_iterator = input_str.decode('utf-8').split('\n')
+    if isinstance(input_str, bytes):
+        input_rows_iterator = input_str.decode('utf-8').split('\n')
+    else:
+        input_rows_iterator = input_str.split('\n')
 
     input_rows = list(csv.reader(input_rows_iterator))
 

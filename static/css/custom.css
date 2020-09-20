@@ -123,6 +123,11 @@
     min-width: 252px;
 }
 
+.tiling-form-input.long
+{
+    min-width: 510px;
+}
+
 .word-entry
 {
     margin-bottom: 20px;
@@ -276,6 +281,11 @@
 }
 
 #pagination-controls a
+{
+    margin: 0px 20px;
+}
+
+#pagination-controls input
 {
     margin: 0px 20px;
 }
