@@ -1248,6 +1248,7 @@ def put_consent_settings(consent_settings: models.ConsentFormSettings,
     """Save consent form settings to database.
 
     @param consent_settings: The consent settings to persist.
+    @param cursor_maybe: The cursor to use or None to get a new cursor.
     """
     values = (
         consent_settings.study,
@@ -1272,4 +1273,113 @@ def put_consent_settings(consent_settings: models.ConsentFormSettings,
                 (?, ?, ?, ?, ?)
             ''',
             values
+        )
+
+
+def get_consent_filings(study: str,
+        cursor_maybe: OptionalCursor = None) -> typing.List[models.ConsentFormFiling]:
+    """Get all of the filed consent forms for a study.
+
+    @param study: The name of the stufy for which consent forms should be
+        returned.
+    @param cursor_maybe: The cursor to use or None to get a new cursor.
+    @returns: List of consent forms filed for the given study.
+    """
+    with get_realized_cursor(cursor_maybe) as cursor:
+        cursor.execute(
+            '''
+            SELECT
+                study,
+                name,
+                child_id,
+                completed,
+                other_options,
+                email
+            FROM
+                consent_filings
+            WHERE
+                study = ?
+            ''',
+            (study,)
+        )
+
+        results_raw = cursor.fetchall()
+
+    def parse_record(record_raw):
+        study = record_raw[0]
+        name = record_raw[1]
+        child_id = record_raw[2]
+        other_options_list = record_raw[4].split('\n')
+        email = record_raw[5]
+
+        completed_int = int(record_raw[3])
+        completed = datetime.datetime.utcfromtimestamp(completed_int)
+
+        return models.ConsentFormFiling(
+            study,
+            name,
+            child_id,
+            completed,
+            other_options_list,
+            email
+        )
+
+    results = map(parse_record, results_raw)
+
+    return list(results)
+
+
+def put_consent_filing(filing: models.ConsentFormFiling,
+        cursor_maybe: OptionalCursor = None) -> None:
+    """Persist a consent filing record.
+
+    @param filing: The filing to save to the database.
+    @param cursor_maybe: The cursor to use or None to get a new cursor.
+    """
+    study = filing.study
+    name = filing.name
+    child_id = filing.child_id
+    completed = int(filing.completed.timestamp())
+    other_options = '\n'.join(filing.other_options)
+    email = filing.email.lower().strip()
+
+    with get_realized_cursor(cursor_maybe) as cursor:
+        cursor.execute(
+            '''
+            INSERT INTO
+                consent_filings (
+                    study,
+                    name,
+                    child_id,
+                    completed,
+                    other_options,
+                    email
+                )
+            VALUES
+                (?, ?, ?, ?, ?, ?)
+            ''',
+            (
+                study,
+                name,
+                child_id,
+                completed,
+                other_options,
+                email
+            )
+        )
+
+
+def delete_consent_filings(email: str,
+        cursor_maybe: OptionalCursor = None) -> None:
+    """Delete all consent forms filed for an email address.
+
+    @param email: The email address for which records should be deleted.
+    @param cursor_maybe: The cursor to use or None to get a new cursor.
+    """
+    email_clean = email.lower().strip()
+
+    with get_realized_cursor(cursor_maybe) as cursor:
+        cursor.execute(
+            '''DELETE FROM consent_filings WHERE email = ?''',
+            (email_clean,)
         )

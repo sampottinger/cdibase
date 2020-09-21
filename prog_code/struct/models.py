@@ -595,14 +595,23 @@ class ConsentFormFiling:
     """Record of a completed consent form."""
 
     def __init__(self, study: str, name: str, child_id: int,
-            completed: datetime.datetime, other_options: typing.List[str]):
+            completed: datetime.datetime, other_options: typing.List[str],
+            email: str):
         """Create a new record of a completed consent form.
 
         Create a new record of a participant (likely parent) having completed a
         consent form.
+
+        @param study: The name of the study for which consent was given.
+        @param name: The name of the parent who gave consent.
+        @param child_id: The database ID of the child.
+        @param completed: Datetime for when the consent was given.
+        @param other_options: Other options to which the parent gave consent.
+        @param email: Email address of the parent.
         """
         self.study = study
         self.name = name
         self.child_id = child_id
         self.completed = completed
         self.other_options = other_options
+        self.email = email

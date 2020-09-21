@@ -87,6 +87,9 @@ class FakeCursor:
             self.result_i += 1
             return val
 
+    def fetchall(self):
+        return self.results
+
 
 class FakeConnection:
 
@@ -224,6 +227,7 @@ class DBUtilTests(unittest.TestCase):
         db_util.put_consent_settings(new_settings, fake_cursor)
 
         self.assertEqual(len(fake_cursor.commands), 1)
+        self.assertTrue('INSERT' in fake_cursor.commands[0][0])
         test_command = fake_cursor.commands[0][1]
         self.assertEqual(test_command[0], 'test')
         self.assertEqual(test_command[1], constants.CONSENT_FORM_ALWAYS)
@@ -233,3 +237,81 @@ class DBUtilTests(unittest.TestCase):
             test_command[4],
             int(datetime.datetime(2020, 1, 30, 2, 3, 4).timestamp())
         )
+
+    def test_get_consent_filings(self):
+        fake_cursor = FakeCursor([
+            (
+                'study',
+                'parent 1',
+                '123',
+                1600705368,
+                'option 1',
+                'parent1@example.com'
+            ),
+            (
+                'study',
+                'parent 2',
+                '124',
+                1600705369,
+                'option 2\noption 3',
+                'parent2@example.com'
+            )
+        ])
+
+        results = db_util.get_consent_filings('study', fake_cursor)
+
+        self.assertEqual(len(results), 2)
+
+        self.assertEqual(results[0].study, 'study')
+        self.assertEqual(results[0].name, 'parent 1')
+        self.assertEqual(results[0].child_id, '123')
+        self.assertEqual(results[0].other_options, ['option 1'])
+        self.assertEqual(results[0].email, 'parent1@example.com')
+        self.assertEqual(
+            results[0].completed,
+            datetime.datetime.utcfromtimestamp(1600705368)
+        )
+
+        self.assertEqual(results[1].study, 'study')
+        self.assertEqual(results[1].name, 'parent 2')
+        self.assertEqual(results[1].child_id, '124')
+        self.assertEqual(results[1].other_options, ['option 2', 'option 3'])
+        self.assertEqual(results[1].email, 'parent2@example.com')
+        self.assertEqual(
+            results[1].completed,
+            datetime.datetime.utcfromtimestamp(1600705369)
+        )
+
+    def test_put_consent_filing(self):
+        fake_cursor = FakeCursor()
+
+        filing = models.ConsentFormFiling(
+            'study',
+            'parent 2',
+            '124',
+            datetime.datetime(2020, 1, 30, 2, 3, 4),
+            ['option 2', 'option 3'],
+            'parent2@example.com'
+        )
+
+        db_util.put_consent_filing(filing, fake_cursor)
+
+        self.assertEqual(len(fake_cursor.commands), 1)
+        self.assertTrue('INSERT' in fake_cursor.commands[0][0])
+        test_command = fake_cursor.commands[0][1]
+        self.assertEqual(test_command[0], 'study')
+        self.assertEqual(test_command[1], 'parent 2')
+        self.assertEqual(test_command[2], '124')
+        self.assertEqual(
+            test_command[3],
+            int(datetime.datetime(2020, 1, 30, 2, 3, 4).timestamp())
+        )
+        self.assertEqual(test_command[4], 'option 2\noption 3')
+        self.assertEqual(test_command[5], 'parent2@example.com')
+
+    def test_delete_consent_filings(self):
+        fake_cursor = FakeCursor()
+        db_util.delete_consent_filings('test@example.com', fake_cursor)
+        self.assertEqual(len(fake_cursor.commands), 1)
+        self.assertTrue('DELETE' in fake_cursor.commands[0][0])
+        self.assertTrue('test@example.com' in fake_cursor.commands[0][1])

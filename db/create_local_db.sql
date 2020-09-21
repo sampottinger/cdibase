@@ -98,3 +98,15 @@ CREATE TABLE consent_settings (
 );
 
 CREATE INDEX `consent_settings_study_index` ON `consent_settings` (`study` ASC);
+
+CREATE TABLE consent_filings (
+    study TEXT,
+    name TEXT,
+    child_id TEXT,
+    completed TEXT,
+    other_options TEXT,
+    email TEXT
+);
+
+CREATE INDEX `consent_filings_study_index` ON `consent_filings` (`study` ASC);
+CREATE INDEX `consent_filings_email_index` ON `consent_filings` (`email` ASC);
