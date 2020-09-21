@@ -246,7 +246,8 @@ class DBUtilTests(unittest.TestCase):
                 '123',
                 1600705368,
                 'option 1',
-                'parent1@example.com'
+                'parent1@example.com',
+                'key_1'
             ),
             (
                 'study',
@@ -254,7 +255,8 @@ class DBUtilTests(unittest.TestCase):
                 '124',
                 1600705369,
                 'option 2\noption 3',
-                'parent2@example.com'
+                'parent2@example.com',
+                'key_2'
             )
         ])
 
@@ -267,6 +269,7 @@ class DBUtilTests(unittest.TestCase):
         self.assertEqual(results[0].child_id, '123')
         self.assertEqual(results[0].other_options, ['option 1'])
         self.assertEqual(results[0].email, 'parent1@example.com')
+        self.assertEqual(results[0].access_key, 'key_1')
         self.assertEqual(
             results[0].completed,
             datetime.datetime.utcfromtimestamp(1600705368)
@@ -277,6 +280,7 @@ class DBUtilTests(unittest.TestCase):
         self.assertEqual(results[1].child_id, '124')
         self.assertEqual(results[1].other_options, ['option 2', 'option 3'])
         self.assertEqual(results[1].email, 'parent2@example.com')
+        self.assertEqual(results[1].access_key, 'key_2')
         self.assertEqual(
             results[1].completed,
             datetime.datetime.utcfromtimestamp(1600705369)
@@ -291,7 +295,8 @@ class DBUtilTests(unittest.TestCase):
             '124',
             datetime.datetime(2020, 1, 30, 2, 3, 4),
             ['option 2', 'option 3'],
-            'parent2@example.com'
+            'parent2@example.com',
+            'test_key_2'
         )
 
         db_util.put_consent_filing(filing, fake_cursor)
@@ -308,6 +313,7 @@ class DBUtilTests(unittest.TestCase):
         )
         self.assertEqual(test_command[4], 'option 2\noption 3')
         self.assertEqual(test_command[5], 'parent2@example.com')
+        self.assertEqual(test_command[6], 'test_key_2')
 
     def test_delete_consent_filings(self):
         fake_cursor = FakeCursor()

@@ -1294,7 +1294,8 @@ def get_consent_filings(study: str,
                 child_id,
                 completed,
                 other_options,
-                email
+                email,
+                access_key
             FROM
                 consent_filings
             WHERE
@@ -1311,6 +1312,7 @@ def get_consent_filings(study: str,
         child_id = record_raw[2]
         other_options_list = record_raw[4].split('\n')
         email = record_raw[5]
+        access_key = record_raw[6]
 
         completed_int = int(record_raw[3])
         completed = datetime.datetime.utcfromtimestamp(completed_int)
@@ -1321,7 +1323,8 @@ def get_consent_filings(study: str,
             child_id,
             completed,
             other_options_list,
-            email
+            email,
+            access_key
         )
 
     results = map(parse_record, results_raw)
@@ -1342,6 +1345,7 @@ def put_consent_filing(filing: models.ConsentFormFiling,
     completed = int(filing.completed.timestamp())
     other_options = '\n'.join(filing.other_options)
     email = filing.email.lower().strip()
+    access_key = filing.access_key
 
     with get_realized_cursor(cursor_maybe) as cursor:
         cursor.execute(
@@ -1353,10 +1357,11 @@ def put_consent_filing(filing: models.ConsentFormFiling,
                     child_id,
                     completed,
                     other_options,
-                    email
+                    email,
+                    access_key
                 )
             VALUES
-                (?, ?, ?, ?, ?, ?)
+                (?, ?, ?, ?, ?, ?, ?)
             ''',
             (
                 study,
@@ -1364,7 +1369,8 @@ def put_consent_filing(filing: models.ConsentFormFiling,
                 child_id,
                 completed,
                 other_options,
-                email
+                email,
+                access_key
             )
         )
 

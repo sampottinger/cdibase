@@ -105,7 +105,8 @@ CREATE TABLE consent_filings (
     child_id TEXT,
     completed TEXT,
     other_options TEXT,
-    email TEXT
+    email TEXT,
+    access_key TEXT
 );
 
 CREATE INDEX `consent_filings_study_index` ON `consent_filings` (`study` ASC);
