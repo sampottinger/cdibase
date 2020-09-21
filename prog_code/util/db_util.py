@@ -32,6 +32,7 @@ import yaml
 
 from ..struct import models
 
+import prog_code.util.constants as constants
 import prog_code.util.file_util as file_util
 
 SNAPSHOT_METADATA_COLS = [
@@ -1034,14 +1035,15 @@ def insert_snapshot(snapshot_metadata: models.SnapshotMetadata,
                 )
 
 
-def insert_parent_form(form_metadata: models.ParentForm) -> None:
+def insert_parent_form(form_metadata: models.ParentForm,
+        cursor_maybe: typing.Optional[sqlite3.Cursor]=None) -> None:
     """Create a record of a parent form.
 
     @param form_metadata: Information about the parent form to persist.
-    @type form_metadata: models.ParentForm
+    @param cursor: The cursor to use or None to get a new cursor.
     """
 
-    with get_cursor() as cursor:
+    with get_realized_cursor(cursor_maybe) as cursor:
         cmd = 'INSERT INTO parent_forms VALUES (%s)' % (', '.join('?' * 15))
         cursor.execute(
             cmd,
@@ -1065,16 +1067,16 @@ def insert_parent_form(form_metadata: models.ParentForm) -> None:
         )
 
 
-def get_parent_form_by_id(form_id: str) -> typing.Optional[models.ParentForm]:
+def get_parent_form_by_id(form_id: str,
+        cursor_maybe: typing.Optional[sqlite3.Cursor] = None) -> typing.Optional[models.ParentForm]:
     """Get information about a parent CDI form.
 
     @param form_id: The ID of the parent CDI form to get the record for.
-    @type form_id: str
-    @return: The ParentForm corresponding to the provided ID or None if that
+    @param cursor_maybe: The cursor to use or None to get a new cursor.
+    @returns: The ParentForm corresponding to the provided ID or None if that
         form could not be found.
-    @rtype: models.ParentForm
     """
-    with get_cursor() as cursor:
+    with get_realized_cursor(cursor_maybe) as cursor:
         cursor.execute(
             'SELECT * FROM parent_forms WHERE form_id=?',
             (form_id,)
@@ -1087,29 +1089,31 @@ def get_parent_form_by_id(form_id: str) -> typing.Optional[models.ParentForm]:
         return None
 
 
-def remove_parent_form(form_id: str) -> None:
+def remove_parent_form(form_id: str,
+        cursor_maybe: typing.Optional[sqlite3.Cursor] = None) -> None:
     """Delete the record of a parent CDI form.
 
     @param form_id: The ID of the parent CDI form to delete.
-    @type form_id: str
+    @param cursor_maybe: The cursor to use or None to get a new cursor.
     """
-    with get_cursor() as cursor:
+    with get_realized_cursor(cursor_maybe) as cursor:
         cursor.execute(
             'DELETE FROM parent_forms WHERE form_id=?',
             (form_id,)
         )
 
 
-def get_counts() -> typing.Mapping[str, typing.Mapping[str, int]]:
+def get_counts(cursor_maybe: typing.Optional[sqlite3.Cursor] = None) -> typing.Mapping[str, typing.Mapping[str, int]]:
     """Get the number of CDIs completed by study by child ID.
 
+    @param cursor_maybe: The cursor to use or None to get a new cursor.
     @returns: Nested dictionary where outer key is child id and inner key is
         study.
     """
     by_study: typing.Dict[str, typing.Dict[str, int]]
     by_study = {}
 
-    with get_cursor() as cursor:
+    with get_realized_cursor(cursor_maybe) as cursor:
         cursor.execute('SELECT study,child_id FROM snapshots WHERE deleted=0')
 
         metadata = cursor.fetchone()
@@ -1133,14 +1137,16 @@ def get_counts() -> typing.Mapping[str, typing.Mapping[str, int]]:
 
 def report_usage(email_address: typing.Optional[str],
         action_name: typing.Optional[str],
-        args_snapshot: typing.Optional[str]) -> None:
+        args_snapshot: typing.Optional[str],
+        cursor_maybe: typing.Optional[sqlite3.Cursor] = None) -> None:
     """Record that a user took an action.
 
     @param email_address: The email address of the user.
     @param action_name: The name of the action taken.
     @param args_snapshot: Description of the arguments used in the action
+    @param cursor_maybe: The cursor to use or None to get a new cursor.
     """
-    with get_cursor() as cursor:
+    with get_realized_cursor(cursor_maybe) as cursor:
         cursor.execute(
             'INSERT INTO usage_report VALUES (?, ?, ?, ?)',
             (
@@ -1152,17 +1158,19 @@ def report_usage(email_address: typing.Optional[str],
         )
 
 
-def get_consent_settings(study: str) -> models.ConsentFormSettings:
+def get_consent_settings(study: str,
+        cursor_maybe: typing.Optional[sqlite3.Cursor] = None) -> models.ConsentFormSettings:
     """Get the consent settings for a study.
 
     Get the consent settings for a study, returning a default if one not
     previously persisted.
 
     @param study: The name of the study.
+    @param cursor_maybe: The cursor to use or None to get a new cursor.
     @returns: The study consent settings or an unsaved record representing the
         default.
     """
-    with get_cursor() as cursor:
+    with get_realized_cursor(cursor_maybe) as cursor:
         cursor.execute(
             '''
             SELECT
@@ -1173,25 +1181,60 @@ def get_consent_settings(study: str) -> models.ConsentFormSettings:
                 epoch_updated
             FROM
                 consent_settings
+            ORDER BY
+                epoch_updated DESC
             '''
         )
 
         prior_settings = cursor.fetchone()
-        if prior_settings == None:
-            return models.ConsentFormSettings(
-                study,
-                constants.CONSENT_FORM_NONE,
-                '',
-                [],
-                None
-            )
-        else:
-            epoch_updated = int(prior_settings[4])
-            updated = datetime.datetime.utcfromtimestamp(epoch_updated)
-            return models.ConsentFormSettings(
-                prior_settings[0],
-                int(prior_settings[1]),
-                prior_settings[2],
-                prior_settings[3].split(','),
-                updated
-            )
+
+    if prior_settings == None:
+        return models.ConsentFormSettings(
+            study,
+            constants.CONSENT_FORM_NONE,
+            '',
+            [],
+            None
+        )
+    else:
+        epoch_updated = int(prior_settings[4])
+        updated = datetime.datetime.utcfromtimestamp(epoch_updated)
+        return models.ConsentFormSettings(
+            prior_settings[0],
+            int(prior_settings[1]),
+            prior_settings[2],
+            prior_settings[3].split('\n'),
+            updated
+        )
+
+
+def put_consent_settings(consent_settings: models.ConsentFormSettings,
+        cursor_maybe: typing.Optional[sqlite3.Cursor] = None) -> None:
+    """Save consent form settings to database.
+
+    @param consent_settings: The consent settings to persist.
+    """
+    values = (
+        consent_settings.study,
+        consent_settings.requirement_type,
+        consent_settings.form_content,
+        '\n'.join(consent_settings.other_options),
+        int(time.time())
+    )
+
+    with get_realized_cursor(cursor_maybe) as cursor:
+        cursor.execute(
+            '''
+            INSERT INTO
+                consent_settings (
+                    study,
+                    requirement_type,
+                    form_content,
+                    other_options,
+                    epoch_updated
+                )
+            VALUES
+                (?, ?, ?, ?, ?)
+            ''',
+            values
+        )

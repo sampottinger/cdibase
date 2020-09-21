@@ -588,7 +588,6 @@ class ConsentFormSettings:
         self.requirement_type = requirement_type
         self.form_content = form_content
         self.other_options = other_options
-        self.epoch_updated = epoch_updated
         self.updated = updated
 
 

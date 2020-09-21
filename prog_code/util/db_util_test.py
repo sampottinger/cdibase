@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import copy
+import datetime
 import re
 import unittest
 
@@ -60,13 +61,15 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
 
 class FakeCursor:
 
-    def __init__(self):
+    def __init__(self, results=None):
         self.commands = []
         self.committed = False
         self.closed = False
         self.lastrowid = 1
+        self.result_i = 0
+        self.results = results if results != None else []
 
-    def execute(self, command, params):
+    def execute(self, command, params=None):
         self.commands.append((command, params))
         self.committed = False
 
@@ -75,6 +78,14 @@ class FakeCursor:
 
     def close(self):
         self.close = True
+
+    def fetchone(self):
+        if self.result_i >= len(self.results):
+            return None
+        else:
+            val = self.results[self.result_i]
+            self.result_i += 1
+            return val
 
 
 class FakeConnection:
@@ -167,3 +178,58 @@ class DBUtilTests(unittest.TestCase):
         test_command = fake_cursor.commands[1]
         self.assertEqual('test-study-1', test_command[1][5])
         self.assertEqual(2, test_command[1][6])
+
+    def test_get_consent_settings_no_prior(self):
+        fake_cursor = FakeCursor()
+
+        result = db_util.get_consent_settings('test', fake_cursor)
+
+        self.assertEqual(result.study, 'test')
+        self.assertEqual(result.requirement_type, constants.CONSENT_FORM_NONE)
+        self.assertEqual(result.form_content, '')
+        self.assertEqual(result.other_options, [])
+        self.assertEqual(result.updated, None)
+
+    def test_get_consent_settings_prior(self):
+        fake_cursor = FakeCursor([
+            (
+                'test',
+                constants.CONSENT_FORM_ONCE,
+                'form content',
+                'option 1\noption, 2',
+                1600705368
+            )
+        ])
+
+        result = db_util.get_consent_settings('test', fake_cursor)
+
+        expected_update = datetime.datetime.utcfromtimestamp(1600705368)
+
+        self.assertEqual(result.study, 'test')
+        self.assertEqual(result.requirement_type, constants.CONSENT_FORM_ONCE)
+        self.assertEqual(result.form_content, 'form content')
+        self.assertEqual(result.other_options, ['option 1', 'option, 2'])
+        self.assertEqual(result.updated, expected_update)
+
+    def test_put_consent_settings(self):
+        fake_cursor = FakeCursor()
+        new_settings = models.ConsentFormSettings(
+            'test',
+            constants.CONSENT_FORM_ALWAYS,
+            'test content',
+            ['option, 1', 'option 2'],
+            datetime.datetime(2020, 1, 30, 2, 3, 4)
+        )
+
+        db_util.put_consent_settings(new_settings, fake_cursor)
+
+        self.assertEqual(len(fake_cursor.commands), 1)
+        test_command = fake_cursor.commands[0][1]
+        self.assertEqual(test_command[0], 'test')
+        self.assertEqual(test_command[1], constants.CONSENT_FORM_ALWAYS)
+        self.assertEqual(test_command[2], 'test content')
+        self.assertEqual(test_command[3], 'option, 1\noption 2')
+        self.assertNotEqual(
+            test_command[4],
+            int(datetime.datetime(2020, 1, 30, 2, 3, 4).timestamp())
+        )
