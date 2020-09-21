@@ -280,7 +280,7 @@ def execute_delete_request() -> controller_types.ValidFlaskReturnTypes:
             snapshot_ids = map(lambda x: x.database_id, snapshots)
             snapshot_ids_non_none = filter(lambda x: x != None, snapshot_ids)
             for snapshot_id in snapshot_ids_non_none:
-                db_util.delete_snapshot(snapshot_id, cursor)
+                db_util.delete_snapshot(snapshot_id, cursor) # type: ignore
 
     if operation == RESTORE_OPERATION:
         flask.session[CONFIRMATION_ATTR] = RESTORED_MESSAGE
