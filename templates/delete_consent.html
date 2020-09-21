@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block contents %}
-<!-- Interface allowing users to upload a new format.
+<!-- Interface allowing users to delete consent records.
 
-Copyright (C) 2014 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
+Copyright (C) 2020 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,17 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 <div class="small-center-content">
-<h3>Upload {{ upload_type }} Format</h3>
+<h3>Delete Consent Records</h3>
 <form enctype="multipart/form-data" method="POST">
     <div class="form-entry form-group">
-        <label>Name</label>
-        <input class="form-control" type="text" name="name" placeholder="ex Regular CDI">
+        <label>Email address of parent or guardian</label>
+        <input autocomplete="email" class="form-control" type="text" name="email" placeholder="ex: test@example.com">
     </div>
-    <div class="form-entry form-group">
-        <label>Specification</label>
-        <input class="form-control" type="file" name="newfile">
-    </div>
-    <input class="btn btn-primary" value="Save" type="submit"> or <a href="/base/edit_formats">cancel</a>.
+    <input class="btn btn-danger" value="Delete" type="submit"> or <a href="/base/edit_formats">cancel</a>.
 </form>
 </div>
 {% endblock %}

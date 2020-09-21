@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block contents %}
+<!-- Interface allowing users to change consent settings.
+
+Copyright (C) 2020 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+
+<div class="jumbotron">
+    <div class="container">
+        <h3>Edit consent settings for {{ study }}.</h3>
+        <p>
+            Configure consent settigns for {{ study }} or, if an admin, get completed consent information.
+        </p>
+    </div>
+</div>
+
+<form method="POST">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-entry form-group">
+                    <label for="requirement-type-input">Consent frequency</label>
+                    <select class="form-control" id="requirement-type-input" name="requirement_type">
+                        <option value="0" {% if cur_settings.requirement_type == 0 %}selected{% endif %}>Never ask online</option>
+                        <option value="1" {% if cur_settings.requirement_type == 1 %}selected{% endif %}>Ask online for each CDI</option>
+                        <option value="2" {% if cur_settings.requirement_type == 2 %}selected{% endif %}>Ask online once</option>
+                    </select>
+                </div>
+                <div class="form-entry form-group">
+                    <label for="other-options-input">Additional optional consents (one per line)</label>
+                    <textarea class="form-control" name="other_options" id="other-options-input" rows="3">{{ '\n'.join(cur_settings.other_options) }}</textarea>
+                </div>
+                <div class="form-entry form-group">
+                    <div><label>Current data</label></div>
+                    <div>
+                        {% if user.can_admin %}
+                        <a href="/base/edit_consent/studies/{{ study }}/download">Download existing consent information >></a>
+                        {% else %}
+                        <div class="hint">Sorry, only admins can download this data.</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <input class="btn btn-primary" value="Save" type="submit"> or <a href="/base/edit_consent">cancel</a>.
+            </div>
+            <div class="col-md-2">
+            </div>
+            <div class="col-md-6">
+                <div class="form-entry form-group">
+                    <label for="form-content-input">Consent form HTML</label>
+                    <textarea class="form-control" name="form_content" id="form-content-input" rows="10">{{ cur_settings.form_content }}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

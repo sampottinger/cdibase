@@ -421,7 +421,7 @@ def load_percentile_model(name: str,
     return models.PercentileTable(metadata[0], metadata[1], metadata[2], spec)
 
 
-def list_stuides(cursor_maybe: OptionalCursor = None) -> typing.List[str]:
+def list_studies(cursor_maybe: OptionalCursor = None) -> typing.List[str]:
     """Get the name of all studies available in the application.
 
     @param cursor_maybe: The cursor to use or None to get a new cursor.

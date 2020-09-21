@@ -27,49 +27,51 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </div>
 
 <ul>
-  <li><a class="nav-link" href="/base">Home</a></li>
-  <li><a class="nav-link" href="/base/tos">Terms of Service</a></li>
+  <li><a href="/base">Home</a></li>
+  <li><a href="/base/tos">Terms of Service</a></li>
 
   {% if user %}
 
   {% if user.can_access_data %}
-  <li><a class="nav-link" href="/base/access_data">Query</a></li>
+  <li><a href="/base/access_data">Query</a></li>
   {% endif %}
 
   {% if user.can_enter_data %}
-  <li><a class="nav-link" href="/base/enter_data">Input</a></li>
+  <li><a href="/base/enter_data">Input</a></li>
   {% endif %}
 
   {% if user.can_delete_data %}
-  <li><a class="nav-link" href="/base/delete_data">Delete</a></li>
+  <li><a href="/base/delete_data">Delete</a></li>
   {% endif %}
 
   {% if user.can_import_data %}
-  <li><a class="nav-link" href="/base/import_data">Import</a></li>
+  <li><a href="/base/import_data">Import</a></li>
   {% endif %}
 
   {% if user.can_enter_data %}
-  <li><a class="nav-link" href="/base/edit_data">Participants</a></li>
+  <li><a href="/base/edit_data">Participants</a></li>
   {% endif %}
 
   {% if user.can_edit_parents %}
-  <li><a class="nav-link" href="/base/parent_accounts">Email Form</a></li>
+  <li><a href="/base/parent_accounts">Email Form</a></li>
   {% endif %}
 
   {% if user.can_change_formats %}
-  <li><a class="nav-link" href="/base/edit_formats">Formats</a></li>
+  <li><a href="/base/edit_formats">Formats</a></li>
+  <li><a href="/base/edit_consent">Consent</a></li>
   {% endif %}
 
   {% if user.can_admin %}
-  <li><a class="nav-link" href="/base/edit_users">Users</a></li>
+  <li><a href="/base/edit_consent/delete">Delete Consent</a></li>
+  <li><a href="/base/edit_users">Users</a></li>
   {% endif %}
 
   {% if user.can_use_api_key %}
-  <li><a class="nav-link" href="/base/config_api_key">API</a></li>
+  <li><a href="/base/config_api_key">API</a></li>
   {% endif %}
 
-  <li><a class="nav-link" href="/base/account">Your Account</a></li>
-  <li><a class="nav-link" href="/base/account/logout">Logout</a></li>
+  <li><a href="/base/account">Your Account</a></li>
+  <li><a href="/base/account/logout">Logout</a></li>
 
   {% endif %}
 </ul>

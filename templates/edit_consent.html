@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block contents %}
+<!-- Interface allowing users to modify consent settings for studies.
+
+Copyright (C) 2020 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<div class="jumbotron">
+    <div class="container">
+        <h3>Get consent online.</h3>
+        <p>
+            Configure which studies require consent forms and modify consent form settings. Admins can also download and delete completed consent information.
+        </p>
+    </div>
+</div>
+<div class="small-center-content">
+    <div>
+      {% if user.can_admin %}
+      Select a study or <a href="/base/edit_consent/delete">delete consent</a>:
+      {% else %}
+      Select a study:
+      {% endif %}
+    </div>
+    <div>
+      <ul>
+        {% for study in studies %}
+        <li><a href="/base/edit_consent/studies/{{ study | urlencode }}">{{ study }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+</div>
+{% endblock %}

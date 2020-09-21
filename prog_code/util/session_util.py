@@ -80,8 +80,7 @@ def create_args_snapshot() -> typing.Dict[str, typing.Any]:
 
 def require_login(access_data: bool = False, admin: bool = False, enter_data: bool = False,
         delete_data: bool = False, import_data: bool = False, edit_parents: bool = False,
-        change_formats: bool = False,
-        use_api_key: bool = False) -> typing.Callable[[typing.Callable], typing.Callable]:
+        change_formats: bool = False, use_api_key: bool = False) -> typing.Callable[[typing.Callable], typing.Callable]:
     """Decorator that requires that a user be logged in to do an operation.
 
     Decorator that requires that a user be logged in to do an operation and

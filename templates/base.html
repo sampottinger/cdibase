@@ -20,7 +20,7 @@
     -->
 
     <head>
-        <title>CdiBase</title>
+        <title>CdiBase: {{ cur_page.replace('_', ' ') }}</title>
         <!-- Bootstrap -->
         <link href="/static/css/bootstrap.min.css" rel="stylesheet">
         <link href="/static/css/bootstrap-reboot.min.css" rel="stylesheet">
@@ -72,6 +72,7 @@
 
                         {% if user.can_change_formats %}
                         <li class="nav-item {% if cur_page == "edit_formats" %}active{% endif %}"><a class="nav-link" href="/base/edit_formats">Formats{% if cur_page == "edit_formats" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
+                        <li class="nav-item {% if cur_page == "edit_consent" %}active{% endif %}"><a class="nav-link" href="/base/edit_consent">Consent{% if cur_page == "edit_consent" %}<span class="sr-only">(Current)</span>{% endif %}</a></li>
                         {% endif %}
 
                         {% if user.can_admin %}
