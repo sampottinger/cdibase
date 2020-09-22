@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <form method="POST">
     <h3>Send CDI Forms by Email</h3>
     <div class="star-legend">
-        * = required, ** = either study and study ID or a global ID is required. Other fields will be specified by the parent or will be filled by the database if left blank.
+        * = required, ** = either study and study ID or a global ID is required, *** = required if first CDI for child. Other fields will be specified by the parent or will be filled by the database if left blank.
     </div>
     <div>
         <div class="tiling-form-input form-group">
@@ -71,7 +71,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             <input class="form-control" id="birthday-input" type="text" name="birthday" placeholder="ex 12/30/1992" value="{{ last_entry_info.birthday }}">
         </div>
         <div class="tiling-form-input form-group">
-            <label for="gender-input">Participant gender *</label>
+            <label for="gender-input">Participant gender ***</label>
             <select aria-required="true" class="form-control" id="gender-input" name="gender">
                 <option value=""></option>
                 <option value="{{ gender_male_constant }}">male</option {% if last_entry_info.gender == gender_male_constant %}selected{% endif %}>
