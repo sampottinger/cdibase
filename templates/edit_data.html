@@ -53,12 +53,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             </div>
             <div id="by-study-id-panel" class="study-id-form-panel">
                 <div class="form-entry">
-                    <label>Study:</label>
-                    <input class="lookup-end-input" id="study-input" type="text" placeholder="Name of study">
+                    <label for="study-input">Study:</label>
+                    <input class="lookup-end-input form-control" id="study-input" type="text" placeholder="Name of study">
                 </div>
                 <div class="form-entry">
-                    <label>Study ID:</label>
-                    <input class="lookup-end-input" id="study-id-input" type="text" placeholder="ID of participant within study">
+                    <label for="study-id-input">Study ID:</label>
+                    <input class="lookup-end-input form-control" id="study-id-input" type="text" placeholder="ID of participant within study">
                 </div>
             </div>
             <div class="align-right">
@@ -103,18 +103,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                         <div class="form-entry-long">
                             <label>Gender:</label>
                             <div>
-                                <label class="radio inline">
-                                    <input class="gender-radio" value="{{female_val}}" name="gender" type="radio"> Female
+                                <label for="gender-female-radio" class="radio inline">
+                                    <input id="gender-female-radio" class="gender-radio" value="{{female_val}}" name="gender" type="radio"> Female
                                 </label>
                             </div>
                             <div>
-                                <label class="radio inline">
-                                    <input class="gender-radio" value="{{male_val}}" name="gender" type="radio"> Male
+                                <label for="gender-male-radio" class="radio inline">
+                                    <input id="gender-male-radio" class="gender-radio" value="{{male_val}}" name="gender" type="radio"> Male
                                 </label>
                             </div>
                             <div>
-                                <label class="radio inline">
-                                    <input class="gender-radio" value="{{other_gender_val}}" name="gender" type="radio"> Other
+                                <label for="gender-other-radio" class="radio inline">
+                                    <input id="gender-other-radio" class="gender-radio" value="{{other_gender_val}}" name="gender" type="radio"> Other
                                 </label>
                             </div>
                         </div>
@@ -126,8 +126,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                                 </label>
                             </div>
                             <div>
-                                <label class="radio inline">
-                                    <input name="hard-of-hearing" class="hard-of-hearing-radio" value="{{false_val}}" type="radio"> No
+                                <label for="hard-of-hearing-check" class="radio inline">
+                                    <input name="hard-of-hearing" id="hard-of-hearing-check" class="hard-of-hearing-radio" value="{{false_val}}" type="radio"> No
                                 </label>
                             </div>
                         </div>
