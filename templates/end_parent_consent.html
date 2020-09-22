@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block contents %}
+<!-- Interface allowing parents to complete a consent form remotely.
+
+Copyright (C) 2020 A. Samuel Pottinger ("Sam Pottinger", gleap.org)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<div class="jumbotron">
+    <div class="container">
+        <h3>Contribute to the CU Language Project</h3>
+
+        <p>Thank you for your time!</p>
+
+        <p>Before we get started, we need your informed consent to participate in our study.</p>
+    </div>
+</div>
+<div class="medium-center-content">
+    <form method="POST">
+        <div class="consent-form-content">
+            <h3>Consent Form</h3>
+            <div>{{ consent_settings.form_content | safe }}</div>
+        </div>
+        <div class="form-section">
+            <h3>Give Consent</h3>
+            <fieldset>
+                <div class="form-group">
+                    <label for="name-input">Your Full Name</label>
+                    <input aria-label="Your full name. Typing here serves as your electronic signature consenting to the above." aria-required="true" id="name-input" class="form-control" type="text" name="name" autocomplete="name" placeholder="ex: John Doe">
+                    <div class="detail-compact">Typing here serves as your electronic signature consenting to the above.</div>
+                </div>
+            </fieldset>
+        </div>
+        <div class="form-section">
+            <h3>Additional Options</h3>
+            <fieldset>
+                {% for option in consent_settings.other_options %}
+                <div>
+                    <label for="{{ get_option_id(option) }}-option-check" class="checkbox">
+                        <input aria-label="Additionally consent to " id="{{ get_option_id(option) }}-option-check" name="{{ get_option_id(option) }}_option_check" type="checkbox">
+                        {{ option }}
+                    </label>
+                </div>
+                {% endfor %}
+            </fieldset>
+        </div>
+        <div class="form-section">
+            <h3>Complete</h3>
+            <input class="btn btn-primary" type="submit" value="Finish"> or close this window and email us to decline.
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block jsinclude %}
+<script type="text/javascript" src="/static/js/parent_form.js"></script>
+{% endblock %}

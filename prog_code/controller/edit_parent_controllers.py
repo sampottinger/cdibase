@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @license: GNU GPL v3
 """
 import datetime
+import re
 import typing
 
 import dateutil.parser as dateutil_parser
@@ -362,11 +363,29 @@ def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTyp
 
     selected_format: models.CDIFormat = selected_format_maybe # type: ignore
 
+    # Ensure a child ID
+    if form_db_id == None:
+        realized_form_study = type_util.assert_not_none(form_study)
+        realized_form_study_id = type_util.assert_not_none(form_study_id)
+        candidate_child_id = db_util.lookup_global_participant_id(
+            realized_form_study,
+            realized_form_study_id
+        )
+        if candidate_child_id == None:
+            realized_child_id = db_util.reserve_child_id()
+        else:
+            realized_child_id = type_util.assert_not_none(
+                candidate_child_id
+            )
+    else:
+        realized_form_study = type_util.assert_not_none(form_study)
+        realized_child_id = type_util.assert_not_none(form_db_id)
+
     # Check for required consent form
     requires_consent = consent_util.requires_consent_form(
-        type_util.assert_not_none(form_db_id),
-        type_util.assert_not_none(form_study),
-        type_util.assert_not_none(form_id)
+        realized_child_id,
+        realized_form_study,
+        form_id
     )
     if requires_consent:
         return flask.redirect('/base/parent_cdi/%s/consent' % form_id)
@@ -755,6 +774,11 @@ def handle_parent_consent_form(form_id: str) -> controller_types.ValidFlaskRetur
     if not requires_consent:
         return flask.redirect('/base/parent_cdi/%s' % form_id)
 
+    # Create other options ID function
+    option_id_regex = r'[0-9a-zA-Z]+'
+    def get_option_id(option_text):
+        return ''.join(re.findall(option_id_regex, option_text))
+
     # On submit
     if flask.request.method == 'POST':
 
@@ -765,12 +789,22 @@ def handle_parent_consent_form(form_id: str) -> controller_types.ValidFlaskRetur
 
         # Get other options
         settings = db_util.get_consent_settings(realized_form_study)
-        option_values = map(
+        options_id_and_text = map(
             lambda x: {
-                'option': x,
-                'value': flask.request.form.get(x + '_option_check', 'off')
+                'id': get_option_id(x),
+                'text': x
             },
             settings.other_options
+        )
+        option_values = map(
+            lambda x: {
+                'option': x['text'],
+                'value': flask.request.form.get(
+                    x['id'] + '_option_check',
+                    'off'
+                )
+            },
+            options_id_and_text
         )
         option_values_selected = filter(
             lambda x: x['value'] == constants.FORM_SELECTED_VALUE,
@@ -803,5 +837,6 @@ def handle_parent_consent_form(form_id: str) -> controller_types.ValidFlaskRetur
             'end_parent_consent.html',
             consent_settings=settings,
             cur_page='remote_participation',
+            get_option_id=get_option_id,
             **session_util.get_standard_template_values()
         )
