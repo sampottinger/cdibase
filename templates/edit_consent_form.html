@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                     <select class="form-control" id="requirement-type-input" name="requirement_type">
                         <option value="0" {% if cur_settings.requirement_type == 0 %}selected{% endif %}>Never ask online</option>
                         <option value="1" {% if cur_settings.requirement_type == 1 %}selected{% endif %}>Ask online for each CDI</option>
-                        <option value="2" {% if cur_settings.requirement_type == 2 %}selected{% endif %}>Ask online once</option>
+                        <option value="2" {% if cur_settings.requirement_type == 2 %}selected{% endif %}>Ask online once per study</option>
                     </select>
                 </div>
                 <div class="form-entry form-group">
