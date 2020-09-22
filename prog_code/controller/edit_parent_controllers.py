@@ -311,7 +311,7 @@ def thank_parent_form() -> controller_types.ValidFlaskReturnTypes:
     )
 
 
-@app.route('/base/parent_cdi/form/<form_id>', methods=['GET', 'POST'])
+@app.route('/base/parent_cdi/<form_id>', methods=['GET', 'POST'])
 def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTypes:
     """Controller to display and handle a parent CDI form.
 
@@ -363,8 +363,13 @@ def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTyp
     selected_format: models.CDIFormat = selected_format_maybe # type: ignore
 
     # Check for required consent form
-    if consent_util.requires_consent_form(form_db_id, form_study):
-        return flask.redirect('/base/parent_cdi/consent/%s' % form_id)
+    requires_consent = consent_util.requires_consent_form(
+        type_util.assert_not_none(form_db_id),
+        type_util.assert_not_none(form_study),
+        type_util.assert_not_none(form_id)
+    )
+    if requires_consent:
+        return flask.redirect('/base/parent_cdi/%s/consent' % form_id)
 
     # On submit
     if request.method == 'POST':
@@ -690,6 +695,113 @@ def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTyp
             results=results,
             ask_gender=selected_format.details['meta'].get('ask_gender', False),
             ask_languages=selected_format.details['meta'].get('ask_languages', False),
+            cur_page='remote_participation',
+            **session_util.get_standard_template_values()
+        )
+
+
+@app.route('/base/parent_cdi/<form_id>/consent', methods=['GET', 'POST'])
+def handle_parent_consent_form(form_id: str) -> controller_types.ValidFlaskReturnTypes:
+    """Render or handle a completed parent consent form.
+
+    @param form_id: The ID of the parent form to render or to process.
+    @returns: Consent form in HTML or redirect on completion.
+    """
+    # Ensure the parent form still exists (and has not been submitted already).
+    parent_form = db_util.get_parent_form_by_id(form_id)
+    if not parent_form:
+        return flask.render_template(
+            'end_parent_form_404.html',
+            cur_page='remote_participation',
+            **session_util.get_standard_template_values()
+        ), 404
+
+    # Ensure that the form has global ID information or both a study and study
+    # ID.
+    form_db_id = parent_form.database_id
+    form_study_id = parent_form.study_id
+    form_study = parent_form.study
+    if form_db_id == None and (form_study_id == None or form_study == None):
+        return flask.render_template(
+            'end_parent_form_404.html',
+            cur_page='remote_participation',
+            **session_util.get_standard_template_values()
+        ), 404
+
+    # Ensure a child ID
+    if form_db_id == None:
+        realized_form_study = type_util.assert_not_none(form_study)
+        realized_form_study_id = type_util.assert_not_none(form_study_id)
+        candidate_child_id = db_util.lookup_global_participant_id(
+            realized_form_study,
+            realized_form_study_id
+        )
+        if candidate_child_id == None:
+            realized_child_id = db_util.reserve_child_id()
+        else:
+            realized_child_id = type_util.assert_not_none(
+                candidate_child_id
+            )
+    else:
+        realized_form_study = type_util.assert_not_none(form_study)
+        realized_child_id = type_util.assert_not_none(form_db_id)
+
+    # Check for required consent form
+    requires_consent = consent_util.requires_consent_form(
+        realized_child_id,
+        realized_form_study,
+        form_id
+    )
+    if not requires_consent:
+        return flask.redirect('/base/parent_cdi/%s' % form_id)
+
+    # On submit
+    if flask.request.method == 'POST':
+
+        # Get easy arguments
+        name = flask.request.form['name']
+        completed = datetime.datetime.utcnow()
+        email = parent_form.parent_email
+
+        # Get other options
+        settings = db_util.get_consent_settings(realized_form_study)
+        option_values = map(
+            lambda x: {
+                'option': x,
+                'value': flask.request.form.get(x + '_option_check', 'off')
+            },
+            settings.other_options
+        )
+        option_values_selected = filter(
+            lambda x: x['value'] == constants.FORM_SELECTED_VALUE,
+            option_values
+        )
+        other_options_selected = list(map(
+            lambda x: x['option'],
+            option_values_selected
+        ))
+
+        # Create and save consent record
+        new_model = models.ConsentFormFiling(
+            realized_form_study,
+            name,
+            realized_child_id,
+            completed,
+            other_options_selected,
+            email,
+            form_id
+        )
+        db_util.put_consent_filing(new_model)
+
+        # Redirect back to CDI
+        return flask.redirect('/base/parent_cdi/%s' % form_id)
+
+    # On get html form
+    else:
+        settings = db_util.get_consent_settings(realized_form_study)
+        return flask.render_template(
+            'end_parent_consent.html',
+            consent_settings=settings,
             cur_page='remote_participation',
             **session_util.get_standard_template_values()
         )

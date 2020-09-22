@@ -645,7 +645,7 @@ def get_all_user_models(
 def lookup_global_participant_id(
         study: str,
         participant_study_id: str,
-        cursor_maybe: OptionalCursor = None) -> typing.Optional[int]:
+        cursor_maybe: OptionalCursor = None) -> typing.Optional[str]:
     """Get the global participant ID given study information.
 
     Get the global participant ID for a child given that child's study ID and

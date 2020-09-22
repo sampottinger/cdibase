@@ -36,7 +36,7 @@ CDI_EMAIL_SUBJECT = 'CU Language Project'
 
 CDI_EMAIL_TEMPLATE = None
 
-URL_TEMPLATE = 'https://cdi.colorado.edu/base/parent_cdi/form/%s'
+URL_TEMPLATE = 'https://cdi.colorado.edu/base/parent_cdi/%s'
 EMAIL_REGEX = re.compile('^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$',
     re.IGNORECASE)
 

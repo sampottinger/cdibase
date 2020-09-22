@@ -201,7 +201,7 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
     TEST_HARD_OF_HEARING,
     False
 )
-PARENT_CDI_FORM_URL = '/base/parent_cdi/form/%d' % TEST_PARENT_FORM_ID
+PARENT_CDI_FORM_URL = '/base/parent_cdi/%d' % TEST_PARENT_FORM_ID
 TEMPLATE_WORD_SPOKEN_VALUES = {
     'cat_1_word_1_report': 1,
     'cat_1_word_2_report': 1,

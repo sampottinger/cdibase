@@ -42,7 +42,7 @@ class ConsentUtilTests(unittest.TestCase):
             datetime.datetime.now()
         )
 
-    def __create_filing(self, child_id):
+    def __create_filing(self, child_id, access_key):
         return models.ConsentFormFiling(
             'test-study',
             'test name',
@@ -50,12 +50,16 @@ class ConsentUtilTests(unittest.TestCase):
             datetime.datetime.now(),
             [],
             'test@example.com',
-            '1234'
+            access_key
         )
 
     def test_requires_consent_form_never(self):
         def body():
-            result = consent_util.requires_consent_form('test-1', 'test-study')
+            result = consent_util.requires_consent_form(
+                'test-1',
+                'test-study',
+                '1234'
+            )
             self.assertFalse(result)
 
         self.__run_with_mocks(
@@ -64,35 +68,65 @@ class ConsentUtilTests(unittest.TestCase):
             []
         )
 
-    def test_requires_consent_form_always(self):
+    def test_requires_consent_form_always_incomplete(self):
         def body():
-            result = consent_util.requires_consent_form('test-1', 'test-study')
+            result = consent_util.requires_consent_form(
+                'test-1',
+                'test-study',
+                '1234'
+            )
             self.assertTrue(result)
 
         self.__run_with_mocks(
             body,
             self.__create_settings(constants.CONSENT_FORM_ALWAYS),
             [
-                self.__create_filing('test-1')
+                self.__create_filing('test-1', '5678')
+            ]
+        )
+
+    def test_requires_consent_form_always_complete(self):
+        def body():
+            result = consent_util.requires_consent_form(
+                'test-1',
+                'test-study',
+                '1234'
+            )
+            self.assertFalse(result)
+
+        self.__run_with_mocks(
+            body,
+            self.__create_settings(constants.CONSENT_FORM_ALWAYS),
+            [
+                self.__create_filing('test-1', '5678'),
+                self.__create_filing('test-1', '1234')
             ]
         )
 
     def test_requires_consent_form_once_no_match_prior(self):
         def body():
-            result = consent_util.requires_consent_form('test-1', 'test-study')
+            result = consent_util.requires_consent_form(
+                'test-1',
+                'test-study',
+                '5678'
+            )
             self.assertTrue(result)
 
         self.__run_with_mocks(
             body,
             self.__create_settings(constants.CONSENT_FORM_ONCE),
             [
-                self.__create_filing('test-2')
+                self.__create_filing('test-2', '1234')
             ]
         )
 
     def test_requires_consent_form_once_no_prior(self):
         def body():
-            result = consent_util.requires_consent_form('test-1', 'test-study')
+            result = consent_util.requires_consent_form(
+                'test-1',
+                'test-study',
+                '5678'
+            )
             self.assertTrue(result)
 
         self.__run_with_mocks(
@@ -103,13 +137,17 @@ class ConsentUtilTests(unittest.TestCase):
 
     def test_requires_consent_form_once_with_prior(self):
         def body():
-            result = consent_util.requires_consent_form('test-1', 'test-study')
+            result = consent_util.requires_consent_form(
+                'test-1',
+                'test-study',
+                '5678'
+            )
             self.assertFalse(result)
 
         self.__run_with_mocks(
             body,
             self.__create_settings(constants.CONSENT_FORM_ONCE),
             [
-                self.__create_filing('test-1')
+                self.__create_filing('test-1', '1234')
             ]
         )
