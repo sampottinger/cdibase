@@ -27,6 +27,7 @@ import typing
 import dateutil.parser as dateutil_parser
 import flask
 
+from ..util import consent_util
 from ..util import constants
 from ..util import db_util
 from ..util import filter_util
@@ -305,11 +306,12 @@ def thank_parent_form() -> controller_types.ValidFlaskReturnTypes:
     """
     return flask.render_template(
         'parent_thanks.html',
+        cur_page='remote_participation',
         **session_util.get_standard_template_values()
     )
 
 
-@app.route('/base/parent_cdi/<form_id>', methods=['GET', 'POST'])
+@app.route('/base/parent_cdi/form/<form_id>', methods=['GET', 'POST'])
 def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTypes:
     """Controller to display and handle a parent CDI form.
 
@@ -334,6 +336,7 @@ def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTyp
     if not parent_form:
         return flask.render_template(
             'end_parent_form_404.html',
+            cur_page='remote_participation',
             **session_util.get_standard_template_values()
         ), 404
 
@@ -345,6 +348,7 @@ def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTyp
     if form_db_id == None and (form_study_id == None or form_study == None):
         return flask.render_template(
             'end_parent_form_404.html',
+            cur_page='remote_participation',
             **session_util.get_standard_template_values()
         ), 404
 
@@ -358,6 +362,11 @@ def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTyp
 
     selected_format: models.CDIFormat = selected_format_maybe # type: ignore
 
+    # Check for required consent form
+    if consent_util.requires_consent_form(form_db_id, form_study):
+        return flask.redirect('/base/parent_cdi/consent/%s' % form_id)
+
+    # On submit
     if request.method == 'POST':
 
         # Parse word entries
@@ -617,6 +626,8 @@ def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTyp
         flask.session['SAVED_WORDS'] = None
         return flask.redirect(THANK_YOU_MSG_URL)
 
+
+    # On load page
     else:
         # Get the most recent snapshot
         if parent_form.database_id == None:
@@ -679,5 +690,6 @@ def handle_parent_cdi_form(form_id: str) -> controller_types.ValidFlaskReturnTyp
             results=results,
             ask_gender=selected_format.details['meta'].get('ask_gender', False),
             ask_languages=selected_format.details['meta'].get('ask_languages', False),
+            cur_page='remote_participation',
             **session_util.get_standard_template_values()
         )

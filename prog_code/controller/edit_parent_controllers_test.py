@@ -201,7 +201,7 @@ TEST_SNAPSHOT = models.SnapshotMetadata(
     TEST_HARD_OF_HEARING,
     False
 )
-PARENT_CDI_FORM_URL = '/base/parent_cdi/%d' % TEST_PARENT_FORM_ID
+PARENT_CDI_FORM_URL = '/base/parent_cdi/form/%d' % TEST_PARENT_FORM_ID
 TEMPLATE_WORD_SPOKEN_VALUES = {
     'cat_1_word_1_report': 1,
     'cat_1_word_2_report': 1,
@@ -287,7 +287,7 @@ class TestEditParentControllers(unittest.TestCase):
         self.app.debug = True
         self.__callback_called = False
 
-    def __run_with_mocks(self, on_start, body, on_end):
+    def __run_with_mocks(self, on_start, body, on_end, requires_consent=False):
         with unittest.mock.patch('prog_code.util.user_util.get_user') as mock_get_user:
             with unittest.mock.patch('prog_code.util.parent_account_util.generate_unique_cdi_form_id') as mock_generate_unique_cdi_form_id:
                 with unittest.mock.patch('prog_code.util.db_util.load_cdi_model') as mock_load_cdi_model:
@@ -302,26 +302,31 @@ class TestEditParentControllers(unittest.TestCase):
                                                     with unittest.mock.patch('prog_code.util.interp_util.monthdelta') as mock_monthdelta:
                                                         with unittest.mock.patch('prog_code.util.math_util.find_percentile') as mock_find_percentile:
                                                             with unittest.mock.patch('prog_code.util.db_util.load_snapshot_contents') as mock_load_snapshot_contents:
-                                                                mocks = {
-                                                                    'get_user': mock_get_user,
-                                                                    'generate_unique_cdi_form_id': mock_generate_unique_cdi_form_id,
-                                                                    'load_cdi_model': mock_load_cdi_model,
-                                                                    'run_search_query': mock_run_search_query,
-                                                                    'insert_parent_form': mock_insert_parent_form,
-                                                                    'send_cdi_email': mock_send_cdi_email,
-                                                                    'insert_snapshot': mock_insert_snapshot,
-                                                                    'remove_parent_form': mock_remove_parent_form,
-                                                                    'get_parent_form_by_id': mock_get_parent_form_by_id,
-                                                                    'load_percentile_model': mock_load_percentile_model,
-                                                                    'get_snapshot_chronology_for_db_id': mock_get_snapshot_chronology_for_db_id,
-                                                                    'monthdelta': mock_monthdelta,
-                                                                    'find_percentile': mock_find_percentile,
-                                                                    'load_snapshot_contents': mock_load_snapshot_contents
-                                                                }
-                                                                on_start(mocks)
-                                                                body()
-                                                                on_end(mocks)
-                                                                self.__callback_called = True
+                                                                with unittest.mock.patch('prog_code.util.consent_util.requires_consent_form') as mock_requires_consent_form:
+                                                                    mocks = {
+                                                                        'get_user': mock_get_user,
+                                                                        'generate_unique_cdi_form_id': mock_generate_unique_cdi_form_id,
+                                                                        'load_cdi_model': mock_load_cdi_model,
+                                                                        'run_search_query': mock_run_search_query,
+                                                                        'insert_parent_form': mock_insert_parent_form,
+                                                                        'send_cdi_email': mock_send_cdi_email,
+                                                                        'insert_snapshot': mock_insert_snapshot,
+                                                                        'remove_parent_form': mock_remove_parent_form,
+                                                                        'get_parent_form_by_id': mock_get_parent_form_by_id,
+                                                                        'load_percentile_model': mock_load_percentile_model,
+                                                                        'get_snapshot_chronology_for_db_id': mock_get_snapshot_chronology_for_db_id,
+                                                                        'monthdelta': mock_monthdelta,
+                                                                        'find_percentile': mock_find_percentile,
+                                                                        'load_snapshot_contents': mock_load_snapshot_contents,
+                                                                        'requires_consent_form': mock_requires_consent_form
+                                                                    }
+
+                                                                    mock_requires_consent_form.return_value = requires_consent
+
+                                                                    on_start(mocks)
+                                                                    body()
+                                                                    on_end(mocks)
+                                                                    self.__callback_called = True
 
     def __assert_callback(self):
         self.assertTrue(self.__callback_called)

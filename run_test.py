@@ -29,6 +29,7 @@ from prog_code.controller.edit_user_controllers_test import TestEditUserControll
 from prog_code.controller.enter_data_controllers_test import EnterDataControllersTests
 
 from prog_code.util.api_key_util_test import APIKeyUtilTests
+from prog_code.util.consent_util_test import ConsentUtilTests
 from prog_code.util.legacy_csv_import_util_test import LegacyUploadParserAutomatonTests
 from prog_code.util.new_csv_import_util_test import NewUploadParserAutomatonTests
 from prog_code.util.db_util_test import DBUtilTests
