@@ -22,6 +22,14 @@ a {
     color: #0071EB;
 }
 
+a:hover {
+    color: #003B7A;
+}
+
+a:active {
+    color: #003B7A;
+}
+
 a.btn {
     text-decoration: none;
     color: white;
